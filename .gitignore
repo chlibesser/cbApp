@@ -50,6 +50,7 @@ frontend/.lock-wscript/
 frontend/logs/
 frontend/pids/
 frontend/lib-cov/
+frontend/.vite/
 
 ## System Files
 .DS_Store
@@ -85,3 +86,8 @@ pnpm-error.log*
 
 ## Temporary upload files
 uploadFiles/
+
+## Docker & Database
+docker-compose.override.yml
+.env.docker
+postgres_data/

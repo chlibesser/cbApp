@@ -7,7 +7,7 @@
             <!-- cbApp Logo -->
             <div class="mb-4">
               <img 
-                src="/logo-cbapp.svg" 
+                src="/Logo_cbApp.svg" 
                 alt="cbApp Logo" 
                 style="height: 60px; width: auto;"
               />
