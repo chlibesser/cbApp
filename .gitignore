@@ -82,3 +82,6 @@ pnpm-error.log*
 ## OS generated files
 *.dmg
 *.iso
+
+## Temporary upload files
+uploadFiles/
