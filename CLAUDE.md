@@ -63,6 +63,48 @@ Claude soll IMMER pnpm verwenden, nie npm oder yarn.
 - **Vollständige Fehleranzeige** - alle Backend-Fehler müssen im Frontend angezeigt werden
 - **Toast-Benachrichtigungen** - bei jeder Daten-Transaktion (Erfolg & Fehler)
 
+## 🚨 Domain-Isolation (KRITISCH)
+
+**⚠️ STRENGE REGEL: Nur Änderungen innerhalb der aktuellen Domain!**
+
+### 🛑 Verbotene Cross-Domain Änderungen
+- **Workflow-Domain** ➜ KEINE Änderungen an User/Tenant/Identity
+- **User-Domain** ➜ KEINE Änderungen an Workflow/Tenant/Admin  
+- **Tenant-Domain** ➜ KEINE Änderungen an Workflow/User/Identity
+- **Identity-Domain** ➜ KEINE Änderungen an Workflow/Tenant/User
+
+### ✅ Erlaubte Änderungen
+- **NUR** in der Domain, in der aktuell gearbeitet wird
+- **NUR** Shared/Core Komponenten wenn explizit erforderlich
+- **NUR** Infrastructure Layer für domainspezifische Anpassungen
+
+### 🔍 Warnsignale
+```
+🚨🚨🚨 ACHTUNG: CROSS-DOMAIN ÄNDERUNG ERKANNT! 🚨🚨🚨
+Du arbeitest in [CURRENT_DOMAIN] aber änderst [OTHER_DOMAIN]!
+STOPPE SOFORT und frage nach Bestätigung!
+```
+
+### 📂 Domain-Struktur
+```
+backend/app/Domains/
+├── Workflow/     # Workflow-spezifische Logik
+├── Identity/     # User/Profile Management  
+├── Tenant/       # Mandantenverwaltung
+└── Admin/        # Systemadministration
+
+frontend/src/domains/
+├── workflow/     # Workflow UI & Services
+├── identity/     # Login/Profile UI
+├── tenant/       # Tenant Management UI  
+└── admin/        # Admin Panel UI
+```
+
+### 🛡️ Ausnahmen (nur mit expliziter Genehmigung)
+- Shared/Core Updates die mehrere Domains betreffen
+- Infrastructure-Änderungen für domainübergreifende Features
+- Bug-Fixes die mehrere Domains tangieren
+
 ## 🌐 Server-Konfiguration
 
 **Backend (Laravel)**: 
