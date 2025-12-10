@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 194 60.603">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 187 60.603">
 <defs>
 <style>
 .cls-1{fill:#fff;}
@@ -19,5 +19,5 @@
 </g>
 <!-- Text cbApp.ch mit Abstand -->
 <text x="57" y="38" fill="#898687" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-weight="bold" font-size="30">cb</text>
-<text x="92" y="38" fill="#e30613" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-weight="bold" font-size="30">App.ch</text>
+<text x="92" y="38" fill="#e30613" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-weight="bold" font-size="30">app.ch</text>
 </svg>

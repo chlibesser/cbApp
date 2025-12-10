@@ -3,7 +3,11 @@
 namespace App\Core\Auth\Services;
 
 use App\Core\Auth\Models\Account;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * AuthService - Core Authentication Service
@@ -13,18 +17,30 @@ class AuthService
     /**
      * Attempt to authenticate an account with username or email
      */
-    public function attempt(array $credentials): ?Account
+    public function attempt(array $credentials): bool
     {
         $identifier = $credentials['username'] ?? $credentials['email'] ?? $credentials['identifier'];
         $password = $credentials['password'];
 
-        $account = Account::findByUsernameOrEmail($identifier);
+        // Versuche Account zu finden
+        $account = $this->findAccountByIdentifier($identifier);
 
-        if ($account && $account->isActive() && Hash::check($password, $account->password)) {
-            return $account;
+        if (!$account) {
+            return false;
         }
 
-        return null;
+        // Prüfe Account Status
+        if (!$account->is_active) {
+            return false;
+        }
+
+        // Prüfe E-Mail Verifizierung
+        if (!$account->email_verified_at) {
+            return false;
+        }
+
+        // Prüfe Passwort
+        return Hash::check($password, $account->password);
     }
 
     /**
@@ -38,7 +54,7 @@ class AuthService
     /**
      * Revoke all tokens for account
      */
-    public function logout(Account $account): void
+    public function revokeAllTokens(Account $account): void
     {
         $account->tokens()->delete();
     }
@@ -48,10 +64,67 @@ class AuthService
      */
     public function register(array $data): Account
     {
+        // Validiere die Registrierungsdaten
+        $validator = Validator::make($data, [
+            'username' => 'required|string|min:3|unique:accounts,username',
+            'email' => 'required|email|unique:accounts,email',
+            'password' => 'required|string|min:8'
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
         return Account::create([
             'username' => $data['username'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'first_name' => $data['first_name'] ?? null,
+            'last_name' => $data['last_name'] ?? null,
         ]);
+    }
+
+    /**
+     * Find account by username or email
+     */
+    public function findAccountByIdentifier(string $identifier): ?Account
+    {
+        return Account::where('email', $identifier)
+            ->orWhere('username', $identifier)
+            ->first();
+    }
+
+    /**
+     * Check if password is strong enough
+     */
+    public function isStrongPassword(string $password): bool
+    {
+        // Mindestens 8 Zeichen
+        if (strlen($password) < 8) {
+            return false;
+        }
+
+        // Mindestens ein Großbuchstabe, ein Kleinbuchstabe und eine Zahl
+        $hasUpperCase = preg_match('/[A-Z]/', $password);
+        $hasLowerCase = preg_match('/[a-z]/', $password);
+        $hasNumber = preg_match('/[0-9]/', $password);
+
+        return $hasUpperCase && $hasLowerCase && $hasNumber;
+    }
+
+    /**
+     * Generate a secure random token
+     */
+    public function generateSecureToken(): string
+    {
+        return Str::random(64);
+    }
+
+    /**
+     * Check if account is active
+     */
+    public function isAccountActive(Account $account): bool
+    {
+        return $account->is_active;
     }
 }

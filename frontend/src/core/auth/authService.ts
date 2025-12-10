@@ -60,6 +60,12 @@ export class AuthService {
     this.setToken(response.data.token)
     return response.data
   }
+
+  async register(registerData: any): Promise<any> {
+    const response = await apiClient.post('/auth/register', registerData)
+    this.setToken(response.data.token)
+    return response.data
+  }
 }
 
 export const authService = new AuthService()

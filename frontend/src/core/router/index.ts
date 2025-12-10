@@ -1,28 +1,74 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { authGuard, adminGuard } from './guards'
 
-// Lazy load components
-const LoginView = () => import('../../domains/identity/views/LoginView.vue')
-const DashboardView = () => import('../../shared/layouts/DashboardLayout.vue')
+// Lazy load layouts
+const AuthLayout = () => import('../../shared/layouts/AuthLayout.vue')
+const DashboardLayout = () => import('../../shared/layouts/DashboardLayout.vue')
 const AdminLayout = () => import('../../domains/admin/layouts/AdminLayout.vue')
+
+// Lazy load views
+const LoginView = () => import('../../domains/identity/views/LoginView.vue')
+const RegisterView = () => import('../../domains/identity/views/RegisterView.vue')
 
 const routes = [
   {
     path: '/',
     redirect: '/dashboard',
   },
+  // Auth routes (login, register, etc.)
+  {
+    path: '/auth',
+    component: AuthLayout,
+    meta: { guestOnly: true },
+    children: [
+      {
+        path: 'login',
+        name: 'login',
+        component: LoginView,
+      },
+      {
+        path: 'register',
+        name: 'register',
+        component: RegisterView,
+      },
+      {
+        path: '',
+        redirect: '/auth/login',
+      },
+    ],
+  },
+  // Legacy login route redirect
   {
     path: '/login',
-    name: 'login',
-    component: LoginView,
-    meta: { guestOnly: true },
+    redirect: '/auth/login',
   },
+  // Main application routes
   {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: DashboardView,
+    path: '/',
+    component: DashboardLayout,
     meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: () => import('../../shared/views/DashboardView.vue'),
+      },
+      // Identity domain routes
+      // {
+      //   path: 'profile',
+      //   name: 'profile',
+      //   component: () => import('../../domains/identity/views/ProfileView.vue'),
+      // },
+      // TODO: Add other domain routes here as they're created
+      // Workflow routes
+      // {
+      //   path: 'todos',
+      //   name: 'todos',
+      //   component: () => import('../../domains/workflow/views/TodosView.vue'),
+      // },
+    ],
   },
+  // Admin routes with separate layout
   {
     path: '/admin',
     component: AdminLayout,

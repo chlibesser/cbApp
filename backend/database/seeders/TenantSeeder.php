@@ -16,22 +16,28 @@ class TenantSeeder extends Seeder
     public function run(): void
     {
         // Demo Company Tenant
-        $companyTenant = Tenant::firstOrCreate([
-            'slug' => 'demo-firma'
-        ], [
-            'name' => 'Demo Firma GmbH',
-            'is_personal' => false,
-            'is_active' => true,
-        ]);
+        $companyTenant = Tenant::where('slug', 'demo-firma')->first();
+        if (!$companyTenant) {
+            $companyTenant = Tenant::create([
+                'id' => (string) Str::uuid(),
+                'slug' => 'demo-firma',
+                'name' => 'Demo Firma GmbH',
+                'is_personal' => false,
+                'is_active' => true,
+            ]);
+        }
 
         // Personal Demo Tenant
-        $personalTenant = Tenant::firstOrCreate([
-            'slug' => 'max-mustermann'
-        ], [
-            'name' => "Max Mustermann's Workspace",
-            'is_personal' => true,
-            'is_active' => true,
-        ]);
+        $personalTenant = Tenant::where('slug', 'max-mustermann')->first();
+        if (!$personalTenant) {
+            $personalTenant = Tenant::create([
+                'id' => (string) Str::uuid(),
+                'slug' => 'max-mustermann',
+                'name' => "Max Mustermann's Workspace",
+                'is_personal' => true,
+                'is_active' => true,
+            ]);
+        }
 
         // Create roles for both tenants
         $this->createRolesForTenant($companyTenant);
@@ -41,13 +47,16 @@ class TenantSeeder extends Seeder
     private function createRolesForTenant(Tenant $tenant)
     {
         // Owner Role (für Personal Tenants oder Firmen-Owner)
-        $ownerRole = Role::firstOrCreate([
-            'tenant_id' => $tenant->id,
-            'name' => 'Owner'
-        ], [
-            'description' => 'Vollzugriff auf alles',
-            'is_system' => true,
-        ]);
+        $ownerRole = Role::where(['tenant_id' => $tenant->id, 'name' => 'Owner'])->first();
+        if (!$ownerRole) {
+            $ownerRole = Role::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $tenant->id,
+                'name' => 'Owner',
+                'description' => 'Vollzugriff auf alles',
+                'is_system' => true,
+            ]);
+        }
 
         // Admin Role
         $adminRole = Role::firstOrCreate([

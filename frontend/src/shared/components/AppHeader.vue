@@ -1,8 +1,23 @@
 <template>
   <v-app-bar app>
-    <v-toolbar-title>
-      <router-link to="/dashboard" class="text-decoration-none text-white"> cbApp </router-link>
-    </v-toolbar-title>
+    <!-- Sidebar Toggle Button -->
+    <v-btn
+      icon
+      @click="layoutStore.toggleSidebar()"
+      class="me-3"
+    >
+      <v-icon>mdi-menu</v-icon>
+    </v-btn>
+
+    <!-- Logo -->
+    <router-link to="/dashboard" class="d-flex align-center text-decoration-none me-4">
+      <img 
+        src="/Logo_cbapp.svg" 
+        alt="cbApp Logo" 
+        class="header-logo me-2"
+      />
+      <span class="text-h6 font-weight-medium text-white">cbApp</span>
+    </router-link>
 
     <v-spacer />
 
@@ -117,9 +132,11 @@
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '../../infrastructure/stores/authStore'
+  import { useLayoutStore } from '../../infrastructure/stores/layoutStore'
 
   const router = useRouter()
   const authStore = useAuthStore()
+  const layoutStore = useLayoutStore()
 
   const account = computed(() => authStore.account)
   const currentTenant = computed(() => authStore.currentTenant)
@@ -152,7 +169,40 @@
   }
 
   const handleLogout = async () => {
-    await authStore.logout()
-    router.push('/login')
+    try {
+      await authStore.logout()
+      // Force a full page reload to ensure clean state
+      window.location.href = '/auth/login'
+    } catch (error) {
+      console.error('Logout failed:', error)
+      // Force redirect even if logout fails
+      window.location.href = '/auth/login'
+    }
   }
 </script>
+
+<style scoped>
+.header-logo {
+  height: 32px;
+  width: auto;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .header-logo {
+    height: 28px;
+  }
+  
+  /* Hide text on mobile, show only logo */
+  .text-h6 {
+    display: none;
+  }
+}
+
+/* Hover effect for logo link */
+.router-link:hover {
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+</style>

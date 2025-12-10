@@ -19,13 +19,15 @@ class QuickLoginController extends Controller
         }
 
         $accounts = Account::with(['tenants.roles', 'profiles'])
-            ->whereIn('username', ['max', 'admin', 'buchhalter', 'lese', 'user'])
+            ->whereIn('username', ['max', 'admin', 'tenantadmin', 'buchhalter', 'lese', 'user'])
             ->get()
             ->map(function ($account) {
                 return [
                     'id' => $account->id,
                     'username' => $account->username,
                     'email' => $account->email,
+                    'system_role' => $account->system_role?->value,
+                    'system_role_label' => $account->system_role?->label(),
                     'tenants' => $account->tenants->map(function ($tenant) use ($account) {
                         $role = $account->getRoleForTenant($tenant->id);
                         return [
@@ -64,7 +66,7 @@ class QuickLoginController extends Controller
         ]);
 
         $account = Account::where('username', $request->username)
-            ->whereIn('username', ['max', 'admin', 'buchhalter', 'lese', 'user'])
+            ->whereIn('username', ['max', 'admin', 'tenantadmin', 'buchhalter', 'lese', 'user'])
             ->first();
 
         if (!$account) {
@@ -100,6 +102,8 @@ class QuickLoginController extends Controller
                 'id' => $account->id,
                 'username' => $account->username,
                 'email' => $account->email,
+                'system_role' => $account->system_role?->value,
+                'system_role_label' => $account->system_role?->label(),
             ],
             'current_tenant' => $currentTenant,
             'token' => $token,

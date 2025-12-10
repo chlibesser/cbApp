@@ -55,6 +55,77 @@ cbApp V1/
 
 Claude soll IMMER pnpm verwenden, nie npm oder yarn.
 
+## 🚧 Entwicklungsrichtlinien
+
+**WICHTIG**: Solange wir im **Entwicklungsmodus** sind:
+
+### Datenbank-Migrations-Strategie
+- **KEINE** `add_*` oder `change_*` Migrationen erstellen
+- **IMMER** die **bestehenden Migrationen direkt anpassen**
+- Nach Änderungen: `php artisan migrate:fresh --seed`
+- Grund: Saubere Migration-History für Production
+
+### Beispiel:
+```bash
+# RICHTIG ✅
+# Bestehende Migration anpassen:
+# database/migrations/2025_12_09_202000_create_accounts_table.php
+
+# FALSCH ❌  
+# Neue Migration erstellen:
+# database/migrations/2025_12_10_123456_add_system_role_to_accounts_table.php
+```
+
+### Wann normale Migrations verwenden:
+- **Erst ab Production-Release** von V1
+- **Niemals** während der Initial-Entwicklungsphase
+
+## 🎯 Enum-Richtlinien
+
+**WICHTIG**: Verwende IMMER PHP 8.1 Backed Enums, NIEMALS Datenbank-Enums!
+
+### Warum PHP Enums?
+- ✅ **Typsicherheit**: IDE Support und Autocompletion
+- ✅ **Methoden**: `->label()`, `->description()`, `->canDo()`
+- ✅ **Wartbarkeit**: Zentrale Definition und Logik
+- ✅ **Performance**: Keine DB-Lookups für Labels
+- ✅ **Laravel Integration**: Automatische Validation und Casting
+
+### Beispiel:
+```php
+// RICHTIG ✅
+enum SystemRole: string {
+    case GLOBAL_ADMIN = 'global_admin';
+    
+    public function label(): string { 
+        return 'Global Administrator'; 
+    }
+}
+
+// Migration:
+$table->string('system_role'); // Als String speichern
+
+// Model:
+protected $casts = ['system_role' => SystemRole::class];
+
+// FALSCH ❌
+$table->enum('system_role', ['global_admin', 'tenant_admin']);
+```
+
+### Wann verwenden:
+- Rollen (SystemRole, TenantRole)
+- Status (OrderStatus, ProjectStatus)
+- Typen (MediaType, NotificationType)
+- Alle festen Wertelisten
+
+## 🇩🇪 Sprache
+
+**WICHTIG**: Claude soll IMMER auf Deutsch antworten, es sei denn explizit anders gefordert:
+- Alle Antworten auf Deutsch
+- Code-Kommentare auf Deutsch (wenn welche nötig sind)
+- Commit-Nachrichten auf Deutsch
+- Dokumentation auf Deutsch
+
 ## ⚠️ Validierungsrichtlinien
 
 **WICHTIG**: Siehe `.claude/validation.md` für detaillierte Validierungsrichtlinien:

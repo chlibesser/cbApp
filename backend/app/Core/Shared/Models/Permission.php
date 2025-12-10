@@ -3,15 +3,42 @@
 namespace App\Core\Shared\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Permission extends Model
 {
+    use HasFactory;
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     */
+    public $incrementing = false;
+
+    /**
+     * The "type" of the auto-incrementing ID.
+     */
+    protected $keyType = 'string';
+
     protected $fillable = [
         'name',
         'resource',
         'action',
         'description',
     ];
+
+    /**
+     * Generate UUID for new models
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * Get all roles that have this permission

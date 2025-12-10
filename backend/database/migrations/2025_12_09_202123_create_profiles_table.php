@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('profiles', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('account_id')->constrained()->onDelete('cascade');
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('tenant_id')->constrained()->onDelete('cascade');
             $table->string('display_name');
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();

@@ -7,7 +7,7 @@ export const authGuard = (
   next: NavigationGuardNext
 ) => {
   if (to.meta?.requiresAuth && !authService.isAuthenticated()) {
-    next({ name: 'login' })
+    next({ path: '/auth/login' })
     return
   }
 
@@ -29,7 +29,7 @@ export const adminGuard = (
   if (to.meta?.requiresAdmin) {
     // For now, just check if authenticated
     if (!authService.isAuthenticated()) {
-      next({ name: 'login' })
+      next({ path: '/auth/login' })
       return
     }
   }

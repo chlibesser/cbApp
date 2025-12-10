@@ -2,16 +2,7 @@
   <v-container class="fill-height" fluid>
     <v-row justify="center" align="center">
       <v-col cols="12" md="6" lg="4">
-        <v-card>
-          <v-card-title class="text-center py-6">
-            <!-- cbApp Logo -->
-            <div class="mb-4">
-              <img src="/Logo_cbApp.svg" alt="cbApp Logo" style="height: 60px; width: auto" />
-            </div>
-            <h2>Login</h2>
-          </v-card-title>
-          <v-card-text>
-            <v-form @submit.prevent="handleLogin" v-model="isFormValid">
+        <v-form @submit.prevent="handleLogin" v-model="isFormValid" data-testid="login-form">
               <v-text-field
                 v-model="credentials.identifier"
                 label="Username or Email"
@@ -21,6 +12,7 @@
                 variant="outlined"
                 class="mb-3"
                 hint="You can login with your username or email address"
+                data-testid="login-identifier"
               />
 
               <v-text-field
@@ -31,6 +23,7 @@
                 required
                 variant="outlined"
                 class="mb-3"
+                data-testid="login-password"
               />
 
               <v-alert
@@ -39,6 +32,7 @@
                 class="mb-3"
                 dismissible
                 @click:close="errorMessage = ''"
+                data-testid="error-message"
               >
                 {{ errorMessage }}
               </v-alert>
@@ -50,12 +44,27 @@
                 :loading="isLoading"
                 :disabled="!isFormValid"
                 size="large"
+                class="mb-3"
+                data-testid="login-submit"
               >
+                <v-progress-circular
+                  v-if="isLoading"
+                  indeterminate
+                  size="20"
+                  data-testid="login-loading"
+                />
                 Login
               </v-btn>
+
+              <div class="text-center">
+                <span class="text-body-2 text-medium-emphasis">
+                  Noch kein Konto? 
+                </span>
+                <router-link to="/auth/register" class="text-primary text-decoration-none">
+                  Hier registrieren
+                </router-link>
+              </div>
             </v-form>
-          </v-card-text>
-        </v-card>
       </v-col>
     </v-row>
     

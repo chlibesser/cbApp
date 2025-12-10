@@ -10,13 +10,17 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(authService.getToken())
   const currentTenant = ref<Tenant | null>(null)
   const availableQuickLogins = ref<QuickLoginAccount[]>([])
+  const quickLogins = ref<QuickLoginAccount[]>([])
 
   // Getters
   const isAuthenticated = computed(() => !!token.value)
-  const user = computed(() => ({
-    account: account.value,
-    profile: profile.value,
-  }))
+  const user = computed(() => {
+    if (!account.value && !profile.value) return null
+    return {
+      account: account.value,
+      profile: profile.value,
+    }
+  })
 
   // Actions
   const login = async (credentials: LoginCredentials) => {
@@ -26,6 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.token
       account.value = response.account
       profile.value = response.profile
+      authService.setToken(response.token)
 
       return response
     } catch (error) {
@@ -37,18 +42,22 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      if (token.value) {
+      // Sofort den Auth-Zustand auf false setzen
+      token.value = null
+      authService.removeToken()
+      
+      if (account.value) {
+        // Nur API-Call machen wenn wir eingeloggt waren
         await authService.logout()
       }
     } catch (error) {
       console.warn('Logout API call failed:', error)
     } finally {
       // Always clear local state and token
-      token.value = null
       account.value = null
       profile.value = null
       currentTenant.value = null
-      authService.removeToken()
+      quickLogins.value = []
     }
   }
 
@@ -57,8 +66,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const userData = await authService.me()
-      account.value = userData.account
-      profile.value = userData.profile
+      account.value = userData
+      if (userData.profile) {
+        profile.value = userData.profile
+      }
+      if (userData.current_tenant) {
+        currentTenant.value = userData.current_tenant
+      }
     } catch (error) {
       // If loading user data fails, clear auth state
       await logout()
@@ -75,9 +89,11 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authService.getQuickLogins()
       availableQuickLogins.value = response.accounts
+      quickLogins.value = response.accounts
     } catch (error) {
       console.warn('Failed to load quick logins:', error)
       availableQuickLogins.value = []
+      quickLogins.value = []
     }
   }
 
@@ -87,7 +103,27 @@ export const useAuthStore = defineStore('auth', () => {
 
       token.value = response.token
       account.value = response.account
+      profile.value = response.profile
       currentTenant.value = response.current_tenant
+      authService.setToken(response.token)
+
+      return response
+    } catch (error) {
+      await logout()
+      throw error
+    }
+  }
+
+  const register = async (registerData: any) => {
+    try {
+      const response = await authService.register(registerData)
+
+      token.value = response.token
+      account.value = response.account
+      authService.setToken(response.token)
+      
+      // Load full user data after registration
+      await loadUserData()
 
       return response
     } catch (error) {
@@ -110,14 +146,20 @@ export const useAuthStore = defineStore('auth', () => {
     return hasPermission(`${resource}.${action}`)
   }
 
+  const canAccessResource = (resource: string): boolean => {
+    if (!currentTenant.value?.role?.permissions) return false
+    return currentTenant.value.role.permissions.some((permission: string) => 
+      permission.startsWith(`${resource}.`)
+    )
+  }
+
   // Initialize auth state
-  const initialize = async () => {
+  const initialize = () => {
+    token.value = authService.getToken()
     if (token.value && !account.value) {
-      try {
-        await loadUserData()
-      } catch (error) {
+      loadUserData().catch((error) => {
         console.warn('Failed to initialize auth state:', error)
-      }
+      })
     }
   }
 
@@ -128,6 +170,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     currentTenant,
     availableQuickLogins,
+    quickLogins,
 
     // Getters
     isAuthenticated,
@@ -136,6 +179,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     logout,
+    register,
     loadUserData,
     updateProfile,
     initialize,
@@ -148,5 +192,6 @@ export const useAuthStore = defineStore('auth', () => {
     switchTenant,
     hasPermission,
     canAccess,
+    canAccessResource,
   }
 })

@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tenants', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->string('logo_url')->nullable();
             $table->boolean('is_personal')->default(false);
             $table->json('settings')->nullable();
             $table->boolean('is_active')->default(true);

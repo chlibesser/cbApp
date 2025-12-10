@@ -18,12 +18,14 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_active')->default(true);
+            $table->string('system_role')->nullable()->comment('Global system role: admin, tenant_admin, member');
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
             
             $table->index(['username', 'email']);
             $table->index('is_active');
+            $table->index('system_role');
         });
     }
 

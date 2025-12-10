@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Core\Shared\Models\Permission;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class PermissionSeeder extends Seeder
 {
@@ -44,10 +45,13 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission['name']],
-                $permission
-            );
+            $existing = Permission::where('name', $permission['name'])->first();
+            
+            if (!$existing) {
+                Permission::create(array_merge($permission, [
+                    'id' => (string) Str::uuid()
+                ]));
+            }
         }
     }
 }

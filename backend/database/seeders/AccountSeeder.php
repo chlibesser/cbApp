@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Core\Auth\Enums\SystemRole;
 use App\Core\Auth\Models\Account;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,22 +18,34 @@ class AccountSeeder extends Seeder
         $companyTenant = \App\Core\Tenant\Models\Tenant::where('slug', 'demo-firma')->first();
         $personalTenant = \App\Core\Tenant\Models\Tenant::where('slug', 'max-mustermann')->first();
 
-        // Owner für Personal Tenant
-        $maxAccount = Account::firstOrCreate([
-            'username' => 'max'
-        ], [
-            'email' => 'max@cbapp.test',
-            'password' => Hash::make('password'),
-            'is_active' => true,
-        ]);
-
-        // Admin für Company Tenant
+        // Global Admin (kann alles)
         $adminAccount = Account::firstOrCreate([
             'username' => 'admin'
         ], [
             'email' => 'admin@cbapp.test',
             'password' => Hash::make('password'),
             'is_active' => true,
+            'system_role' => SystemRole::ADMIN,
+        ]);
+
+        // Owner für Personal Tenant (Member mit Owner-Rolle im Tenant)
+        $maxAccount = Account::firstOrCreate([
+            'username' => 'max'
+        ], [
+            'email' => 'max@cbapp.test',
+            'password' => Hash::make('password'),
+            'is_active' => true,
+            'system_role' => SystemRole::MEMBER,
+        ]);
+
+        // Tenant Admin für Company Tenant
+        $tenantAdminAccount = Account::firstOrCreate([
+            'username' => 'tenantadmin'
+        ], [
+            'email' => 'tenantadmin@cbapp.test',
+            'password' => Hash::make('password'),
+            'is_active' => true,
+            'system_role' => SystemRole::TENANT_ADMIN,
         ]);
 
         // Buchhalter Full für Company Tenant
@@ -42,6 +55,7 @@ class AccountSeeder extends Seeder
             'email' => 'buchhalter@cbapp.test',
             'password' => Hash::make('password'),
             'is_active' => true,
+            'system_role' => SystemRole::MEMBER,
         ]);
 
         // Buchhalter Read-Only für Company Tenant
@@ -51,6 +65,7 @@ class AccountSeeder extends Seeder
             'email' => 'lese@cbapp.test',
             'password' => Hash::make('password'),
             'is_active' => true,
+            'system_role' => SystemRole::MEMBER,
         ]);
 
         // Basic User für Company Tenant
@@ -60,36 +75,39 @@ class AccountSeeder extends Seeder
             'email' => 'user@cbapp.test',
             'password' => Hash::make('password'),
             'is_active' => true,
+            'system_role' => SystemRole::MEMBER,
         ]);
 
         // Assign accounts to tenants with roles
         if ($personalTenant && $companyTenant) {
-            $ownerRole = \App\Core\Tenant\Models\Role::where('tenant_id', $personalTenant->id)->where('name', 'Owner')->first();
-            $adminRole = \App\Core\Tenant\Models\Role::where('tenant_id', $companyTenant->id)->where('name', 'Admin')->first();
+            $personalOwnerRole = \App\Core\Tenant\Models\Role::where('tenant_id', $personalTenant->id)->where('name', 'Owner')->first();
+            $companyAdminRole = \App\Core\Tenant\Models\Role::where('tenant_id', $companyTenant->id)->where('name', 'Admin')->first();
             $buchhalterFullRole = \App\Core\Tenant\Models\Role::where('tenant_id', $companyTenant->id)->where('name', 'Buchhalter (Full)')->first();
             $buchhalterReadRole = \App\Core\Tenant\Models\Role::where('tenant_id', $companyTenant->id)->where('name', 'Buchhalter (Read-Only)')->first();
             $userRole = \App\Core\Tenant\Models\Role::where('tenant_id', $companyTenant->id)->where('name', 'User')->first();
 
-            // Max: Owner of personal tenant
-            $maxAccount->tenants()->syncWithoutDetaching([$personalTenant->id => ['role_id' => $ownerRole->id]]);
-
-            // Admin: Admin of company tenant
-            $adminAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $adminRole->id]]);
-
-            // Buchhalter: Full access to accounting in company tenant
-            $buchhalterAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $buchhalterFullRole->id]]);
-
-            // Lese: Read-only access to accounting in company tenant
-            $leseAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $buchhalterReadRole->id]]);
-
-            // User: Basic access to company tenant
-            $userAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $userRole->id]]);
-
-            // Create profiles for all users
+            // Max: Owner of his personal workspace (selbst-registriert)
+            $maxAccount->tenants()->syncWithoutDetaching([$personalTenant->id => ['role_id' => $personalOwnerRole->id]]);
             $this->createProfile($maxAccount, $personalTenant, 'Max Mustermann', 'Max', 'Mustermann');
-            $this->createProfile($adminAccount, $companyTenant, 'Admin User', 'Admin', 'User');
+
+            // Global Admin: Admin in company tenant (hat System-Role ADMIN, braucht keinen Personal Tenant)
+            $adminAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $companyAdminRole->id]]);
+            $this->createProfile($adminAccount, $companyTenant, 'Global Administrator', 'Global', 'Administrator');
+
+            // Tenant Admin: Admin of company tenant (System-Role TENANT_ADMIN)
+            $tenantAdminAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $companyAdminRole->id]]);
+            $this->createProfile($tenantAdminAccount, $companyTenant, 'Tenant Administrator', 'Tenant', 'Administrator');
+
+            // Buchhalter: Full access to accounting in company tenant (eingeladen)
+            $buchhalterAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $buchhalterFullRole->id]]);
             $this->createProfile($buchhalterAccount, $companyTenant, 'Buchhalter Vollzugriff', 'Buchhalter', 'Vollzugriff');
+
+            // Lese: Read-only access to accounting in company tenant (eingeladen)
+            $leseAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $buchhalterReadRole->id]]);
             $this->createProfile($leseAccount, $companyTenant, 'Buchhalter Readonly', 'Buchhalter', 'Readonly');
+
+            // User: Basic access to company tenant (eingeladen)
+            $userAccount->tenants()->syncWithoutDetaching([$companyTenant->id => ['role_id' => $userRole->id]]);
             $this->createProfile($userAccount, $companyTenant, 'Basic User', 'Basic', 'User');
         }
     }

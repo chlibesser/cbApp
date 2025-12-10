@@ -2,11 +2,13 @@
 
 namespace App\Core\Auth\Models;
 
+use App\Core\Auth\Enums\SystemRole;
 use App\Core\Shared\Models\BaseModel;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -23,13 +25,14 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class Account extends BaseModel implements AuthenticatableContract, AuthorizableContract
 {
-    use Authenticatable, Authorizable, HasApiTokens, HasUuids;
+    use Authenticatable, Authorizable, HasApiTokens, HasUuids, HasFactory;
 
     protected $fillable = [
         'username',
         'email', 
         'password',
         'is_active',
+        'system_role',
     ];
 
     protected $hidden = [
@@ -41,6 +44,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'system_role' => SystemRole::class,
     ];
 
     /**
@@ -117,5 +121,92 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     {
         $role = $this->getRoleForTenant($tenantId);
         return $role ? $role->permissions : collect();
+    }
+
+    // SystemRole Helper Methods
+
+    /**
+     * Check if account is global admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->system_role === SystemRole::ADMIN;
+    }
+
+    /**
+     * Check if account is tenant admin
+     */
+    public function isTenantAdmin(): bool
+    {
+        return $this->system_role === SystemRole::TENANT_ADMIN;
+    }
+
+    /**
+     * Check if account is member
+     */
+    public function isMember(): bool
+    {
+        return $this->system_role === SystemRole::MEMBER;
+    }
+
+    /**
+     * Check if account can manage tenants (create/delete)
+     */
+    public function canManageTenants(): bool
+    {
+        return $this->system_role?->canManageTenants() ?? false;
+    }
+
+    /**
+     * Check if account can manage own tenant content
+     */
+    public function canManageOwnTenant(): bool
+    {
+        return $this->system_role?->canManageOwnTenant() ?? false;
+    }
+
+    /**
+     * Check if account has a global permission
+     */
+    public function hasGlobalPermission(string $permission): bool
+    {
+        return $this->system_role?->hasGlobalPermission($permission) ?? false;
+    }
+
+    /**
+     * Get all global permissions for this account
+     */
+    public function getGlobalPermissions(): array
+    {
+        return $this->system_role?->getGlobalPermissions() ?? [];
+    }
+
+    /**
+     * Enhanced permission check including system role
+     */
+    public function hasPermissionEnhanced($tenantId, $resource, $action): bool
+    {
+        // Global admin has all permissions
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // Check global permission first
+        $globalPermission = "{$resource}.{$action}";
+        if ($this->hasGlobalPermission($globalPermission)) {
+            return true;
+        }
+
+        // Fall back to tenant-specific permissions
+        return $this->hasPermission($tenantId, $resource, $action);
+    }
+
+    /**
+     * Set system role
+     */
+    public function assignSystemRole(SystemRole $role): void
+    {
+        $this->system_role = $role;
+        $this->save();
     }
 }
