@@ -105,6 +105,29 @@ frontend/src/domains/
 - Infrastructure-Änderungen für domainübergreifende Features
 - Bug-Fixes die mehrere Domains tangieren
 
+## 🗃️ Datenbank-Architektur
+
+**WICHTIG**: Alle IDs in der Datenbank sind **UUIDs**, keine Auto-Increment Integers!
+
+### UUID-Verwendung
+- **Accounts**: UUID Primary Keys
+- **Alle Relations**: UUID Foreign Keys
+- **Morphable Relations**: `uuidMorphs()` statt `morphs()`
+- **Personal Access Tokens**: UUID tokenable_id
+
+### Beispiel Migration:
+```php
+// RICHTIG ✅
+$table->uuid('id')->primary();
+$table->foreignUuid('account_id')->constrained();
+$table->uuidMorphs('tokenable');
+
+// FALSCH ❌
+$table->id();
+$table->foreignId('account_id')->constrained();
+$table->morphs('tokenable');
+```
+
 ## 🌐 Server-Konfiguration
 
 **Backend (Laravel)**: 
@@ -116,6 +139,11 @@ frontend/src/domains/
 **Frontend (Vue.js)**: 
 - Port: **5173** (Vite Standard)
 - Start: `pnpm dev`
+
+**Datenbank (PostgreSQL)**:
+- Port: **5432**
+- Database: `cbapp_v1`
+- Extension: `pgvector` (für zukünftige ML-Features)
 
 ---
 
