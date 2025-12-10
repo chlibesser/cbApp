@@ -7,5 +7,5 @@
 </template>
 
 <script setup lang="ts">
-// This is the main app component
+  // This is the main app component
 </script>

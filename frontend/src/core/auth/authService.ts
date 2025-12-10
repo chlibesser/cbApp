@@ -1,4 +1,11 @@
-import type { LoginCredentials, LoginResponse, Account, Profile } from './types'
+import type { 
+  LoginCredentials, 
+  LoginResponse, 
+  Account, 
+  Profile,
+  QuickLoginResponse,
+  QuickLoginListResponse
+} from './types'
 import { apiClient } from '../api/apiClient'
 
 export class AuthService {
@@ -37,6 +44,21 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.getToken()
+  }
+
+  // Quick Login Methods
+  async getQuickLogins(): Promise<QuickLoginListResponse> {
+    const response = await apiClient.get<QuickLoginListResponse>('/auth/quick-login')
+    return response.data
+  }
+
+  async quickLogin(username: string, tenantId?: number): Promise<QuickLoginResponse> {
+    const response = await apiClient.post<QuickLoginResponse>('/auth/quick-login', {
+      username,
+      tenant_id: tenantId,
+    })
+    this.setToken(response.data.token)
+    return response.data
   }
 }
 

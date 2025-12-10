@@ -14,7 +14,7 @@ export const useTenantStore = defineStore('tenant', () => {
   const loadTenants = async () => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await tenantService.getTenants()
       tenants.value = response.data
@@ -40,7 +40,7 @@ export const useTenantStore = defineStore('tenant', () => {
   const updateTenant = async (id: number, tenantData: Partial<Tenant>) => {
     try {
       const updatedTenant = await tenantService.updateTenant(id, tenantData)
-      const index = tenants.value.findIndex(t => t.id === id)
+      const index = tenants.value.findIndex((t) => t.id === id)
       if (index !== -1) {
         tenants.value[index] = updatedTenant
       }
@@ -54,7 +54,7 @@ export const useTenantStore = defineStore('tenant', () => {
   const deleteTenant = async (id: number) => {
     try {
       await tenantService.deleteTenant(id)
-      tenants.value = tenants.value.filter(t => t.id !== id)
+      tenants.value = tenants.value.filter((t) => t.id !== id)
     } catch (err: any) {
       error.value = err.message || 'Failed to delete tenant'
       throw err
@@ -75,13 +75,13 @@ export const useTenantStore = defineStore('tenant', () => {
     currentTenant,
     loading,
     error,
-    
+
     // Actions
     loadTenants,
     createTenant,
     updateTenant,
     deleteTenant,
     setCurrentTenant,
-    clearError
+    clearError,
   }
 })

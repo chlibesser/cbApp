@@ -9,7 +9,7 @@ export function useApi<T>() {
   const execute = async (apiCall: () => Promise<T>) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const result = await apiCall()
       data.value = result
@@ -33,6 +33,6 @@ export function useApi<T>() {
     loading,
     error,
     execute,
-    reset
+    reset,
   }
 }

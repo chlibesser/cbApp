@@ -3,28 +3,26 @@
 namespace App\Domains\Identity\Models;
 
 use App\Core\Auth\Models\Account;
-use App\Core\Shared\Models\BaseModel;
+use Illuminate\Database\Eloquent\Model;
 use App\Core\Tenant\Models\Tenant;
 
 /**
  * Profile Model - Tenant-specific identity
  */
-class Profile extends BaseModel
+class Profile extends Model
 {
     protected $fillable = [
         'account_id',
         'tenant_id',
+        'display_name',
         'first_name',
         'last_name',
-        'display_name',
-        'avatar_url',
-        'settings',
-        'is_active',
+        'avatar',
+        'preferences',
     ];
 
     protected $casts = [
-        'settings' => 'array',
-        'is_active' => 'boolean',
+        'preferences' => 'array',
     ];
 
     /**
@@ -44,11 +42,11 @@ class Profile extends BaseModel
     }
 
     /**
-     * Get the roles assigned to this profile
+     * Get the role assigned to the account for this tenant
      */
-    public function roles()
+    public function role()
     {
-        return $this->belongsToMany(Role::class);
+        return $this->account->getRoleForTenant($this->tenant_id);
     }
 
     /**

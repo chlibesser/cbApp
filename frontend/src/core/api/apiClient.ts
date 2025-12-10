@@ -8,7 +8,7 @@ export class ApiClient {
     this.baseURL = baseURL
     this.defaultHeaders = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     }
   }
 
@@ -16,12 +16,9 @@ export class ApiClient {
     return localStorage.getItem('auth_token')
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
-    
+
     const headers = {
       ...this.defaultHeaders,
       ...options.headers,

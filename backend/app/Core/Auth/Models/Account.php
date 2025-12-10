@@ -76,4 +76,46 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     {
         return !is_null($this->email_verified_at);
     }
+
+    /**
+     * Get all tenants associated with this account
+     */
+    public function tenants()
+    {
+        return $this->belongsToMany(\App\Core\Tenant\Models\Tenant::class, 'tenant_user')
+                    ->withPivot('role_id')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the role for a specific tenant
+     */
+    public function getRoleForTenant($tenantId)
+    {
+        $pivot = $this->tenants()->where('tenant_id', $tenantId)->first()?->pivot;
+        return $pivot ? \App\Core\Tenant\Models\Role::find($pivot->role_id) : null;
+    }
+
+    /**
+     * Check if account has permission for a specific tenant
+     */
+    public function hasPermission($tenantId, $resource, $action)
+    {
+        $role = $this->getRoleForTenant($tenantId);
+        if (!$role) return false;
+
+        return $role->permissions()
+                   ->where('resource', $resource)
+                   ->where('action', $action)
+                   ->exists();
+    }
+
+    /**
+     * Get all permissions for a specific tenant
+     */
+    public function getPermissionsForTenant($tenantId)
+    {
+        $role = $this->getRoleForTenant($tenantId);
+        return $role ? $role->permissions : collect();
+    }
 }

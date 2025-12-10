@@ -37,3 +37,37 @@ export interface LoginResponse {
   account: Account
   profile: Profile
 }
+
+export interface Role {
+  id: number
+  name: string
+  description?: string
+  permissions: string[]
+}
+
+export interface Tenant {
+  id: number
+  name: string
+  slug: string
+  is_personal: boolean
+  role?: Role
+}
+
+export interface QuickLoginAccount {
+  id: string
+  username: string
+  email: string
+  tenants: Tenant[]
+}
+
+export interface QuickLoginResponse {
+  message: string
+  account: Account
+  current_tenant?: Tenant
+  token: string
+}
+
+export interface QuickLoginListResponse {
+  accounts: QuickLoginAccount[]
+  environment: string
+}

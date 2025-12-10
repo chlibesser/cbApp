@@ -9,19 +9,19 @@ const AdminLayout = () => import('../../domains/admin/layouts/AdminLayout.vue')
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/dashboard',
   },
   {
     path: '/login',
     name: 'login',
     component: LoginView,
-    meta: { guestOnly: true }
+    meta: { guestOnly: true },
   },
   {
     path: '/dashboard',
     name: 'dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/admin',
@@ -30,25 +30,25 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: '/admin/tenants'
+        redirect: '/admin/tenants',
       },
       {
         path: 'tenants',
         name: 'admin-tenants',
-        component: () => import('../../domains/admin/views/TenantsView.vue')
+        component: () => import('../../domains/admin/views/TenantsView.vue'),
       },
       {
         path: 'accounts',
         name: 'admin-accounts',
-        component: () => import('../../domains/admin/views/AccountsView.vue')
-      }
-    ]
-  }
+        component: () => import('../../domains/admin/views/AccountsView.vue'),
+      },
+    ],
+  },
 ]
 
 export const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
 // Apply guards

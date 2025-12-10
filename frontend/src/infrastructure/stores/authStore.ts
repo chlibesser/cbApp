@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Account, Profile, LoginCredentials, AuthState } from '../../core/auth'
+import type { Account, Profile, LoginCredentials, AuthState, Tenant, QuickLoginAccount } from '../../core/auth'
 import { authService } from '../../core/auth'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -8,23 +8,25 @@ export const useAuthStore = defineStore('auth', () => {
   const account = ref<Account | null>(null)
   const profile = ref<Profile | null>(null)
   const token = ref<string | null>(authService.getToken())
+  const currentTenant = ref<Tenant | null>(null)
+  const availableQuickLogins = ref<QuickLoginAccount[]>([])
 
   // Getters
   const isAuthenticated = computed(() => !!token.value)
   const user = computed(() => ({
     account: account.value,
-    profile: profile.value
+    profile: profile.value,
   }))
 
   // Actions
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await authService.login(credentials)
-      
+
       token.value = response.token
       account.value = response.account
       profile.value = response.profile
-      
+
       return response
     } catch (error) {
       // Clear any existing auth data on login failure
@@ -45,6 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null
       account.value = null
       profile.value = null
+      currentTenant.value = null
       authService.removeToken()
     }
   }
@@ -67,6 +70,46 @@ export const useAuthStore = defineStore('auth', () => {
     profile.value = updatedProfile
   }
 
+  // Quick Login Actions
+  const loadQuickLogins = async () => {
+    try {
+      const response = await authService.getQuickLogins()
+      availableQuickLogins.value = response.accounts
+    } catch (error) {
+      console.warn('Failed to load quick logins:', error)
+      availableQuickLogins.value = []
+    }
+  }
+
+  const quickLogin = async (username: string, tenantId?: number) => {
+    try {
+      const response = await authService.quickLogin(username, tenantId)
+
+      token.value = response.token
+      account.value = response.account
+      currentTenant.value = response.current_tenant
+
+      return response
+    } catch (error) {
+      await logout()
+      throw error
+    }
+  }
+
+  // Tenant Management
+  const switchTenant = (tenant: Tenant) => {
+    currentTenant.value = tenant
+  }
+
+  const hasPermission = (permission: string): boolean => {
+    if (!currentTenant.value?.role?.permissions) return false
+    return currentTenant.value.role.permissions.includes(permission)
+  }
+
+  const canAccess = (resource: string, action: string): boolean => {
+    return hasPermission(`${resource}.${action}`)
+  }
+
   // Initialize auth state
   const initialize = async () => {
     if (token.value && !account.value) {
@@ -83,16 +126,27 @@ export const useAuthStore = defineStore('auth', () => {
     account,
     profile,
     token,
-    
+    currentTenant,
+    availableQuickLogins,
+
     // Getters
     isAuthenticated,
     user,
-    
+
     // Actions
     login,
     logout,
     loadUserData,
     updateProfile,
-    initialize
+    initialize,
+
+    // Quick Login Actions
+    loadQuickLogins,
+    quickLogin,
+
+    // Tenant Management
+    switchTenant,
+    hasPermission,
+    canAccess,
   }
 })
