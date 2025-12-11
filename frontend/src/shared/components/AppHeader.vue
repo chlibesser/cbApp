@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar app>
+  <v-app-bar app fixed elevation="2">
     <!-- Sidebar Toggle Button -->
     <v-btn
       icon
@@ -18,6 +18,31 @@
       />
       <span class="text-h6 font-weight-medium text-white">cbApp</span>
     </router-link>
+
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs
+      v-if="breadcrumbs.length > 0"
+      :items="breadcrumbs"
+      class="flex-grow-0 pa-0"
+      density="compact"
+    >
+      <template v-slot:prepend>
+        <v-icon size="small" class="me-2">mdi-home</v-icon>
+      </template>
+      
+      <template v-slot:item="{ item, index }">
+        <v-breadcrumbs-item
+          :disabled="index === breadcrumbs.length - 1"
+          :to="item.to"
+        >
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+      
+      <template v-slot:divider>
+        <v-icon size="small">mdi-chevron-right</v-icon>
+      </template>
+    </v-breadcrumbs>
 
     <v-spacer />
 
@@ -130,16 +155,51 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { useRouter, useRoute } from 'vue-router'
   import { useAuthStore } from '../../infrastructure/stores/authStore'
   import { useLayoutStore } from '../../infrastructure/stores/layoutStore'
 
   const router = useRouter()
+  const route = useRoute()
   const authStore = useAuthStore()
   const layoutStore = useLayoutStore()
 
   const account = computed(() => authStore.account)
   const currentTenant = computed(() => authStore.currentTenant)
+
+  // Breadcrumbs logic based on current route
+  const breadcrumbs = computed(() => {
+    const crumbs: Array<{ title: string; to?: string }> = []
+    
+    // Always start with Dashboard
+    crumbs.push({ title: 'Dashboard', to: '/dashboard' })
+    
+    // Route-specific breadcrumbs
+    if (route.path.startsWith('/admin/')) {
+      crumbs.push({ title: 'Admin' })
+      
+      if (route.name === 'admin-tenants') {
+        crumbs.push({ title: 'Tenants' })
+      } else if (route.name === 'admin-accounts') {
+        crumbs.push({ title: 'Accounts' })
+      }
+    } else if (route.path.startsWith('/tenant/')) {
+      crumbs.push({ title: 'Tenant' })
+      
+      if (route.name === 'tenant-categories') {
+        crumbs.push({ title: 'Categories' })
+      }
+    } else if (route.path.startsWith('/profile')) {
+      crumbs.push({ title: 'Profile' })
+    }
+    
+    // Remove Dashboard if we're actually on dashboard
+    if (route.name === 'dashboard') {
+      return []
+    }
+    
+    return crumbs
+  })
   
   // Mock available tenants for demo - in real app this would come from the store
   const availableTenants = computed(() => {
