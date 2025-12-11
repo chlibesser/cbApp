@@ -1,159 +1,177 @@
 <template>
-  <div>
-    <v-row class="mb-4">
-      <v-col>
-        <h1>Tenants</h1>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn color="primary" @click="showCreateDialog = true">
-          <v-icon left>mdi-plus</v-icon>
-          Add Tenant
-        </v-btn>
-      </v-col>
-    </v-row>
+  <div class="tenants-view">
+    <!-- Page Header -->
+    <div class="d-flex align-center justify-space-between mb-4">
+      <div>
+        <h1 class="text-h4 font-weight-bold">Tenant-Verwaltung</h1>
+        <p class="text-subtitle-1 text-medium-emphasis">
+          Verwalten Sie alle System-Tenants
+        </p>
+      </div>
+      
+      <v-chip 
+        v-if="totalCount !== undefined" 
+        color="primary" 
+        variant="tonal"
+        size="large"
+        class="px-4"
+      >
+        {{ totalCount }} Tenants
+      </v-chip>
+    </div>
 
+    <!-- Advanced Data Table -->
     <v-card>
-      <v-data-table :headers="headers" :items="tenants" :loading="loading" item-key="id">
-        <template v-slot:item.is_active="{ item }">
-          <v-chip :color="item.is_active ? 'success' : 'error'" small>
-            {{ item.is_active ? 'Active' : 'Inactive' }}
+      <AdvancedDataTable
+        :entity-config="tenantEntityConfig"
+        @item-selected="handleItemSelected"
+        @item-double-click="viewTenant"
+        @create="createTenant"
+        @update:count="handleCountUpdate"
+      >
+        <!-- Custom slot for name with link -->
+        <template #item.name="{ item }">
+          <div>
+            <div class="font-weight-medium">{{ item.name }}</div>
+            <div class="text-caption text-medium-emphasis">{{ item.slug }}</div>
+          </div>
+        </template>
+
+        <!-- Custom slot for status -->
+        <template #item.is_active="{ item }">
+          <v-chip 
+            :color="item.is_active ? 'success' : 'error'"
+            variant="tonal"
+            size="x-small"
+          >
+            {{ item.is_active ? 'Aktiv' : 'Inaktiv' }}
           </v-chip>
         </template>
 
-        <template v-slot:item.actions="{ item }">
-          <v-btn icon size="small" @click="editTenant(item)">
-            <v-icon>mdi-pencil</v-icon>
-          </v-btn>
-          <v-btn icon size="small" color="error" @click="deleteTenant(item.id)">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
+        <!-- Custom slot for user count -->
+        <template #item.current_users_count="{ item }">
+          <div class="text-center">
+            <span class="font-weight-medium">{{ item.current_users_count || 0 }}</span>
+            <span class="text-caption text-medium-emphasis">
+              / {{ item.max_users || '∞' }}
+            </span>
+          </div>
         </template>
-      </v-data-table>
-    </v-card>
 
-    <!-- Create/Edit Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="500">
-      <v-card>
-        <v-card-title>
-          {{ editingTenant ? 'Edit Tenant' : 'Create Tenant' }}
-        </v-card-title>
-        <v-card-text>
-          <v-form v-model="formValid">
-            <v-text-field v-model="tenantForm.name" label="Name" :rules="nameRules" required />
-            <v-text-field
-              v-model="tenantForm.subdomain"
-              label="Subdomain"
-              :rules="subdomainRules"
-              required
-            />
-            <v-switch v-if="editingTenant" v-model="tenantForm.is_active" label="Active" />
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="closeDialog">Cancel</v-btn>
-          <v-btn color="primary" :disabled="!formValid" @click="saveTenant">
-            {{ editingTenant ? 'Update' : 'Create' }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <!-- Custom slot for actions -->
+        <template #item.actions="{ item }">
+          <div class="d-flex gap-1">
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              @click="viewTenant(item)"
+            >
+              <v-icon size="18">mdi-eye</v-icon>
+              <v-tooltip activator="parent">Ansehen</v-tooltip>
+            </v-btn>
+            
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              @click="editTenant(item)"
+            >
+              <v-icon size="18">mdi-pencil</v-icon>
+              <v-tooltip activator="parent">Bearbeiten</v-tooltip>
+            </v-btn>
+            
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              @click="switchToTenant(item)"
+              color="primary"
+            >
+              <v-icon size="18">mdi-swap-horizontal</v-icon>
+              <v-tooltip activator="parent">Zu Tenant wechseln</v-tooltip>
+            </v-btn>
+            
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              color="error"
+              @click="deleteTenant(item)"
+            >
+              <v-icon size="18">mdi-delete</v-icon>
+              <v-tooltip activator="parent">Löschen</v-tooltip>
+            </v-btn>
+          </div>
+        </template>
+      </AdvancedDataTable>
+    </v-card>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
-  import type { Tenant } from '../types'
-  import { tenantService } from '../services/tenantService'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { AdvancedDataTable } from '@/shared/components'
+import { tenantEntityConfig } from '@/config/entities'
+import { useRSDStore } from '@/infrastructure/stores/rsdStore'
+import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
+import { useTenantStore } from '@/infrastructure/stores/tenantStore'
+import { tenantService } from '../services/tenantService'
+import type { Tenant } from '../types'
 
-  const tenants = ref<Tenant[]>([])
-  const loading = ref(false)
-  const showCreateDialog = ref(false)
-  const formValid = ref(false)
-  const editingTenant = ref<Tenant | null>(null)
+const router = useRouter()
+const rsdStore = useRSDStore()
+const layoutStore = useLayoutStore()
+const tenantStore = useTenantStore()
+const totalCount = ref<number>()
 
-  const tenantForm = ref({
-    name: '',
-    subdomain: '',
-    is_active: true,
+function handleItemSelected(item: Tenant) {
+  console.log('Selected tenant:', item)
+}
+
+function handleCountUpdate(count: number) {
+  totalCount.value = count
+}
+
+function viewTenant(item: Tenant) {
+  router.push(`/admin/tenants/${item.id}`)
+}
+
+function editTenant(item: Tenant) {
+  rsdStore.open('tenant', 'edit', item)
+}
+
+function createTenant() {
+  rsdStore.open('tenant', 'create')
+}
+
+async function switchToTenant(item: Tenant) {
+  try {
+    await tenantStore.switchTenant(item.id)
+    layoutStore.showSuccess(`Zu Tenant "${item.name}" gewechselt`)
+    router.push('/dashboard')
+  } catch (error: any) {
+    layoutStore.showError(error.response?.data?.message || 'Fehler beim Wechseln des Tenants')
+  }
+}
+
+async function deleteTenant(item: Tenant) {
+  const confirmed = await new Promise<boolean>(resolve => {
+    // Using browser confirm for now - can be replaced with custom dialog
+    resolve(confirm(`Möchten Sie den Tenant "${item.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`))
   })
+  
+  if (!confirmed) return
 
-  const headers = [
-    { title: 'ID', key: 'id' },
-    { title: 'Name', key: 'name' },
-    { title: 'Subdomain', key: 'subdomain' },
-    { title: 'Status', key: 'is_active' },
-    { title: 'Created', key: 'created_at' },
-    { title: 'Actions', key: 'actions', sortable: false },
-  ]
-
-  const nameRules = [(v: string) => !!v || 'Name is required']
-
-  const subdomainRules = [
-    (v: string) => !!v || 'Subdomain is required',
-    (v: string) =>
-      /^[a-z0-9-]+$/.test(v) ||
-      'Subdomain must contain only lowercase letters, numbers, and hyphens',
-  ]
-
-  const loadTenants = async () => {
-    loading.value = true
-    try {
-      const response = await tenantService.getTenants()
-      tenants.value = response.data
-    } catch (error) {
-      console.error('Failed to load tenants:', error)
-    } finally {
-      loading.value = false
-    }
+  try {
+    await tenantService.deleteTenant(item.id)
+    layoutStore.showSuccess('Tenant wurde gelöscht')
+    
+    // Trigger table refresh
+    window.dispatchEvent(new CustomEvent('refresh-tables'))
+  } catch (error: any) {
+    layoutStore.showError(error.response?.data?.message || 'Fehler beim Löschen des Tenants')
   }
-
-  const editTenant = (tenant: Tenant) => {
-    editingTenant.value = tenant
-    tenantForm.value = {
-      name: tenant.name,
-      subdomain: tenant.subdomain,
-      is_active: tenant.is_active,
-    }
-    showCreateDialog.value = true
-  }
-
-  const saveTenant = async () => {
-    try {
-      if (editingTenant.value) {
-        await tenantService.updateTenant(editingTenant.value.id, tenantForm.value)
-      } else {
-        await tenantService.createTenant(tenantForm.value)
-      }
-      await loadTenants()
-      closeDialog()
-    } catch (error) {
-      console.error('Failed to save tenant:', error)
-    }
-  }
-
-  const deleteTenant = async (id: number) => {
-    if (confirm('Are you sure you want to delete this tenant?')) {
-      try {
-        await tenantService.deleteTenant(id)
-        await loadTenants()
-      } catch (error) {
-        console.error('Failed to delete tenant:', error)
-      }
-    }
-  }
-
-  const closeDialog = () => {
-    showCreateDialog.value = false
-    editingTenant.value = null
-    tenantForm.value = {
-      name: '',
-      subdomain: '',
-      is_active: true,
-    }
-  }
-
-  onMounted(() => {
-    loadTenants()
-  })
+}
 </script>

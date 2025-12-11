@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
+use App\Core\Auth\Models\PersonalAccessToken;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Use custom PersonalAccessToken model with UUID support
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
     }
 }

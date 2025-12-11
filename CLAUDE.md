@@ -55,6 +55,61 @@ cbApp V1/
 
 Claude soll IMMER pnpm verwenden, nie npm oder yarn.
 
+## 📊 UI-Komponenten-System
+
+### **ADT (Advanced Data Table)**
+**Definition**: Enterprise-grade Tabellen-Komponente für Datenmanagement
+
+**Funktionen:**
+- Server-Side Processing (Pagination, Sortierung, Filterung)
+- Entity-basierte Konfiguration über EntityConfig
+- Multi-Type-Spalten (Text, Email, Boolean, Date, Number, etc.)
+- Resizable Columns mit Min-/Max-Width
+- Custom Slots für erweiterte Zelleninhalte
+- Automatische Filter-UI generiert aus Spalten-Definitionen
+- Event-System für CRUD-Operationen
+- TypeScript-typisiert für vollständige IDE-Unterstützung
+
+**Verwendung:**
+```vue
+<AdvancedDataTable
+  :columns="tableColumns"
+  :api-endpoint="/api/admin/tenants"
+  @create="handleCreate"
+  @item-selected="handleItemSelected"
+>
+  <template #item.status="{ item, value }">
+    <v-chip :color="value ? 'success' : 'error'">
+      {{ value ? 'Aktiv' : 'Inaktiv' }}
+    </v-chip>
+  </template>
+</AdvancedDataTable>
+```
+
+### **RSD (Right Side Drawer)**
+**Definition**: Rechte Seitenleiste für Detail-/Bearbeitungsansichten
+
+**Funktionen:**
+- Modal-artige Seitenleiste für CRUD-Operationen
+- Drei Modi: View, Edit, Create
+- Entity-spezifische Komponenten-Loading
+- Zentraler Store für State-Management
+- Event-System für Success/Error-Handling
+- Auto-Refresh der Tabellen nach Änderungen
+- Mobile-responsive Design
+
+**Verwendung über Store:**
+```typescript
+import { useRSDStore } from '@/infrastructure/stores/rsdStore'
+
+const rsdStore = useRSDStore()
+
+// Öffnen für verschiedene Modi
+rsdStore.openView('tenant', tenantData)
+rsdStore.openEdit('tenant', tenantData) 
+rsdStore.openCreate('tenant')
+```
+
 ## 🚧 Entwicklungsrichtlinien
 
 **WICHTIG**: Solange wir im **Entwicklungsmodus** sind:
@@ -198,6 +253,22 @@ $table->id();
 $table->foreignId('account_id')->constrained();
 $table->morphs('tokenable');
 ```
+
+## 🎨 View-Design Standards
+
+**WICHTIG**: Alle Views folgen einem einheitlichen Design-Pattern für Konsistenz und Professionalität.
+
+### Grundprinzipien:
+- **Minimalistisch**: Fokus auf Daten, keine überladenen UI-Elemente
+- **Einheitlich**: Alle Views verwenden das gleiche Layout-Pattern
+- **Modern**: Klares, professionelles Enterprise-Design
+
+### Standard-Struktur:
+1. **Header**: Titel + Beschreibung + Zähler-Chip
+2. **Optional**: Tab-Navigation für komplexere Views
+3. **Hauptinhalt**: ADT in v-card
+
+**Detaillierte Dokumentation**: Siehe `/docs/VIEW_DESIGN_STANDARDS.md`
 
 ## 🌐 Server-Konfiguration
 

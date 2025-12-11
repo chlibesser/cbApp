@@ -2,7 +2,7 @@
 
 namespace App\Infrastructure\Http\Middleware;
 
-use App\Core\Shared\Enums\SystemRole;
+use App\Core\Auth\Enums\SystemRole;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,32 +20,32 @@ class AdminOnly
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        // Check if user has super admin or tenant admin role
-        // This is a simplified check - you would implement proper role checking
-        $currentProfile = session('current_profile');
-        
-        if (!$currentProfile || !$this->isAdmin($currentProfile)) {
-            return response()->json(['message' => 'Access denied'], 403);
+        // Check if user has admin system role
+        if (!$this->isAdmin($user)) {
+            return response()->json([
+                'message' => 'Keine Berechtigung. Nur Administratoren haben Zugriff.',
+            ], 403);
         }
 
         return $next($request);
     }
 
     /**
-     * Check if profile has admin privileges
+     * Check if account has admin privileges
      */
-    private function isAdmin($profile): bool
+    private function isAdmin($account): bool
     {
-        // Implement your admin check logic here
-        // This is a placeholder implementation
-        return $profile->roles()
-            ->whereIn('slug', [
-                SystemRole::SUPER_ADMIN->value,
-                SystemRole::TENANT_ADMIN->value,
-            ])
-            ->exists();
+        $systemRole = $account->system_role;
+        
+        // If it's an Enum, use the built-in isAdmin method
+        if ($systemRole instanceof SystemRole) {
+            return $systemRole->isAdmin() || $systemRole->isTenantAdmin();
+        }
+        
+        // Fallback for string values (legacy)
+        return in_array($systemRole, ['admin', 'tenant_admin']);
     }
 }

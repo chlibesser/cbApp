@@ -4,6 +4,8 @@ export interface Account {
   email: string
   is_active: boolean
   email_verified_at?: string
+  system_role?: string | null
+  system_role_label?: string | null
   created_at: string
   updated_at: string
 }

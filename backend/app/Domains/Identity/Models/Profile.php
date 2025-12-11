@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Models;
 use App\Core\Auth\Models\Account;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use App\Core\Tenant\Models\Tenant;
 use Illuminate\Support\Str;
 
@@ -13,17 +14,7 @@ use Illuminate\Support\Str;
  */
 class Profile extends Model
 {
-    use HasFactory;
-    
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     */
-    public $incrementing = false;
-
-    /**
-     * The "type" of the auto-incrementing ID.
-     */
-    protected $keyType = 'string';
+    use HasFactory, HasUuids;
     
     protected $fillable = [
         'account_id',
@@ -31,27 +22,19 @@ class Profile extends Model
         'display_name',
         'first_name',
         'last_name',
+        'email',
+        'phone',
+        'system_role',
+        'is_active',
         'avatar',
         'preferences',
     ];
 
     protected $casts = [
         'preferences' => 'array',
+        'is_active' => 'boolean',
     ];
 
-    /**
-     * Generate UUID for new models
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            if (empty($model->id)) {
-                $model->id = (string) Str::uuid();
-            }
-        });
-    }
 
     /**
      * Get the account this profile belongs to

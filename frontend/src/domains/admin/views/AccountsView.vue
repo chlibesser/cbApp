@@ -1,140 +1,163 @@
 <template>
-  <div>
-    <v-row class="mb-4">
-      <v-col>
-        <h1>Accounts</h1>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn color="primary" @click="showCreateDialog = true">
-          <v-icon left>mdi-plus</v-icon>
-          Add Account
-        </v-btn>
-      </v-col>
-    </v-row>
+  <div class="accounts-view">
+    <!-- Page Header -->
+    <div class="d-flex align-center justify-space-between mb-4">
+      <div>
+        <h1 class="text-h4 font-weight-bold">Account-Verwaltung</h1>
+        <p class="text-subtitle-1 text-medium-emphasis">
+          Verwalten Sie alle System-Accounts
+        </p>
+      </div>
+      
+      <v-chip 
+        v-if="totalCount !== undefined" 
+        color="primary" 
+        variant="tonal"
+        size="large"
+        class="px-4"
+      >
+        {{ totalCount }} Accounts
+      </v-chip>
+    </div>
 
+    <!-- Advanced Data Table -->
     <v-card>
-      <v-data-table :headers="headers" :items="accounts" :loading="loading" item-key="id">
-        <template v-slot:item.email_verified_at="{ item }">
-          <v-chip :color="item.email_verified_at ? 'success' : 'warning'" small>
-            {{ item.email_verified_at ? 'Verified' : 'Unverified' }}
+      <AdvancedDataTable
+        :entity-config="accountEntityConfig"
+        @item-selected="handleItemSelected"
+        @item-double-click="viewAccount"
+        @create="createAccount"
+        @update:count="handleCountUpdate"
+      >
+        <!-- Custom slot for email verification status -->
+        <template #item.email_verified_at="{ item }">
+          <v-chip 
+            :color="item.email_verified_at ? 'success' : 'warning'"
+            variant="tonal"
+            size="x-small"
+          >
+            {{ item.email_verified_at ? 'Verifiziert' : 'Nicht verifiziert' }}
           </v-chip>
         </template>
 
-        <template v-slot:item.actions="{ item }">
-          <v-btn icon size="small" color="error" @click="deleteAccount(item.id)">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
+        <!-- Custom slot for system role -->
+        <template #item.system_role="{ item }">
+          <v-chip
+            :color="getSystemRoleColor(item.system_role)"
+            variant="tonal"
+            size="x-small"
+          >
+            {{ getSystemRoleLabel(item.system_role) }}
+          </v-chip>
         </template>
-      </v-data-table>
-    </v-card>
 
-    <!-- Create Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="500">
-      <v-card>
-        <v-card-title>Create Account</v-card-title>
-        <v-card-text>
-          <v-form v-model="formValid">
-            <v-text-field
-              v-model="accountForm.email"
-              label="Email"
-              type="email"
-              :rules="emailRules"
-              required
-            />
-            <v-text-field
-              v-model="accountForm.password"
-              label="Password"
-              type="password"
-              :rules="passwordRules"
-              required
-            />
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="closeDialog">Cancel</v-btn>
-          <v-btn color="primary" :disabled="!formValid" @click="saveAccount"> Create </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <!-- Custom slot for actions -->
+        <template #item.actions="{ item }">
+          <div class="d-flex gap-1">
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              @click="viewAccount(item)"
+            >
+              <v-icon size="18">mdi-eye</v-icon>
+              <v-tooltip activator="parent">Ansehen</v-tooltip>
+            </v-btn>
+            
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              @click="editAccount(item)"
+            >
+              <v-icon size="18">mdi-pencil</v-icon>
+              <v-tooltip activator="parent">Bearbeiten</v-tooltip>
+            </v-btn>
+            
+            <v-btn 
+              icon 
+              size="small" 
+              variant="text"
+              color="error"
+              @click="deleteAccount(item)"
+            >
+              <v-icon size="18">mdi-delete</v-icon>
+              <v-tooltip activator="parent">Löschen</v-tooltip>
+            </v-btn>
+          </div>
+        </template>
+      </AdvancedDataTable>
+    </v-card>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
-  import type { Account } from '../types'
-  import { accountService } from '../services/accountService'
+import { ref } from 'vue'
+import { AdvancedDataTable } from '@/shared/components'
+import { accountEntityConfig } from '@/config/entities'
+import { useRSDStore } from '@/infrastructure/stores/rsdStore'
+import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
+import { accountService } from '../services/accountService'
+import type { Account } from '../types'
 
-  const accounts = ref<Account[]>([])
-  const loading = ref(false)
-  const showCreateDialog = ref(false)
-  const formValid = ref(false)
+const rsdStore = useRSDStore()
+const layoutStore = useLayoutStore()
+const totalCount = ref<number>()
 
-  const accountForm = ref({
-    email: '',
-    password: '',
+function handleItemSelected(item: Account) {
+  console.log('Selected account:', item)
+}
+
+function handleCountUpdate(count: number) {
+  totalCount.value = count
+}
+
+function viewAccount(item: Account) {
+  rsdStore.open('account', 'view', item)
+}
+
+function editAccount(item: Account) {
+  rsdStore.open('account', 'edit', item)
+}
+
+function createAccount() {
+  rsdStore.open('account', 'create')
+}
+
+async function deleteAccount(item: Account) {
+  const confirmed = await new Promise<boolean>(resolve => {
+    // Using browser confirm for now - can be replaced with custom dialog
+    resolve(confirm(`Möchten Sie den Account "${item.email}" wirklich löschen?`))
   })
+  
+  if (!confirmed) return
 
-  const headers = [
-    { title: 'ID', key: 'id' },
-    { title: 'Email', key: 'email' },
-    { title: 'Status', key: 'email_verified_at' },
-    { title: 'Created', key: 'created_at' },
-    { title: 'Actions', key: 'actions', sortable: false },
-  ]
-
-  const emailRules = [
-    (v: string) => !!v || 'Email is required',
-    (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid',
-  ]
-
-  const passwordRules = [
-    (v: string) => !!v || 'Password is required',
-    (v: string) => v.length >= 8 || 'Password must be at least 8 characters',
-  ]
-
-  const loadAccounts = async () => {
-    loading.value = true
-    try {
-      const response = await accountService.getAccounts()
-      accounts.value = response.data
-    } catch (error) {
-      console.error('Failed to load accounts:', error)
-    } finally {
-      loading.value = false
-    }
+  try {
+    await accountService.deleteAccount(item.id)
+    layoutStore.showSuccess('Account wurde gelöscht')
+    
+    // Trigger table refresh
+    window.dispatchEvent(new CustomEvent('refresh-tables'))
+  } catch (error: any) {
+    layoutStore.showError(error.response?.data?.message || 'Fehler beim Löschen des Accounts')
   }
+}
 
-  const saveAccount = async () => {
-    try {
-      await accountService.createAccount(accountForm.value)
-      await loadAccounts()
-      closeDialog()
-    } catch (error) {
-      console.error('Failed to create account:', error)
-    }
+function getSystemRoleColor(role: string): string {
+  const colors: Record<string, string> = {
+    global_admin: 'error',
+    tenant_admin: 'warning', 
+    tenant_member: 'primary'
   }
+  return colors[role] || 'default'
+}
 
-  const deleteAccount = async (id: number) => {
-    if (confirm('Are you sure you want to delete this account?')) {
-      try {
-        await accountService.deleteAccount(id)
-        await loadAccounts()
-      } catch (error) {
-        console.error('Failed to delete account:', error)
-      }
-    }
+function getSystemRoleLabel(role: string): string {
+  const labels: Record<string, string> = {
+    global_admin: 'Global Admin',
+    tenant_admin: 'Tenant Admin',
+    tenant_member: 'Mitglied'
   }
-
-  const closeDialog = () => {
-    showCreateDialog.value = false
-    accountForm.value = {
-      email: '',
-      password: '',
-    }
-  }
-
-  onMounted(() => {
-    loadAccounts()
-  })
+  return labels[role] || role
+}
 </script>

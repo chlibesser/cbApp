@@ -18,7 +18,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/check-email', [RegisterController::class, 'checkEmail']);
     
     // Login/Logout
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login', [LoginController::class, 'login'])->name('login');
     Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/me', [LoginController::class, 'me'])->middleware('auth:sanctum');
     
@@ -26,3 +26,4 @@ Route::prefix('auth')->group(function () {
     Route::get('/quick-login', [QuickLoginController::class, 'index']);
     Route::post('/quick-login', [QuickLoginController::class, 'login']);
 });
+

@@ -59,40 +59,52 @@ class TenantSeeder extends Seeder
         }
 
         // Admin Role
-        $adminRole = Role::firstOrCreate([
-            'tenant_id' => $tenant->id,
-            'name' => 'Admin'
-        ], [
-            'description' => 'Administrator mit fast allen Rechten',
-            'is_system' => true,
-        ]);
+        $adminRole = Role::where(['tenant_id' => $tenant->id, 'name' => 'Admin'])->first();
+        if (!$adminRole) {
+            $adminRole = Role::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $tenant->id,
+                'name' => 'Admin',
+                'description' => 'Administrator mit fast allen Rechten',
+                'is_system' => true,
+            ]);
+        }
 
         // Buchhalter Full Role
-        $accountantFullRole = Role::firstOrCreate([
-            'tenant_id' => $tenant->id,
-            'name' => 'Buchhalter (Full)'
-        ], [
-            'description' => 'Vollzugriff auf Buchhaltung',
-            'is_system' => true,
-        ]);
+        $accountantFullRole = Role::where(['tenant_id' => $tenant->id, 'name' => 'Buchhalter (Full)'])->first();
+        if (!$accountantFullRole) {
+            $accountantFullRole = Role::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $tenant->id,
+                'name' => 'Buchhalter (Full)',
+                'description' => 'Vollzugriff auf Buchhaltung',
+                'is_system' => true,
+            ]);
+        }
 
         // Buchhalter Read-Only Role
-        $accountantReadRole = Role::firstOrCreate([
-            'tenant_id' => $tenant->id,
-            'name' => 'Buchhalter (Read-Only)'
-        ], [
-            'description' => 'Nur Lesezugriff auf Buchhaltung',
-            'is_system' => true,
-        ]);
+        $accountantReadRole = Role::where(['tenant_id' => $tenant->id, 'name' => 'Buchhalter (Read-Only)'])->first();
+        if (!$accountantReadRole) {
+            $accountantReadRole = Role::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $tenant->id,
+                'name' => 'Buchhalter (Read-Only)',
+                'description' => 'Nur Lesezugriff auf Buchhaltung',
+                'is_system' => true,
+            ]);
+        }
 
         // User Role
-        $userRole = Role::firstOrCreate([
-            'tenant_id' => $tenant->id,
-            'name' => 'User'
-        ], [
-            'description' => 'Basis-Benutzer',
-            'is_system' => true,
-        ]);
+        $userRole = Role::where(['tenant_id' => $tenant->id, 'name' => 'User'])->first();
+        if (!$userRole) {
+            $userRole = Role::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $tenant->id,
+                'name' => 'User',
+                'description' => 'Basis-Benutzer',
+                'is_system' => true,
+            ]);
+        }
 
         // Assign permissions
         $this->assignPermissions($ownerRole, Permission::all()->pluck('id')->toArray());

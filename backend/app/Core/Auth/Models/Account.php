@@ -87,6 +87,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     public function tenants()
     {
         return $this->belongsToMany(\App\Core\Tenant\Models\Tenant::class, 'tenant_user')
+                    ->using(\App\Core\Tenant\Models\TenantUser::class)
                     ->withPivot('role_id')
                     ->withTimestamps();
     }

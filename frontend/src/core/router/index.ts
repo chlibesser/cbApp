@@ -53,6 +53,11 @@ const routes = [
         name: 'dashboard',
         component: () => import('../../shared/views/DashboardView.vue'),
       },
+      {
+        path: 'foundation',
+        name: 'foundation',
+        component: () => import('../../shared/views/FoundationView.vue'),
+      },
       // Identity domain routes
       // {
       //   path: 'profile',
@@ -68,10 +73,10 @@ const routes = [
       // },
     ],
   },
-  // Admin routes with separate layout
+  // Admin routes - using same DashboardLayout to keep sidebar
   {
     path: '/admin',
-    component: AdminLayout,
+    component: DashboardLayout,
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       {
@@ -82,6 +87,12 @@ const routes = [
         path: 'tenants',
         name: 'admin-tenants',
         component: () => import('../../domains/admin/views/TenantsView.vue'),
+      },
+      {
+        path: 'tenants/:id',
+        name: 'admin-tenant-detail',
+        component: () => import('../../domains/admin/views/TenantDetailView.vue'),
+        props: true
       },
       {
         path: 'accounts',

@@ -23,6 +23,14 @@
             <div class="d-flex flex-wrap gap-2">
               <v-btn
                 variant="outlined"
+                color="success"
+                prepend-icon="mdi-check-decagram"
+                to="/foundation"
+              >
+                Foundation Status
+              </v-btn>
+              <v-btn
+                variant="outlined"
                 color="primary"
                 prepend-icon="mdi-plus"
                 @click="openRightDrawer"
