@@ -66,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const userData = await authService.me()
-      account.value = userData
+      account.value = userData.account
       if (userData.profile) {
         profile.value = userData.profile
       }
@@ -153,14 +153,11 @@ export const useAuthStore = defineStore('auth', () => {
     )
   }
 
-  // Initialize auth state
+  // Initialize auth state (lightweight - similar to V0's approach)
   const initialize = () => {
     token.value = authService.getToken()
-    if (token.value && !account.value) {
-      loadUserData().catch((error) => {
-        console.warn('Failed to initialize auth state:', error)
-      })
-    }
+    // Don't automatically load user data - this can cause race conditions
+    // User data will be loaded after successful navigation by App.vue
   }
 
   return {
