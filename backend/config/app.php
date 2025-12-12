@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Development Mode - Skip Authorization
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, all authorization checks will be skipped.
+    | IMPORTANT: Only use during development! Must be disabled in production.
+    |
+    */
+
+    'skip_authorization' => env('APP_SKIP_AUTHORIZATION', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

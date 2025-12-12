@@ -64,6 +64,40 @@ const routes = [
       //   name: 'profile',
       //   component: () => import('../../domains/identity/views/ProfileView.vue'),
       // },
+      // Tenant management routes (for tenant admins)
+      {
+        path: 'tenant',
+        children: [
+          {
+            path: 'users',
+            name: 'tenant-users',
+            component: () => import('../../domains/tenant/views/UsersView.vue'),
+          },
+          {
+            path: 'categories',
+            name: 'tenant-categories',
+            component: () => import('../../domains/tenant/views/CategoryManagementView.vue'),
+          },
+          {
+            path: 'documents',
+            name: 'tenant-documents',
+            component: () => import('../../domains/tenant/views/DocumentManagementView.vue'),
+          },
+          {
+            path: 'documents/:id',
+            name: 'tenant-document-detail',
+            component: () => import('../../domains/tenant/views/DocumentDetailView.vue'),
+            props: true
+          },
+          // TODO: Add other tenant admin routes
+          // {
+          //   path: 'settings',
+          //   name: 'tenant-settings',
+          //   component: () => import('../../domains/tenant/views/SettingsView.vue'),
+          // },
+        ],
+      },
+      
       // TODO: Add other domain routes here as they're created
       // Workflow routes
       // {

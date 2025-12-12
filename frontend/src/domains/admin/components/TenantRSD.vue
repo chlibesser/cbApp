@@ -80,7 +80,6 @@
             variant="outlined"
             density="compact"
             :error-messages="errors.name"
-            required
           />
         </v-col>
         
@@ -93,7 +92,6 @@
             :error-messages="errors.slug"
             hint="URL-freundliche Version des Namens"
             persistent-hint
-            required
           />
         </v-col>
         

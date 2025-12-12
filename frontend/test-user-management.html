@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test User Management</title>
+</head>
+<body>
+    <h1>User Management Test</h1>
+    <p>Setting auth token in localStorage and redirecting to tenant users page...</p>
+    
+    <script>
+        // Set the auth token in localStorage
+        localStorage.setItem('auth_token', '019b0e76-2a76-7330-8162-a077f4fb1f4c|jCRIcrXAZeBJpjPmy5N8aYguGoLqPjYfYrmvPFKP7f8495f4');
+        
+        // Redirect to the tenant users page
+        setTimeout(() => {
+            window.location.href = 'http://localhost:5174/#/tenant/users';
+        }, 2000);
+    </script>
+</body>
+</html>

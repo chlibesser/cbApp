@@ -50,7 +50,6 @@
             variant="outlined"
             density="compact"
             :error-messages="errors.first_name"
-            required
           />
         </v-col>
         
@@ -61,7 +60,6 @@
             variant="outlined"
             density="compact"
             :error-messages="errors.last_name"
-            required
           />
         </v-col>
         

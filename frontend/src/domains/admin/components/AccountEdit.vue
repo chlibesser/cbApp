@@ -1,6 +1,6 @@
 <template>
   <div class="account-edit">
-    <v-form ref="form" v-model="formValid" @submit.prevent="handleSubmit">
+    <v-form ref="form" @submit.prevent="handleSubmit">
       <v-card>
         <v-card-text>
           <v-row>
@@ -16,9 +16,7 @@
               <v-text-field
                 v-model="formData.username"
                 label="Benutzername"
-                :rules="usernameRules"
                 variant="outlined"
-                required
                 :disabled="loading"
               />
             </v-col>
@@ -28,9 +26,7 @@
                 v-model="formData.email"
                 label="E-Mail"
                 type="email"
-                :rules="emailRules"
                 variant="outlined"
-                required
                 :disabled="loading"
               />
             </v-col>
@@ -85,7 +81,6 @@
                           type="password"
                           variant="outlined"
                           :disabled="loading"
-                          :rules="changePassword ? passwordRules : []"
                         />
                       </v-col>
 
@@ -96,7 +91,6 @@
                           type="password"
                           variant="outlined"
                           :disabled="loading"
-                          :rules="changePassword ? confirmPasswordRules : []"
                         />
                       </v-col>
                     </v-row>
@@ -127,7 +121,7 @@
             type="submit"
             color="primary"
             :loading="loading"
-            :disabled="!formValid"
+            :disabled="false"
           >
             <v-icon class="mr-1">mdi-content-save</v-icon>
             Speichern
@@ -157,7 +151,6 @@ const emit = defineEmits<{
 
 // Form state
 const form = ref()
-const formValid = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const passwordPanel = ref()
@@ -187,26 +180,6 @@ const systemRoles = [
   { value: 'member', text: 'Mitglied' }
 ]
 
-// Validation rules
-const usernameRules = [
-  (v: string) => !!v || 'Benutzername ist erforderlich',
-  (v: string) => v.length >= 3 || 'Benutzername muss mindestens 3 Zeichen haben'
-]
-
-const emailRules = [
-  (v: string) => !!v || 'E-Mail ist erforderlich',
-  (v: string) => /.+@.+\..+/.test(v) || 'E-Mail muss gültig sein'
-]
-
-const passwordRules = [
-  (v: string) => !changePassword.value || !!v || 'Passwort ist erforderlich',
-  (v: string) => !changePassword.value || v.length >= 8 || 'Passwort muss mindestens 8 Zeichen haben'
-]
-
-const confirmPasswordRules = [
-  (v: string) => !changePassword.value || !!v || 'Passwortbestätigung ist erforderlich',
-  (v: string) => !changePassword.value || v === passwordData.value.password || 'Passwörter stimmen nicht überein'
-]
 
 // Methods
 const initializeForm = () => {
@@ -221,7 +194,7 @@ const initializeForm = () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.value?.validate() || !props.data) return
+  if (!props.data) return
 
   loading.value = true
   error.value = null

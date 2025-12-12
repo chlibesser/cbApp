@@ -1,0 +1,28 @@
+/* 
+ * V0-Style Compact Chips
+ * Globale CSS-Klassen für konsistente Chip-Darstellung nach V0-Standards
+ */
+
+/* Tonal-outlined Kombinationsklasse für definierte Grenzen */
+.tonal-outlined.v-chip {
+  border: 1px solid currentColor !important;
+}
+
+/* Optimiertes Padding für x-small Chips */
+.v-chip--size-x-small :deep(.v-chip__content) {
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+  padding: 4px 8px !important;
+  gap: 4px !important;
+}
+
+/* Konsistente Schriftgröße für alle Chips */
+.v-chip {
+  font-size: 0.875rem;
+}
+
+/* Icon-Optimierung für kleine Chips */
+.v-chip--size-x-small .v-icon {
+  font-size: 12px !important;
+}

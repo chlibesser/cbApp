@@ -179,7 +179,7 @@
       <v-card>
         <v-card-title>Benutzer zum Tenant hinzufügen</v-card-title>
         <v-card-text>
-          <v-form ref="assignForm" v-model="assignFormValid">
+          <v-form ref="assignForm">
             <v-row>
               <v-col cols="12">
                 <v-select
@@ -188,7 +188,6 @@
                   :items="availableAccounts"
                   :loading="loadingAccounts"
                   variant="outlined"
-                  :rules="[v => !!v || 'Account ist erforderlich']"
                   item-title="text"
                   item-value="value"
                   return-object
@@ -201,7 +200,6 @@
                   v-model="assignForm.first_name"
                   label="Vorname"
                   variant="outlined"
-                  :rules="[v => !!v || 'Vorname ist erforderlich']"
                 />
               </v-col>
 
@@ -210,7 +208,6 @@
                   v-model="assignForm.last_name"
                   label="Nachname"
                   variant="outlined"
-                  :rules="[v => !!v || 'Nachname ist erforderlich']"
                 />
               </v-col>
 
@@ -220,7 +217,6 @@
                   label="E-Mail"
                   type="email"
                   variant="outlined"
-                  :rules="emailRules"
                 />
               </v-col>
 
@@ -238,7 +234,6 @@
                   label="Rolle"
                   :items="tenantRoles"
                   variant="outlined"
-                  :rules="[v => !!v || 'Rolle ist erforderlich']"
                   item-title="text"
                   item-value="value"
                 />
@@ -253,7 +248,7 @@
           <v-btn
             color="primary"
             :loading="assignLoading"
-            :disabled="!assignFormValid"
+            :disabled="false"
             @click="assignUser"
           >
             Hinzufügen
@@ -325,7 +320,6 @@ const assignForm = ref<AssignUserToTenantRequest>({
   email: '',
   phone: ''
 })
-const assignFormValid = ref(false)
 const assignLoading = ref(false)
 const availableAccounts = ref<Array<{value: string, text: string}>>([])
 const loadingAccounts = ref(false)
@@ -365,10 +359,6 @@ const tenantRoles = [
   { value: 'tenant_member', text: 'Tenant Member' }
 ]
 
-const emailRules = [
-  (v: string) => !!v || 'E-Mail ist erforderlich',
-  (v: string) => /.+@.+\..+/.test(v) || 'E-Mail muss gültig sein'
-]
 
 // Methods
 const formatDate = (dateString: string) => {

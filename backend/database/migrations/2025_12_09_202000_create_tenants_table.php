@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('settings')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
             
             $table->index(['slug', 'is_active']);
             $table->index(['is_personal', 'is_active']);

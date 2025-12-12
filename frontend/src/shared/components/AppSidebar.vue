@@ -241,6 +241,13 @@ const isAdmin = computed(() => {
   return authStore.hasPermission('admin.view')
 })
 
+const isTenantAdmin = computed(() => {
+  if (!authStore.isAuthenticated) return false
+  
+  // Check SystemRole - TenantAdmin kann Tenant verwalten
+  return authStore.account?.system_role === 'tenant_admin'
+})
+
 // Navigation structure - nur verfügbare Features für V1
 const navigationSections = computed((): NavigationSection[] => {
   // Wenn nicht eingeloggt, leere Sections zurückgeben
@@ -248,7 +255,7 @@ const navigationSections = computed((): NavigationSection[] => {
     return []
   }
 
-  return [
+  const sections = [
     {
       title: 'Foundation',
       items: [
@@ -265,6 +272,57 @@ const navigationSections = computed((): NavigationSection[] => {
       ]
     }
   ]
+
+  // Dokumente für alle Benutzer
+  sections.push({
+    title: 'Dokumente & Kategorien',
+    items: [
+      {
+        name: 'tenant-documents',
+        title: 'Dokumentenverwaltung',
+        to: '/tenant/documents',
+        icon: 'mdi-file-document-multiple',
+        badge: {
+          text: 'AI',
+          color: 'purple'
+        }
+      },
+      {
+        name: 'tenant-categories',
+        title: 'Kategorien',
+        to: '/tenant/categories',
+        icon: 'mdi-tag-multiple',
+      }
+    ]
+  })
+
+  // Tenant-Verwaltung für Tenant-Admins
+  if (isTenantAdmin.value || isAdmin.value) {
+    sections.push({
+      title: 'Tenant-Verwaltung',
+      items: [
+        {
+          name: 'tenant-users',
+          title: 'Benutzerverwaltung',
+          to: '/tenant/users',
+          icon: 'mdi-account-group',
+          badge: {
+            text: 'Neu',
+            color: 'primary'
+          }
+        }
+        // TODO: Add more tenant admin features
+        // {
+        //   name: 'tenant-settings',
+        //   title: 'Einstellungen',
+        //   to: '/tenant/settings',
+        //   icon: 'mdi-cog'
+        // }
+      ]
+    })
+  }
+
+  return sections
 })
 </script>
 

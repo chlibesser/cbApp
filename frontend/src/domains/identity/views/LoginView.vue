@@ -2,13 +2,11 @@
   <v-container class="fill-height" fluid>
     <v-row justify="center" align="center">
       <v-col cols="12" md="6" lg="4">
-        <v-form @submit.prevent="handleLogin" v-model="isFormValid" data-testid="login-form">
+        <v-form @submit.prevent="handleLogin" data-testid="login-form">
               <v-text-field
                 v-model="credentials.identifier"
                 label="Username or Email"
                 type="text"
-                :rules="identifierRules"
-                required
                 variant="outlined"
                 class="mb-3"
                 hint="You can login with your username or email address"
@@ -19,8 +17,6 @@
                 v-model="credentials.password"
                 label="Password"
                 type="password"
-                :rules="passwordRules"
-                required
                 variant="outlined"
                 class="mb-3"
                 data-testid="login-password"
@@ -42,7 +38,7 @@
                 color="primary"
                 block
                 :loading="isLoading"
-                :disabled="!isFormValid"
+                :disabled="false"
                 size="large"
                 class="mb-3"
                 data-testid="login-submit"
@@ -88,22 +84,11 @@
     password: '',
   })
 
-  const isFormValid = ref(false)
   const isLoading = ref(false)
   const errorMessage = ref('')
 
-  const identifierRules = [
-    (v: string) => !!v || 'Username or Email is required',
-    (v: string) => v.length >= 3 || 'Must be at least 3 characters',
-  ]
-
-  const passwordRules = [
-    (v: string) => !!v || 'Password is required',
-    (v: string) => v.length >= 6 || 'Password must be at least 6 characters',
-  ]
 
   const handleLogin = async () => {
-    if (!isFormValid.value) return
 
     isLoading.value = true
     errorMessage.value = ''

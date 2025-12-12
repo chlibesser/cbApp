@@ -114,13 +114,15 @@ class AccountSeeder extends Seeder
 
     private function createProfile($account, $tenant, $displayName, $firstName, $lastName)
     {
-        \App\Domains\Identity\Models\Profile::firstOrCreate([
+        \App\Domains\Tenant\Models\Profile::firstOrCreate([
             'account_id' => $account->id,
             'tenant_id' => $tenant->id,
         ], [
-            'display_name' => $displayName,
             'first_name' => $firstName,
             'last_name' => $lastName,
+            'email' => $account->email,
+            'system_role' => 'tenant_member',
+            'is_active' => true,
         ]);
     }
 }

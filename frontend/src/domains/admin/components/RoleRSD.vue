@@ -50,7 +50,6 @@
             variant="outlined"
             density="compact"
             :error-messages="errors.name"
-            required
           />
         </v-col>
         

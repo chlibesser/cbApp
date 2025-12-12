@@ -1,6 +1,6 @@
 <template>
   <div class="tenant-create">
-    <v-form ref="form" v-model="formValid" @submit.prevent="handleSubmit">
+    <v-form ref="form" @submit.prevent="handleSubmit">
       <v-card>
         <v-card-text>
           <v-row>
@@ -19,9 +19,7 @@
               <v-text-field
                 v-model="formData.name"
                 label="Tenant-Name"
-                :rules="nameRules"
                 variant="outlined"
-                required
                 :disabled="loading"
                 @input="generateSlug"
                 hint="Der Name des Tenants, z.B. 'Meine Firma GmbH'"
@@ -33,7 +31,6 @@
               <v-text-field
                 v-model="formData.slug"
                 label="Slug (URL-Bezeichnung)"
-                :rules="slugRules"
                 variant="outlined"
                 :disabled="loading"
                 hint="URL-freundlicher Name, z.B. 'meine-firma'"
@@ -49,7 +46,6 @@
                 :disabled="loading"
                 rows="3"
                 counter="500"
-                :rules="descriptionRules"
                 hint="Kurze Beschreibung des Tenants"
                 persistent-hint
               />
@@ -157,7 +153,7 @@
             type="submit"
             color="primary"
             :loading="loading"
-            :disabled="!formValid"
+            :disabled="false"
           >
             <v-icon class="mr-1">mdi-plus</v-icon>
             Tenant erstellen
@@ -181,7 +177,6 @@ const emit = defineEmits<{
 
 // Form state
 const form = ref()
-const formValid = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -209,23 +204,6 @@ const tenantTypes = [
   }
 ]
 
-// Validation rules
-const nameRules = [
-  (v: string) => !!v || 'Name ist erforderlich',
-  (v: string) => v.length <= 255 || 'Name darf maximal 255 Zeichen haben',
-  (v: string) => v.length >= 2 || 'Name muss mindestens 2 Zeichen haben'
-]
-
-const slugRules = [
-  (v: string) => !v || v.length <= 100 || 'Slug darf maximal 100 Zeichen haben',
-  (v: string) => !v || /^[a-z0-9-]+$/.test(v) || 'Slug darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten',
-  (v: string) => !v || !v.startsWith('-') || 'Slug darf nicht mit einem Bindestrich beginnen',
-  (v: string) => !v || !v.endsWith('-') || 'Slug darf nicht mit einem Bindestrich enden'
-]
-
-const descriptionRules = [
-  (v: string) => !v || v.length <= 500 || 'Beschreibung darf maximal 500 Zeichen haben'
-]
 
 // Methods
 const generateSlug = () => {
@@ -246,7 +224,6 @@ const generateSlug = () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.value?.validate()) return
 
   loading.value = true
   error.value = null

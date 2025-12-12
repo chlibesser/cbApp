@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->redirectGuestsTo(fn () => response()->json(['message' => 'Unauthenticated.'], 401));
         
+        // Development: Skip Authorization für alle API-Routen
+        $middleware->api([
+            \App\Infrastructure\Http\Middleware\SkipAuthorizationInDevelopment::class,
+        ]);
+        
         $middleware->alias([
             'admin.only' => \App\Infrastructure\Http\Middleware\AdminOnly::class,
         ]);

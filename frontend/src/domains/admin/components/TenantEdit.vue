@@ -1,6 +1,6 @@
 <template>
   <div class="tenant-edit">
-    <v-form ref="form" v-model="formValid" @submit.prevent="handleSubmit">
+    <v-form ref="form" @submit.prevent="handleSubmit">
       <v-card>
         <v-card-text>
           <v-row>
@@ -16,9 +16,7 @@
               <v-text-field
                 v-model="formData.name"
                 label="Tenant-Name"
-                :rules="nameRules"
                 variant="outlined"
-                required
                 :disabled="loading"
               />
             </v-col>
@@ -27,7 +25,6 @@
               <v-text-field
                 v-model="formData.slug"
                 label="Slug (URL-Bezeichnung)"
-                :rules="slugRules"
                 variant="outlined"
                 :disabled="loading"
                 hint="Nur Kleinbuchstaben, Zahlen und Bindestriche"
@@ -43,7 +40,6 @@
                 :disabled="loading"
                 rows="3"
                 counter="500"
-                :rules="descriptionRules"
               />
             </v-col>
 
@@ -97,7 +93,6 @@
                           variant="outlined"
                           :disabled="loading"
                           rows="6"
-                          :rules="jsonRules"
                           placeholder="{}"
                           hint="Erweiterte Konfiguration als JSON-Objekt"
                           persistent-hint
@@ -131,7 +126,7 @@
             type="submit"
             color="primary"
             :loading="loading"
-            :disabled="!formValid"
+            :disabled="false"
           >
             <v-icon class="mr-1">mdi-content-save</v-icon>
             Speichern
@@ -161,7 +156,6 @@ const emit = defineEmits<{
 
 // Form state
 const form = ref()
-const formValid = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const settingsPanel = ref()
@@ -185,32 +179,6 @@ const tenantTypes = [
   { value: true, text: 'Persönlich' }
 ]
 
-// Validation rules
-const nameRules = [
-  (v: string) => !!v || 'Name ist erforderlich',
-  (v: string) => v.length <= 255 || 'Name darf maximal 255 Zeichen haben'
-]
-
-const slugRules = [
-  (v: string) => !v || v.length <= 100 || 'Slug darf maximal 100 Zeichen haben',
-  (v: string) => !v || /^[a-z0-9-]+$/.test(v) || 'Slug darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten'
-]
-
-const descriptionRules = [
-  (v: string) => !v || v.length <= 500 || 'Beschreibung darf maximal 500 Zeichen haben'
-]
-
-const jsonRules = [
-  (v: string) => {
-    if (!v) return true
-    try {
-      JSON.parse(v)
-      return true
-    } catch {
-      return 'Ungültiges JSON-Format'
-    }
-  }
-]
 
 // Methods
 const initializeForm = () => {
@@ -228,7 +196,7 @@ const initializeForm = () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.value?.validate() || !props.data) return
+  if (!props.data) return
 
   loading.value = true
   error.value = null

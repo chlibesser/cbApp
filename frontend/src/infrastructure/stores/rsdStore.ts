@@ -7,7 +7,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
 
 export type RSDMode = 'view' | 'edit' | 'create'
-export type RSDEntity = 'account' | 'tenant' | 'profile' | 'permission' | 'role'
+export type RSDEntity = 'account' | 'tenant' | 'profile' | 'permission' | 'role' | 'user'
 
 interface RSDState {
   isOpen: boolean
@@ -49,7 +49,8 @@ export const useRSDStore = defineStore('rsd', () => {
       tenant: 'Tenant',
       profile: 'Profile',
       permission: 'Berechtigung',
-      role: 'Rolle'
+      role: 'Rolle',
+      user: 'Benutzer'
     }
 
     const entityName = entityNames[state.value.entity]
@@ -77,6 +78,8 @@ export const useRSDStore = defineStore('rsd', () => {
         return state.value.data.name || state.value.data.slug || ''
       case 'profile':
         return `${state.value.data.first_name || ''} ${state.value.data.last_name || ''}`.trim() || state.value.data.email || ''
+      case 'user':
+        return state.value.data.full_name || state.value.data.email || ''
       case 'permission':
         return state.value.data.name || state.value.data.key || ''
       case 'role':
@@ -159,6 +162,21 @@ export const useRSDStore = defineStore('rsd', () => {
     setLoading(false)
   }
 
+  // Additional properties for component access
+  const currentItem = computed(() => state.value.data)
+
+  // Emit success event for parent components
+  const emitSuccess = (eventType: string, data?: any) => {
+    window.dispatchEvent(new CustomEvent('rsd-success', {
+      detail: { 
+        eventType,
+        entity: state.value.entity,
+        mode: state.value.mode,
+        data
+      }
+    }))
+  }
+
   return {
     // State
     state: readonly(state),
@@ -191,6 +209,10 @@ export const useRSDStore = defineStore('rsd', () => {
 
     // Event handlers
     handleSuccess,
-    handleError
+    handleError,
+
+    // Additional properties
+    currentItem,
+    emitSuccess
   }
 })

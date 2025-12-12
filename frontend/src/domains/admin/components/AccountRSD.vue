@@ -66,7 +66,6 @@
             density="compact"
             type="email"
             :error-messages="errors.email"
-            required
           />
         </v-col>
         
@@ -78,7 +77,6 @@
             density="compact"
             type="password"
             :error-messages="errors.password"
-            required
           />
         </v-col>
         
@@ -92,7 +90,6 @@
             item-title="text"
             item-value="value"
             :error-messages="errors.system_role"
-            required
           />
         </v-col>
         

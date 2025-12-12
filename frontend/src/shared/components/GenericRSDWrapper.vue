@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
 import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
 
@@ -96,30 +96,36 @@ import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
 const rsdStore = useRSDStore()
 const layoutStore = useLayoutStore()
 
-// Dynamic component mapping (V0-style: single component per entity)
+// Dynamic component mapping based on entity and mode
 const componentMap = {
   // Admin domain
-  'tenant': () => import('@/domains/admin/components/TenantRSD.vue'),
-  'account': () => import('@/domains/admin/components/AccountRSD.vue'),
-  'permission': () => import('@/domains/admin/components/PermissionRSD.vue'),
-  'role': () => import('@/domains/admin/components/RoleRSD.vue'),
+  'tenant': defineAsyncComponent(() => import('@/domains/admin/components/TenantRSD.vue')),
+  'account': defineAsyncComponent(() => import('@/domains/admin/components/AccountRSD.vue')),
+  'permission': defineAsyncComponent(() => import('@/domains/admin/components/PermissionRSD.vue')),
+  'role': defineAsyncComponent(() => import('@/domains/admin/components/RoleRSD.vue')),
   
   // Identity domain
-  'profile': () => import('@/domains/identity/components/ProfileRSD.vue'),
+  'profile': defineAsyncComponent(() => import('@/domains/identity/components/ProfileRSD.vue')),
+
+  // User management (separate components for each mode)
+  'user-create': defineAsyncComponent(() => import('@/domains/tenant/components/UserCreateForm.vue')),
+  'user-edit': defineAsyncComponent(() => import('@/domains/tenant/components/UserEditForm.vue')),
+  'user-view': defineAsyncComponent(() => import('@/domains/tenant/components/UserViewDetails.vue')),
 }
 
 // Computed component
 const currentComponent = computed(() => {
-  if (!rsdStore.entity) return null
+  if (!rsdStore.entity || !rsdStore.mode) return null
   
-  const componentKey = rsdStore.entity as keyof typeof componentMap
-  const componentLoader = componentMap[componentKey]
-  
-  if (componentLoader) {
-    return componentLoader
+  // For user entity, use mode-specific components
+  if (rsdStore.entity === 'user') {
+    const componentKey = `${rsdStore.entity}-${rsdStore.mode}` as keyof typeof componentMap
+    return componentMap[componentKey] || null
   }
   
-  return null
+  // For other entities, use entity-based components (legacy)
+  const componentKey = rsdStore.entity as keyof typeof componentMap
+  return componentMap[componentKey] || null
 })
 
 // Event handlers

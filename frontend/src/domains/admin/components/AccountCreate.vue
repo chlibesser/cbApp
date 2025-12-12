@@ -1,6 +1,6 @@
 <template>
   <div class="account-create">
-    <v-form ref="form" v-model="formValid" @submit.prevent="handleSubmit">
+    <v-form ref="form" @submit.prevent="handleSubmit">
       <v-card>
         <v-card-text>
           <v-row>
@@ -19,9 +19,7 @@
               <v-text-field
                 v-model="formData.username"
                 label="Benutzername"
-                :rules="usernameRules"
                 variant="outlined"
-                required
                 :disabled="loading"
                 hint="Eindeutiger Benutzername für die Anmeldung"
                 persistent-hint
@@ -33,9 +31,7 @@
                 v-model="formData.email"
                 label="E-Mail"
                 type="email"
-                :rules="emailRules"
                 variant="outlined"
-                required
                 :disabled="loading"
                 hint="E-Mail-Adresse für Benachrichtigungen"
                 persistent-hint
@@ -47,9 +43,7 @@
                 v-model="formData.password"
                 label="Passwort"
                 type="password"
-                :rules="passwordRules"
                 variant="outlined"
-                required
                 :disabled="loading"
                 hint="Mindestens 8 Zeichen"
                 persistent-hint
@@ -61,9 +55,7 @@
                 v-model="formData.password_confirmation"
                 label="Passwort bestätigen"
                 type="password"
-                :rules="confirmPasswordRules"
                 variant="outlined"
-                required
                 :disabled="loading"
                 hint="Passwort erneut eingeben"
                 persistent-hint
@@ -172,7 +164,7 @@
             type="submit"
             color="primary"
             :loading="loading"
-            :disabled="!formValid"
+            :disabled="false"
           >
             <v-icon class="mr-1">mdi-plus</v-icon>
             Account erstellen
@@ -196,7 +188,6 @@ const emit = defineEmits<{
 
 // Form state
 const form = ref()
-const formValid = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -229,27 +220,6 @@ const systemRoles = [
   }
 ]
 
-// Validation rules
-const usernameRules = [
-  (v: string) => !!v || 'Benutzername ist erforderlich',
-  (v: string) => v.length >= 3 || 'Benutzername muss mindestens 3 Zeichen haben',
-  (v: string) => /^[a-zA-Z0-9_-]+$/.test(v) || 'Nur Buchstaben, Zahlen, - und _ erlaubt'
-]
-
-const emailRules = [
-  (v: string) => !!v || 'E-Mail ist erforderlich',
-  (v: string) => /.+@.+\..+/.test(v) || 'E-Mail muss gültig sein'
-]
-
-const passwordRules = [
-  (v: string) => !!v || 'Passwort ist erforderlich',
-  (v: string) => v.length >= 8 || 'Passwort muss mindestens 8 Zeichen haben'
-]
-
-const confirmPasswordRules = [
-  (v: string) => !!v || 'Passwortbestätigung ist erforderlich',
-  (v: string) => v === formData.value.password || 'Passwörter stimmen nicht überein'
-]
 
 // Methods
 const getSystemRoleLabel = (role: string | null) => {
@@ -269,7 +239,6 @@ const getSystemRoleColor = (role: string | null) => {
 }
 
 const handleSubmit = async () => {
-  if (!form.value?.validate()) return
 
   loading.value = true
   error.value = null

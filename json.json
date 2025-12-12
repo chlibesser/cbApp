@@ -1,0 +1,52 @@
+[
+  {
+    "id": 23196,
+    "name": "INX>W75",
+    "welle": "W",
+    "depot": "IPL",
+    "active": true,
+    "validFrom": "2021-07-08T22:00:00.000000Z",
+    "validUntil": null,
+    "version": "1",
+    "zipcodes": [
+      {
+        "zip": "1110",
+        "country": "CH"
+      },
+      {
+        "zip": "1211",
+        "country": "CH"
+      },
+      {
+        "zip": "1211",
+        "country": "CH"
+      },
+      {
+        "zip": "1212",
+        "country": "CH"
+      },
+      {
+        "zip": "1214",
+        "country": "CH"
+      },
+      {
+        "zip": "1227",
+        "country": "CH"
+      },
+      {
+        "zip": "1227",
+        "country": "CH"
+      },
+      {
+        "zip": "1227",
+        "country": "CH"
+      }
+    ],
+    "suborgs": {
+      "suborg_id": 25,
+      "suborg_name": "4 Swiss Transport AG",
+      "suborg_from": "2021-08-31T22:00:00.000Z",
+      "suborg_until": null
+    }
+  }
+]
