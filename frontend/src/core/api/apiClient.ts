@@ -39,6 +39,7 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'omit', // Pure token auth - keine Cookies
       })
 
       let data
@@ -107,6 +108,7 @@ export class ApiClient {
         method: 'POST',
         headers,
         body: formData,
+        credentials: 'omit', // Pure token auth - keine Cookies
       })
 
       let data
@@ -179,6 +181,7 @@ export class ApiClient {
       const response = await fetch(url, {
         method: 'GET',
         headers,
+        credentials: 'omit', // Pure token auth - keine Cookies
       })
 
       if (!response.ok) {

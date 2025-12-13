@@ -17,7 +17,7 @@ class AuthService
     /**
      * Attempt to authenticate an account with username or email
      */
-    public function attempt(array $credentials): bool
+    public function attempt(array $credentials): ?Account
     {
         $identifier = $credentials['username'] ?? $credentials['email'] ?? $credentials['identifier'];
         $password = $credentials['password'];
@@ -26,21 +26,25 @@ class AuthService
         $account = $this->findAccountByIdentifier($identifier);
 
         if (!$account) {
-            return false;
+            return null;
         }
 
         // Prüfe Account Status
         if (!$account->is_active) {
-            return false;
+            return null;
         }
 
         // Prüfe E-Mail Verifizierung
         if (!$account->email_verified_at) {
-            return false;
+            return null;
         }
 
         // Prüfe Passwort
-        return Hash::check($password, $account->password);
+        if (!Hash::check($password, $account->password)) {
+            return null;
+        }
+
+        return $account;
     }
 
     /**
@@ -49,6 +53,15 @@ class AuthService
     public function createToken(Account $account, string $tokenName = 'API Token'): string
     {
         return $account->createToken($tokenName)->plainTextToken;
+    }
+
+    /**
+     * Logout account (revoke current token)
+     */
+    public function logout(Account $account): void
+    {
+        // Revoke only the current access token
+        $account->currentAccessToken()?->delete();
     }
 
     /**

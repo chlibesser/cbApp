@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->statefulApi();
+        // Entferne statefulApi() für pure Token-basierte Authentifizierung
         $middleware->redirectGuestsTo(fn () => response()->json(['message' => 'Unauthenticated.'], 401));
         
         // Development: Skip Authorization für alle API-Routen
