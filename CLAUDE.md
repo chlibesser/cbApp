@@ -202,6 +202,58 @@ $table->enum('system_role', ['global_admin', 'tenant_admin']);
 - Commit-Nachrichten auf Deutsch
 - Dokumentation auf Deutsch
 
+## 🔧 Arbeitsweise für Code-Änderungen
+
+**WICHTIG**: Bei Code-Änderungen soll Claude IMMER folgendes Verfahren befolgen:
+
+### Was KEINE Freigabe braucht:
+- ✅ **Dateien lesen**: IMMER volle Freigabe - Claude kann jederzeit Dateien lesen
+- ✅ **Code analysieren**: Suchen, Grep, Glob - alles ohne Rückfrage
+- ✅ **Tests ausführen**: Nach Änderungen automatisch testen
+
+### Schrittweise Vorgehensweise bei ÄNDERUNGEN:
+1. **Eine Datei pro Änderung** - Immer nur eine einzelne Datei bearbeiten
+2. **Änderung ankündigen** - Kurz beschreiben:
+   - Welche Datei wird geändert
+   - Was ist die konkrete Änderung
+   - Warum wird diese Änderung gemacht
+3. **Auf Bestätigung warten** - Erst nach "ok" oder expliziter Freigabe fortfahren
+4. **Änderung durchführen** - Die angekündigte Änderung umsetzen
+5. **Automatisch testen** - Ohne Rückfrage testen (siehe Test-Richtlinien unten)
+
+### Test-Richtlinien:
+- **Backend-Endpoints**: MÜSSEN sofort nach Implementierung getestet werden
+  - Mit `curl` oder Postman/Thunder Client
+  - Erfolgs- und Fehlerszenarien prüfen
+  - OHNE Rückfrage beim User
+- **Frontend-API-Calls**: MÜSSEN sofort validiert werden
+  - Prüfen ob der Endpoint korrekt aufgerufen wird
+  - Response-Handling verifizieren
+  - OHNE Rückfrage beim User
+
+### Beispiel-Ablauf:
+```
+Claude: "Ich werde die Datei `backend/app/Http/Controllers/WorkflowController.php` anpassen.
+
+**Änderung**: Füge einen neuen Endpoint `GET /api/workflows/{id}/validate` hinzu.
+**Grund**: Dies ermöglicht die Validierung eines Workflows vor der Ausführung.
+
+Soll ich fortfahren?"
+
+User: "ok"
+
+Claude: [führt die Änderung durch]
+[testet automatisch den neuen Endpoint mit curl]
+[zeigt Testergebnis]
+```
+
+### Vorteile dieser Arbeitsweise:
+- ✅ **Transparenz**: Jede Änderung ist nachvollziehbar
+- ✅ **Kontrolle**: Keine unerwarteten Änderungen
+- ✅ **Fokus**: Konzentration auf eine Aufgabe
+- ✅ **Qualität**: Sofortige Validierung durch Tests
+- ✅ **Review**: Möglichkeit zum Eingreifen vor der Änderung
+
 ## ⚠️ Validierungsrichtlinien
 
 **WICHTIG**: Siehe `.claude/validation.md` für detaillierte Validierungsrichtlinien:
