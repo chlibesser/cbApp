@@ -46,6 +46,27 @@ cbApp V1/
 3. **Admin-Bereich** - Tenant & User-Verwaltung
 4. **Permissions** - Von Anfang an richtig
 
+## ✅ Bereits implementierte Features
+
+### Core-Features:
+- **🔐 Auth-System**: Token-basierte Authentifizierung mit Laravel Sanctum
+- **👥 Tenant-System**: Multi-Mandantenfähigkeit mit User-Management
+- **📄 Document Management**: Upload, AI-Analyse, Kategorisierung
+- **🏷️ Kategorie-System**: Hierarchische Kategorien mit Regeln
+- **🔄 Workflow-System**: Visual Workflow Builder mit Vue Flow
+
+### UI-Komponenten:
+- **📊 ADT**: Advanced Data Table für alle Listen
+- **📝 RSD**: Right Side Drawer für CRUD-Operationen
+- **🔔 Toast-System**: Feedback für alle Aktionen
+- **🎨 Design Standards**: Einheitliches Layout-Pattern
+
+### Infrastruktur:
+- **🏗️ Domain-Driven Design**: Saubere Trennung der Domains
+- **📘 TypeScript**: Vollständig typisiertes Frontend
+- **📦 pnpm**: Als Package Manager
+- **🐘 PostgreSQL**: Mit UUID Primary Keys
+
 ## 🛠️ Package Manager
 
 **WICHTIG**: In diesem Projekt wird AUSSCHLIESSLICH **pnpm** als Package Manager verwendet:
@@ -269,6 +290,45 @@ $table->morphs('tokenable');
 3. **Hauptinhalt**: ADT in v-card
 
 **Detaillierte Dokumentation**: Siehe `/docs/VIEW_DESIGN_STANDARDS.md`
+
+## 🔐 Token-basierte Authentifizierung
+
+**WICHTIG**: cbApp V1 verwendet ein **reines Token-basiertes Auth-System** ohne Sessions oder CSRF-Tokens!
+
+### Architektur:
+- **Laravel Sanctum**: Nur für API Token Management (keine SPA-Features)
+- **Stateless API**: Jeder Request wird über Bearer Token authentifiziert
+- **Keine Sessions**: `SESSION_DRIVER=array` - keine serverseitigen Sessions
+- **Kein CSRF**: Alle State-verändernden Operationen nur über authentifizierte API
+- **Token Storage**: Im Frontend localStorage (für Persistenz)
+
+### Auth-Flow:
+```typescript
+// Login
+POST /api/auth/login
+Response: { token: "...", user: {...} }
+
+// Alle API-Requests
+headers: {
+  'Authorization': 'Bearer ' + token,
+  'Accept': 'application/json'
+}
+
+// Logout
+POST /api/auth/logout (invalidiert Token)
+```
+
+### Sicherheitsvorteile:
+- ✅ **XSS-resistent**: Kein CSRF-Token im DOM/Meta-Tags
+- ✅ **Einfache Architektur**: Keine Session-Synchronisation
+- ✅ **Skalierbar**: Komplett stateless
+- ✅ **Mobile-ready**: Gleiche API für Web/Mobile
+
+### Frontend-Integration:
+- **authStore**: Verwaltet Token und User-State
+- **apiClient**: Fügt automatisch Bearer Token hinzu
+- **Auto-Logout**: Bei 401 Unauthorized
+- **Token-Refresh**: Nicht implementiert (by design)
 
 ## 🌐 Server-Konfiguration
 
