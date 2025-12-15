@@ -16,6 +16,20 @@ export class ApiClient {
     return localStorage.getItem('auth_token')
   }
 
+  private getCurrentTenantId(): string | null {
+    // Get tenant ID from auth store - this will be dynamically loaded
+    const authData = localStorage.getItem('auth_user_data')
+    if (authData) {
+      try {
+        const userData = JSON.parse(authData)
+        return userData.current_tenant?.id || null
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
 
@@ -30,9 +44,11 @@ export class ApiClient {
     }
 
     // Add tenant ID header for tenant-specific requests
-    // TODO: Get from auth store instead of hardcoded
     if (endpoint.includes('/tenant/')) {
-      headers['X-Tenant-ID'] = '9b5ae261-24a4-48ed-a8bf-bf60ec25afa9' // Demo Firma GmbH
+      const tenantId = this.getCurrentTenantId()
+      if (tenantId) {
+        headers['X-Tenant-ID'] = tenantId
+      }
     }
 
     try {
@@ -100,7 +116,10 @@ export class ApiClient {
 
     // Add tenant ID header for tenant-specific requests
     if (endpoint.includes('/tenant/')) {
-      headers['X-Tenant-ID'] = '9b5ae261-24a4-48ed-a8bf-bf60ec25afa9' // Demo Firma GmbH
+      const tenantId = this.getCurrentTenantId()
+      if (tenantId) {
+        headers['X-Tenant-ID'] = tenantId
+      }
     }
 
     try {
@@ -174,7 +193,10 @@ export class ApiClient {
 
     // Add tenant ID header for tenant-specific requests
     if (endpoint.includes('/tenant/')) {
-      headers['X-Tenant-ID'] = '9b5ae261-24a4-48ed-a8bf-bf60ec25afa9' // Demo Firma GmbH
+      const tenantId = this.getCurrentTenantId()
+      if (tenantId) {
+        headers['X-Tenant-ID'] = tenantId
+      }
     }
 
     try {

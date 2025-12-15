@@ -10,10 +10,12 @@ import { apiClient } from '../api/apiClient'
 
 export class AuthService {
   private static readonly TOKEN_KEY = 'auth_token'
+  private static readonly USER_DATA_KEY = 'auth_user_data'
 
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials)
     this.setToken(response.data.token)
+    this.setUserData(response.data)
     return response.data
   }
 
@@ -22,6 +24,7 @@ export class AuthService {
       await apiClient.post('/auth/logout')
     } finally {
       this.removeToken()
+      this.removeUserData()
     }
   }
 
@@ -42,6 +45,19 @@ export class AuthService {
     localStorage.removeItem(AuthService.TOKEN_KEY)
   }
 
+  setUserData(userData: any): void {
+    localStorage.setItem(AuthService.USER_DATA_KEY, JSON.stringify(userData))
+  }
+
+  getUserData(): any | null {
+    const data = localStorage.getItem(AuthService.USER_DATA_KEY)
+    return data ? JSON.parse(data) : null
+  }
+
+  removeUserData(): void {
+    localStorage.removeItem(AuthService.USER_DATA_KEY)
+  }
+
   isAuthenticated(): boolean {
     return !!this.getToken()
   }
@@ -58,12 +74,14 @@ export class AuthService {
       tenant_id: tenantId,
     })
     this.setToken(response.data.token)
+    this.setUserData(response.data)
     return response.data
   }
 
   async register(registerData: any): Promise<any> {
     const response = await apiClient.post('/auth/register', registerData)
     this.setToken(response.data.token)
+    this.setUserData(response.data)
     return response.data
   }
 }

@@ -296,6 +296,7 @@ const navigationSections = computed((): NavigationSection[] => {
     ]
   })
 
+
   // Tenant-Verwaltung für Tenant-Admins
   if (isTenantAdmin.value || isAdmin.value) {
     sections.push({

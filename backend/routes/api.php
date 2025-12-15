@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum'])->prefix('tenant')->group(function () {
         Route::patch('/{category}/set-default', [CategoryController::class, 'setDefault']);
         Route::post('/reorder', [CategoryController::class, 'reorder']);
     });
+    
 });
 
 // Public signed document routes (no authentication required)

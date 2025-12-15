@@ -1,48 +1,60 @@
-interface ToastOptions {
-  message: string
-  type?: 'success' | 'error' | 'warning' | 'info'
-  duration?: number
-}
+import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
 
+/**
+ * Vue-kompatibles Toast-System basierend auf dem LayoutStore
+ * 
+ * Bietet eine einfache API für Toast-Benachrichtigungen mit
+ * voller Integration in das cbApp V1 Notification-System.
+ */
 export function useToast() {
-  const showToast = (options: ToastOptions) => {
-    // For now, just use console logging
-    // Later this can be integrated with a proper toast library like Vuetify Snackbar
-    const emoji = {
-      success: '✅',
-      error: '❌', 
-      warning: '⚠️',
-      info: 'ℹ️'
-    }[options.type || 'info']
-    
-    console.log(`${emoji} ${options.message}`)
-    
-    // No more alerts - errors are now shown inline in forms
-    // Success messages can be console only for now
-  }
-
-  // Convenience methods
-  const success = (message: string, duration?: number) => {
-    showToast({ message, type: 'success', duration })
-  }
-
-  const error = (message: string, duration?: number) => {
-    showToast({ message, type: 'error', duration })
-  }
-
-  const warning = (message: string, duration?: number) => {
-    showToast({ message, type: 'warning', duration })
-  }
-
-  const info = (message: string, duration?: number) => {
-    showToast({ message, type: 'info', duration })
-  }
-
+  const layoutStore = useLayoutStore()
+  
   return {
-    showToast,
-    success,
-    error,
-    warning,
-    info
+    /**
+     * Zeigt eine Erfolgs-Nachricht an
+     */
+    success: (message: string, options?: { timeout?: number; actions?: any[] }) => {
+      return layoutStore.showSuccess(message, options)
+    },
+
+    /**
+     * Zeigt eine Fehler-Nachricht an  
+     */
+    error: (message: string, options?: { timeout?: number; persistent?: boolean; actions?: any[] }) => {
+      return layoutStore.showError(message, options)
+    },
+
+    /**
+     * Zeigt eine Warn-Nachricht an
+     */
+    warning: (message: string, options?: { timeout?: number; actions?: any[] }) => {
+      return layoutStore.showWarning(message, options)
+    },
+
+    /**
+     * Zeigt eine Info-Nachricht an
+     */
+    info: (message: string, options?: { timeout?: number; actions?: any[] }) => {
+      return layoutStore.showInfo(message, options)
+    },
+
+    /**
+     * Entfernt eine spezifische Benachrichtigung
+     */
+    remove: (id: string) => {
+      layoutStore.removeNotification(id)
+    },
+
+    /**
+     * Entfernt alle Benachrichtigungen
+     */
+    clear: () => {
+      layoutStore.clearAllNotifications()
+    },
+
+    /**
+     * Direkter Zugriff auf das Notification-Array (readonly)
+     */
+    notifications: layoutStore.notifications,
   }
 }

@@ -134,8 +134,9 @@ const handleActionClick = (action: any, notificationId: string) => {
 
 .toast-container {
   position: fixed;
-  top: 24px;
-  right: 24px;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   max-width: 400px;
   width: 100%;
   pointer-events: auto;
@@ -144,7 +145,8 @@ const handleActionClick = (action: any, notificationId: string) => {
 
 .toast-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  gap: 12px;
 }
 
 .toast-item {
@@ -176,9 +178,10 @@ const handleActionClick = (action: any, notificationId: string) => {
 /* Mobile responsive */
 @media (max-width: 600px) {
   .toast-container {
-    top: 16px;
-    right: 16px;
-    left: 16px;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
     max-width: none;
   }
   
@@ -198,12 +201,12 @@ const handleActionClick = (action: any, notificationId: string) => {
 
 .toast-enter-from {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateY(100%);
 }
 
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateY(100%);
 }
 
 .toast-move {

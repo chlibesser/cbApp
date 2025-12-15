@@ -98,13 +98,6 @@ const routes = [
         ],
       },
       
-      // TODO: Add other domain routes here as they're created
-      // Workflow routes
-      // {
-      //   path: 'todos',
-      //   name: 'todos',
-      //   component: () => import('../../domains/workflow/views/TodosView.vue'),
-      // },
     ],
   },
   // Admin routes - using same DashboardLayout to keep sidebar

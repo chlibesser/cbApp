@@ -58,6 +58,10 @@ export const useAuthStore = defineStore('auth', () => {
       profile.value = null
       currentTenant.value = null
       quickLogins.value = []
+      
+      // Clear all localStorage data
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user_data')
     }
   }
 
