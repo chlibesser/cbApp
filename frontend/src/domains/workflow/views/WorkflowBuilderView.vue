@@ -13,6 +13,14 @@
       </div>
       <div class="d-flex align-center gap-2">
         <v-btn
+          color="secondary"
+          prepend-icon="mdi-test-tube"
+          @click="testButton"
+          variant="outlined"
+        >
+          Test
+        </v-btn>
+        <v-btn
           color="primary"
           prepend-icon="mdi-content-save"
           @click="saveWorkflow"
@@ -82,13 +90,30 @@
         </v-card>
       </div>
     </div>
+
+    <!-- Snackbar für Feedback -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      :timeout="4000"
+      location="bottom right"
+    >
+      {{ snackbarText }}
+      <template v-slot:actions>
+        <v-btn
+          variant="text"
+          @click="snackbar = false"
+        >
+          Schließen
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useToast } from '@/shared/composables/useToast'
 import { workflowService, type Workflow } from '../services/workflowService'
 import { VueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
@@ -103,7 +128,6 @@ import '@vue-flow/minimap/dist/style.css'
 
 const router = useRouter()
 const route = useRoute()
-const toast = useToast()
 
 // State
 const nodes = ref([])
@@ -121,6 +145,11 @@ const workflowName = ref<string>('')
 const workflowDescription = ref<string>('')
 const loading = ref(false)
 
+// Snackbar state
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarColor = ref('success')
+
 // Computed
 const isEditMode = computed(() => !!currentWorkflowId.value)
 const pageTitle = computed(() => 
@@ -130,23 +159,25 @@ const saveButtonText = computed(() =>
   isEditMode.value ? 'Änderungen speichern' : 'Workflow speichern'
 )
 
+// Snackbar functions
+function showSuccess(message: string) {
+  snackbarText.value = message
+  snackbarColor.value = 'success'
+  snackbar.value = true
+}
+
+function showError(message: string) {
+  snackbarText.value = message
+  snackbarColor.value = 'error'
+  snackbar.value = true
+}
+
+
 function onPaneContextMenu(event: any) {
-  console.log('Full context menu event:', event)
-  console.log('Event keys:', Object.keys(event))
-  
   const mouseEvent = event.event || event
   if (mouseEvent && mouseEvent.preventDefault) {
     mouseEvent.preventDefault()
   }
-  
-  console.log('Available properties:', {
-    flowTransform: event.flowTransform,
-    position: event.position,
-    clientX: mouseEvent?.clientX,
-    clientY: mouseEvent?.clientY,
-    offsetX: mouseEvent?.offsetX,
-    offsetY: mouseEvent?.offsetY
-  })
   
   const nodeX = mouseEvent?.offsetX || mouseEvent?.clientX || 100
   const nodeY = mouseEvent?.offsetY || mouseEvent?.clientY || 100
@@ -191,8 +222,6 @@ function addNode(nodeType: string) {
 }
 
 function onConnect(connection: any) {
-  console.log('New connection:', connection)
-  
   const newEdge = {
     id: `edge_${Date.now()}`,
     source: connection.source,
@@ -221,7 +250,7 @@ async function loadWorkflow(workflowId: string) {
     
   } catch (error: any) {
     console.error('Error loading workflow:', error)
-    toast.error(error.response?.data?.message || 'Fehler beim Laden des Workflows')
+    showError(error.response?.data?.message || 'Fehler beim Laden des Workflows')
     
     // Navigate back to workflows list on error
     router.push({ name: 'workflows' })
@@ -252,12 +281,12 @@ async function saveWorkflow() {
     let result: Workflow
 
     if (isEditMode.value && currentWorkflowId.value) {
-      // Update existing workflow
       result = await workflowService.updateWorkflow(currentWorkflowId.value, workflowData)
-      toast.success(`Workflow "${result.name}" erfolgreich aktualisiert`)
+      showSuccess(`Workflow "${result.name}" erfolgreich aktualisiert`)
+
     } else {
-      // Create new workflow - ask for name first
       const name = prompt('Workflow Name:')
+      
       if (!name) {
         loading.value = false
         return
@@ -267,20 +296,25 @@ async function saveWorkflow() {
       workflowData.description = `Workflow mit ${nodes.value.length} Nodes und ${edges.value.length} Verbindungen`
       
       result = await workflowService.createWorkflow(workflowData)
-      toast.success(`Workflow "${result.name}" erfolgreich erstellt`)
+      showSuccess(`Workflow "${result.name}" erfolgreich erstellt`)
       
-      // Update state for newly created workflow
       currentWorkflowId.value = result.id
       workflowName.value = result.name
       workflowDescription.value = result.description || ''
+
     }
     
   } catch (error: any) {
-    console.error('Error saving workflow:', error)
-    toast.error(error.response?.data?.message || 'Fehler beim Speichern des Workflows')
+    console.error('❌ Error saving workflow:', error)
+    showError(error.response?.data?.message || 'Fehler beim Speichern des Workflows')
   } finally {
+
     loading.value = false
   }
+}
+
+function testButton() {
+  // Simple test function
 }
 
 function handleBack() {
