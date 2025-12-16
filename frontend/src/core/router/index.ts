@@ -94,6 +94,12 @@ const routes = [
             name: 'workflows',
             component: () => import('../../domains/workflow/views/WorkflowsView.vue'),
           },
+          {
+            path: 'workflows/builder/:id?',
+            name: 'workflow-builder',
+            component: () => import('../../domains/workflow/views/WorkflowBuilderView.vue'),
+            props: true
+          },
           // TODO: Add other tenant admin routes
           // {
           //   path: 'settings',

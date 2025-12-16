@@ -10,6 +10,7 @@ use App\Infrastructure\Http\Controllers\Tenant\DocumentController;
 use App\Infrastructure\Http\Controllers\Tenant\CategoryGroupController;
 use App\Infrastructure\Http\Controllers\Tenant\CategoryController;
 use App\Infrastructure\Http\Controllers\Documents\SignedDocumentController;
+use App\Domains\Workflow\Http\Controllers\WorkflowController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -84,6 +85,16 @@ Route::middleware(['auth:sanctum'])->prefix('tenant')->group(function () {
         Route::patch('/{category}/toggle', [CategoryController::class, 'toggle']);
         Route::patch('/{category}/set-default', [CategoryController::class, 'setDefault']);
         Route::post('/reorder', [CategoryController::class, 'reorder']);
+    });
+    
+    // Workflow Management
+    Route::prefix('workflows')->group(function () {
+        Route::get('/', [WorkflowController::class, 'index']);
+        Route::post('/', [WorkflowController::class, 'store']);
+        Route::get('/{workflow}', [WorkflowController::class, 'show']);
+        Route::patch('/{workflow}', [WorkflowController::class, 'update']);
+        Route::delete('/{workflow}', [WorkflowController::class, 'destroy']);
+        Route::post('/{workflow}/execute', [WorkflowController::class, 'execute']);
     });
     
 });
