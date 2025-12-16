@@ -311,6 +311,12 @@ const navigationSections = computed((): NavigationSection[] => {
             text: 'Neu',
             color: 'primary'
           }
+        },
+        {
+          name: 'tenant-workflows',
+          title: 'Workflows',
+          to: '/tenant/workflows',
+          icon: 'mdi-sitemap'
         }
         // TODO: Add more tenant admin features
         // {
