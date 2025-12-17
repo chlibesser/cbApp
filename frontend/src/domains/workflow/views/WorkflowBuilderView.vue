@@ -10,10 +10,21 @@
           @click="handleBack"
         />
         <div class="workflow-title">
-          <h1 v-if="!editingName" @click="editingName = true" class="clickable-title">
-            {{ pageTitle }}
-            <v-icon size="small" class="ml-2 edit-icon">mdi-pencil</v-icon>
-          </h1>
+          <div class="d-flex align-center">
+            <h1 v-if="!editingName" @click="editingName = true" class="clickable-title">
+              {{ pageTitle }}
+              <v-icon size="small" class="ml-2 edit-icon">mdi-pencil</v-icon>
+            </h1>
+            <v-chip 
+              v-if="currentWorkflowId"
+              :color="getStatusColor(workflowStatus)"
+              variant="flat"
+              size="small"
+              class="ml-3"
+            >
+              {{ getStatusLabel(workflowStatus) }}
+            </v-chip>
+          </div>
           <v-text-field
             v-if="editingName"
             v-model="workflowName"
@@ -29,6 +40,30 @@
         </div>
       </div>
       <div class="d-flex align-center gap-2">
+        <!-- Status Toggle (nur für gespeicherte Workflows) -->
+        <v-btn
+          v-if="currentWorkflowId"
+          :color="workflowStatus === 'active' ? 'warning' : 'success'"
+          :prepend-icon="workflowStatus === 'active' ? 'mdi-pause' : 'mdi-play'"
+          variant="outlined"
+          @click="toggleWorkflowStatus"
+          :disabled="loading"
+        >
+          {{ workflowStatus === 'active' ? 'Deaktivieren' : 'Aktivieren' }}
+        </v-btn>
+        
+        <!-- Workflow starten (nur wenn aktiv) -->
+        <v-btn
+          v-if="currentWorkflowId && workflowStatus === 'active'"
+          color="success"
+          prepend-icon="mdi-rocket-launch"
+          @click="executeWorkflow"
+          :disabled="loading"
+          :loading="executing"
+        >
+          Workflow starten
+        </v-btn>
+        
         <v-btn
           color="primary"
           prepend-icon="mdi-content-save"
@@ -187,7 +222,9 @@ const selectedNode = ref<WorkflowNode | null>(null)
 const currentWorkflowId = ref<string | null>(null)
 const workflowName = ref<string>('')
 const workflowDescription = ref<string>('')
+const workflowStatus = ref<'draft' | 'active' | 'inactive'>('draft')
 const loading = ref(false)
+const executing = ref(false)
 
 // Snackbar state
 const snackbar = ref(false)
@@ -219,6 +256,23 @@ function showError(message: string) {
   snackbarText.value = message
   snackbarColor.value = 'error'
   snackbar.value = true
+}
+
+// Status helper functions
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'active': return 'success'
+    case 'inactive': return 'error'
+    default: return 'grey'
+  }
+}
+
+function getStatusLabel(status: string) {
+  switch (status) {
+    case 'active': return 'Aktiv'
+    case 'inactive': return 'Inaktiv'
+    default: return 'Entwurf'
+  }
 }
 
 
@@ -353,6 +407,7 @@ async function loadWorkflow(workflowId: string) {
     currentWorkflowId.value = workflow.id
     workflowName.value = workflow.name
     workflowDescription.value = workflow.description || ''
+    workflowStatus.value = workflow.status || 'draft'
     originalName.value = workflow.name
     
     // Set nodes and edges
@@ -419,6 +474,7 @@ async function saveWorkflow() {
       currentWorkflowId.value = result.id
       workflowName.value = result.name
       workflowDescription.value = result.description || ''
+      workflowStatus.value = result.status || 'active' // Neue Workflows automatisch als aktiv setzen
       
       // Clear query parameters by replacing the current route
       router.replace({ 
@@ -473,10 +529,103 @@ function handleNodeUpdated(updatedNode: WorkflowNode) {
   }
 }
 
-function handleNodeDeleted() {
-  // The deletion is already handled by onNodeDeleted
+function handleNodeDeleted(nodeId: string) {
+  // Remove the node from nodes array
+  nodes.value = nodes.value.filter(n => n.id !== nodeId)
+  
+  // Remove any edges connected to this node
+  edges.value = edges.value.filter(e => 
+    e.source !== nodeId && e.target !== nodeId
+  )
+  
+  // Clear selection and close properties panel
   selectedNode.value = null
+  showPropertiesPanel.value = false
+  
+  // Force Vue Flow re-render
+  vueFlowKey.value++
+  
   showSuccess('Node gelöscht')
+}
+
+// Workflow execution and status management
+async function toggleWorkflowStatus() {
+  if (!currentWorkflowId.value) return
+  
+  try {
+    loading.value = true
+    const newStatus = workflowStatus.value === 'active' ? 'inactive' : 'active'
+    
+    await workflowService.updateWorkflow(currentWorkflowId.value, {
+      status: newStatus
+    })
+    
+    workflowStatus.value = newStatus
+    showSuccess(`Workflow ${newStatus === 'active' ? 'aktiviert' : 'deaktiviert'}`)
+    
+  } catch (error: any) {
+    console.error('Error updating workflow status:', error)
+    showError(error.response?.data?.message || 'Fehler beim Ändern des Status')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function executeWorkflow() {
+  if (!currentWorkflowId.value) {
+    showError('Keine Workflow-ID vorhanden')
+    return
+  }
+  
+  console.log('🚀 Executing workflow:', currentWorkflowId.value)
+  console.log('📊 Workflow status:', workflowStatus.value)
+  
+  try {
+    executing.value = true
+    console.log('📡 Calling workflowService.executeWorkflow...')
+    const result = await workflowService.executeWorkflow(currentWorkflowId.value)
+    
+    console.log('✅ Execution result:', result)
+    
+    // Show detailed results if available
+    if (result.results && result.results.length > 0) {
+      console.log('📋 Detailed execution results:', result.results)
+      
+      // Create detailed message
+      const successNodes = result.results.filter(r => r.status === 'success').length
+      const errorNodes = result.results.filter(r => r.status === 'error').length
+      
+      let message = `${result.message} (${successNodes} erfolgreich`
+      if (errorNodes > 0) {
+        message += `, ${errorNodes} fehlgeschlagen`
+      }
+      message += `)`
+      
+      // Show error or success based on overall result
+      if (errorNodes > 0) {
+        showError(message)
+      } else {
+        showSuccess(message)
+      }
+      
+      // Log detailed results for debugging
+      result.results.forEach((nodeResult, index) => {
+        console.log(`📋 Node ${index + 1}:`, nodeResult)
+        if (nodeResult.details) {
+          console.log(`   Details:`, nodeResult.details)
+        }
+      })
+    } else {
+      showSuccess(`${result.message} (ID: ${result.execution_id.substring(0, 8)}...)`)
+    }
+    
+  } catch (error: any) {
+    console.error('❌ Error executing workflow:', error)
+    console.error('❌ Error details:', error.response?.data)
+    showError(error.response?.data?.message || 'Fehler beim Ausführen des Workflows')
+  } finally {
+    executing.value = false
+  }
 }
 
 onMounted(async () => {

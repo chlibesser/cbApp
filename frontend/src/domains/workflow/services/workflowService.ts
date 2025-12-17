@@ -63,8 +63,24 @@ class WorkflowService {
   /**
    * Execute/run a workflow
    */
-  async executeWorkflow(id: string): Promise<{ message: string; execution_id: string }> {
+  async executeWorkflow(id: string): Promise<{ 
+    message: string; 
+    execution_id: string; 
+    results?: Array<{
+      node_id: string;
+      type: string;
+      action_type?: string;
+      status: 'success' | 'error' | 'skipped';
+      message: string;
+      details?: any;
+    }>
+  }> {
+    console.log('🔧 workflowService.executeWorkflow called with ID:', id)
+    console.log('🔗 Request URL:', `${this.baseUrl}/${id}/execute`)
+    
     const response = await apiClient.post(`${this.baseUrl}/${id}/execute`)
+    
+    console.log('📡 API Response:', response)
     return response.data
   }
 }
