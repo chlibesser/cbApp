@@ -9,6 +9,7 @@ use App\Core\Tenant\Models\Tenant;
 use Illuminate\Contracts\Auth\Authenticatable;
 // use App\Core\AI\Services\AIService;
 use App\Domains\AI\Jobs\ProcessDocumentWithAI;
+use App\Domains\Document\Events\DocumentUploaded;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -79,6 +80,9 @@ class DocumentService
         if ($document->is_processable) {
             $this->queueAIProcessing($document);
         }
+
+        // Fire document uploaded event for workflow triggers
+        DocumentUploaded::dispatch($document, $uploader, $metadata);
 
         return $document;
     }
