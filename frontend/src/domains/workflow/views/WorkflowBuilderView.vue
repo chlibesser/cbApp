@@ -145,6 +145,16 @@
       :selected-node="selectedNode"
       @nodeUpdated="handleNodeUpdated"
       @nodeDeleted="handleNodeDeleted"
+      @expandToDialog="expandToDialog"
+    />
+
+    <!-- Node Properties Dialog -->
+    <NodePropertiesDialog
+      v-model="showPropertiesDialog"
+      :selected-node="selectedNode"
+      @nodeUpdated="handleNodeUpdated"
+      @nodeDeleted="handleNodeDeleted"
+      @collapseToPanel="collapseToPanel"
     />
 
     <!-- Snackbar für Feedback -->
@@ -182,6 +192,7 @@ import ActionNode from '../components/ActionNode.vue'
 import ConditionNode from '../components/ConditionNode.vue'
 import EndNode from '../components/EndNode.vue'
 import NodePropertiesPanel from '../components/NodePropertiesPanel.vue'
+import NodePropertiesDialog from '../components/NodePropertiesDialog.vue'
 
 // Import types
 import type { WorkflowNode } from '../types'
@@ -216,6 +227,7 @@ const contextMenu = ref({
 
 // Properties Panel State
 const showPropertiesPanel = ref(false)
+const showPropertiesDialog = ref(false)
 const selectedNode = ref<WorkflowNode | null>(null)
 
 // Workflow metadata
@@ -546,6 +558,20 @@ function handleNodeDeleted(nodeId: string) {
   vueFlowKey.value++
   
   showSuccess('Node gelöscht')
+}
+
+// Dialog/Panel state management
+function expandToDialog() {
+  showPropertiesPanel.value = false
+  // Small delay to prevent Vuetify scroll strategy errors
+  setTimeout(() => {
+    showPropertiesDialog.value = true
+  }, 100)
+}
+
+function collapseToPanel() {
+  showPropertiesDialog.value = false
+  showPropertiesPanel.value = true
 }
 
 // Workflow execution and status management

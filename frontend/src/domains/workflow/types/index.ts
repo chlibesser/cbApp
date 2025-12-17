@@ -18,6 +18,13 @@ export interface ActionNodeData extends BaseNodeData {
   method?: string
   endpoint?: string
   parameters?: Record<string, any>
+  headers?: Array<{ key: string; value: string }>
+  body?: {
+    type: 'json' | 'form' | 'raw'
+    json: string
+    formData: Array<{ key: string; value: string }>
+    raw: string
+  }
   status?: 'ready' | 'running' | 'completed' | 'failed'
   timeout?: number
   retries?: number

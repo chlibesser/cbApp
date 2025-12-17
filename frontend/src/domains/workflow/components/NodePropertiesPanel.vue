@@ -15,6 +15,14 @@
       <v-spacer />
       
       <v-btn
+        icon="mdi-arrow-expand"
+        variant="text"
+        @click="expandToDialog"
+        title="Erweiterte Ansicht"
+        class="mr-2"
+      />
+      
+      <v-btn
         icon="mdi-close"
         variant="text"
         @click="closePanel"
@@ -105,6 +113,7 @@ interface Emits {
   (e: 'update:modelValue', value: boolean): void
   (e: 'nodeUpdated', node: WorkflowNode): void
   (e: 'nodeDeleted', nodeId: string): void
+  (e: 'expandToDialog'): void
 }
 
 const props = defineProps<Props>()
@@ -134,6 +143,10 @@ watch(() => props.selectedNode, (newNode) => {
 // Methods
 function closePanel() {
   isVisible.value = false
+}
+
+function expandToDialog() {
+  emit('expandToDialog')
 }
 
 function getNodeIcon(nodeType?: string): string {
