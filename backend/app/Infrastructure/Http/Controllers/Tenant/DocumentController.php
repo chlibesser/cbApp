@@ -119,6 +119,85 @@ class DocumentController extends Controller
         }
     }
 
+    public function bulkStore(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|file|max:10240', // 10MB max per file
+            'common_settings.visibility' => 'nullable|in:public,internal,confidential,restricted',
+            'common_settings.expires_at' => 'nullable|date|after:now',
+            'file_settings' => 'nullable|array',
+            'file_settings.*.title' => 'nullable|string|max:255',
+            'file_settings.*.description' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validierungsfehler beim Bulk-Upload',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $tenant = $this->getCurrentTenant();
+        $files = $request->file('files');
+        $commonSettings = $request->get('common_settings', []);
+        $fileSettings = $request->get('file_settings', []);
+
+        // Prepare files array for service
+        $filesForUpload = [];
+        foreach ($files as $index => $file) {
+            $metadata = array_merge(
+                $commonSettings,
+                $fileSettings[$index] ?? []
+            );
+            
+            $filesForUpload[] = [
+                'file' => $file,
+                'metadata' => $metadata
+            ];
+        }
+
+        try {
+            $results = $this->documentService->uploadMultipleDocuments(
+                $filesForUpload,
+                $tenant,
+                auth()->user(),
+                $commonSettings
+            );
+
+            // Generate response message
+            $summary = $results['summary'];
+            $message = '';
+            
+            if ($summary['success_count'] > 0 && $summary['error_count'] > 0) {
+                $message = "{$summary['success_count']} von {$summary['total']} Dateien erfolgreich hochgeladen";
+            } elseif ($summary['success_count'] === $summary['total']) {
+                $message = "Alle {$summary['total']} Dateien erfolgreich hochgeladen";
+            } else {
+                $message = "Upload fehlgeschlagen: {$summary['error_count']} von {$summary['total']} Dateien konnten nicht hochgeladen werden";
+            }
+
+            // Load relationships for successful documents
+            $successfulDocuments = collect($results['successful'])->map(function ($item) {
+                return $item['document']->load(['uploader', 'categories.categoryGroup']);
+            });
+
+            return response()->json([
+                'message' => $message,
+                'data' => [
+                    'successful' => $successfulDocuments,
+                    'failed' => $results['failed'],
+                    'summary' => $results['summary']
+                ]
+            ], $summary['error_count'] > 0 ? 207 : 201); // 207 Multi-Status or 201 Created
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Fehler beim Bulk-Upload: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function show(Document $document): JsonResponse
     {
         $this->authorizeDocumentAccess($document);

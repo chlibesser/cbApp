@@ -40,7 +40,7 @@ class CategoryGroup extends BaseModel
     ];
 
     protected $attributes = [
-        'selection_type' => 'single',
+        'selection_type' => SelectionType::SINGLE->value,
         'is_required' => false,
         'ai_enabled' => true,
         'ai_confidence_threshold' => 0.7,

@@ -31,6 +31,7 @@ class CategorySeeder extends Seeder
             $this->seedDocumentTypeGroup($tenant);
             $this->seedPriorityGroup($tenant);
             $this->seedDepartmentGroup($tenant);
+            $this->seedPartnerTypeGroup($tenant);
         });
 
         $this->command->info('Category seeding completed successfully!');
@@ -260,6 +261,99 @@ class CategorySeeder extends Seeder
             'display_order' => 2,
             'icon' => 'mdi-laptop',
             'color' => 'teal',
+            'is_active' => true,
+        ]);
+    }
+
+    private function seedPartnerTypeGroup(Tenant $tenant): void
+    {
+        $group = CategoryGroup::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Partnertyp',
+            'slug' => 'partner_type',
+            'description' => 'Klassifizierung der Partner nach ihrer Beziehungsart',
+            'selection_type' => SelectionType::SINGLE,
+            'is_required' => true,
+            'ai_enabled' => false,
+            'display_order' => 3,
+            'icon' => 'mdi-handshake',
+            'color' => 'indigo',
+            'is_active' => true,
+        ]);
+
+        // Lieferanten
+        Category::create([
+            'category_group_id' => $group->id,
+            'tenant_id' => $tenant->id,
+            'name' => 'Lieferanten',
+            'slug' => 'suppliers',
+            'description' => 'Unternehmen, die Produkte oder Materialien liefern',
+            'ai_positive_description' => 'Unternehmen, die Produkte, Materialien oder Waren liefern.',
+            'ai_negative_description' => 'Keine Kunden oder Dienstleister.',
+            'ai_keywords' => ['Lieferant', 'Supplier', 'Ware', 'Material', 'Produkt', 'Lieferung'],
+            'ai_examples' => ['Materiallieferant', 'Produkthersteller', 'Großhändler'],
+            'is_default' => false,
+            'requires_approval' => false,
+            'display_order' => 0,
+            'icon' => 'mdi-truck-delivery',
+            'color' => 'blue',
+            'is_active' => true,
+        ]);
+
+        // Kunden
+        Category::create([
+            'category_group_id' => $group->id,
+            'tenant_id' => $tenant->id,
+            'name' => 'Kunden',
+            'slug' => 'customers',
+            'description' => 'Unternehmen oder Personen, die unsere Produkte/Dienstleistungen kaufen',
+            'ai_positive_description' => 'Unternehmen oder Personen, die unsere Produkte oder Dienstleistungen kaufen.',
+            'ai_negative_description' => 'Keine Lieferanten oder reinen Dienstleister.',
+            'ai_keywords' => ['Kunde', 'Customer', 'Client', 'Käufer', 'Auftraggeber'],
+            'ai_examples' => ['Geschäftskunde', 'Privatkunde', 'Stammkunde'],
+            'is_default' => true,
+            'requires_approval' => false,
+            'display_order' => 1,
+            'icon' => 'mdi-account-heart',
+            'color' => 'green',
+            'is_active' => true,
+        ]);
+
+        // Dienstleister
+        Category::create([
+            'category_group_id' => $group->id,
+            'tenant_id' => $tenant->id,
+            'name' => 'Dienstleister',
+            'slug' => 'service_providers',
+            'description' => 'Unternehmen, die Dienstleistungen für uns erbringen',
+            'ai_positive_description' => 'Unternehmen, die Dienstleistungen für uns erbringen.',
+            'ai_negative_description' => 'Keine Produktlieferanten oder Kunden.',
+            'ai_keywords' => ['Dienstleister', 'Service', 'Beratung', 'Wartung', 'Support'],
+            'ai_examples' => ['IT-Dienstleister', 'Steuerberater', 'Wartungsfirma'],
+            'is_default' => false,
+            'requires_approval' => false,
+            'display_order' => 2,
+            'icon' => 'mdi-tools',
+            'color' => 'orange',
+            'is_active' => true,
+        ]);
+
+        // Partner
+        Category::create([
+            'category_group_id' => $group->id,
+            'tenant_id' => $tenant->id,
+            'name' => 'Partner',
+            'slug' => 'business_partners',
+            'description' => 'Strategische Geschäftspartner und Kooperationen',
+            'ai_positive_description' => 'Strategische Geschäftspartner und Kooperationen.',
+            'ai_negative_description' => 'Keine einfachen Kunden oder Lieferanten.',
+            'ai_keywords' => ['Partner', 'Kooperation', 'Allianz', 'Joint Venture', 'strategisch'],
+            'ai_examples' => ['Technologiepartner', 'Vertriebspartner', 'Strategische Allianz'],
+            'is_default' => false,
+            'requires_approval' => false,
+            'display_order' => 3,
+            'icon' => 'mdi-handshake',
+            'color' => 'purple',
             'is_active' => true,
         ]);
     }

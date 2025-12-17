@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('stored_filename', 255);
             $table->string('mime_type', 100);
             $table->bigInteger('file_size');
-            $table->string('file_hash', 64)->unique(); // SHA-256 for deduplication
+            $table->string('file_hash', 64); // SHA-256 for deduplication (no unique constraint due to versioning)
             $table->string('storage_path', 500);
             
             // Document properties

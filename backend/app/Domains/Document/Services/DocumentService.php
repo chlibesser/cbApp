@@ -32,13 +32,25 @@ class DocumentService
         // Generate file hash for deduplication
         $fileHash = hash_file('sha256', $file->getRealPath());
         
-        // Check for duplicate
+        // Check for existing document (only active documents)
         $existing = Document::where('file_hash', $fileHash)
                            ->where('tenant_id', $tenant->id)
+                           ->where('status', 'active')
                            ->first();
-                           
+        
+        $version = 1;
+        $parentDocumentId = null;
+        
+        // If document exists, create new version
         if ($existing) {
-            throw new \Exception('Dokument bereits vorhanden: ' . $existing->original_filename);
+            // Mark existing version as not latest
+            $existing->update(['is_latest_version' => false]);
+            
+            // Set up versioning
+            $parentDocumentId = $existing->parent_document_id ?? $existing->id;
+            $version = Document::where('parent_document_id', $parentDocumentId)
+                             ->orWhere('id', $parentDocumentId)
+                             ->max('version') + 1;
         }
 
         // Generate storage filename
@@ -68,6 +80,9 @@ class DocumentService
             'visibility' => $metadata['visibility'] ?? 'internal',
             'ai_processing_status' => 'pending',
             'status' => 'active',
+            'parent_document_id' => $parentDocumentId,
+            'version' => $version,
+            'is_latest_version' => true,
         ]);
 
         // Log upload activity
@@ -355,6 +370,68 @@ class DocumentService
                 ];
             }
         }
+
+        return $results;
+    }
+
+    public function uploadMultipleDocuments(
+        array $files,
+        Tenant $tenant,
+        Authenticatable $uploader,
+        array $commonMetadata = []
+    ): array {
+        $results = [
+            'successful' => [],
+            'failed' => [],
+            'summary' => [
+                'total' => count($files),
+                'success_count' => 0,
+                'error_count' => 0
+            ]
+        ];
+
+        foreach ($files as $index => $fileData) {
+            $file = $fileData['file'];
+            $metadata = array_merge($commonMetadata, $fileData['metadata'] ?? []);
+            
+            try {
+                $document = $this->uploadDocument($file, $tenant, $uploader, $metadata);
+                
+                $results['successful'][] = [
+                    'index' => $index,
+                    'filename' => $file->getClientOriginalName(),
+                    'document' => $document,
+                    'message' => 'Dokument erfolgreich hochgeladen'
+                ];
+                
+                $results['summary']['success_count']++;
+                
+            } catch (\Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'filename' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType()
+                ];
+                
+                $results['summary']['error_count']++;
+                
+                Log::warning('Document upload failed in bulk operation', [
+                    'filename' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                    'tenant_id' => $tenant->id,
+                    'uploader_id' => $uploader->id
+                ]);
+            }
+        }
+
+        Log::info('Bulk document upload completed', [
+            'tenant_id' => $tenant->id,
+            'total_files' => $results['summary']['total'],
+            'successful' => $results['summary']['success_count'],
+            'failed' => $results['summary']['error_count']
+        ]);
 
         return $results;
     }

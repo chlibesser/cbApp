@@ -11,6 +11,7 @@ use App\Infrastructure\Http\Controllers\Tenant\CategoryGroupController;
 use App\Infrastructure\Http\Controllers\Tenant\CategoryController;
 use App\Infrastructure\Http\Controllers\Documents\SignedDocumentController;
 use App\Domains\Workflow\Http\Controllers\WorkflowController;
+use App\Domains\Partner\Controllers\PartnerController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -51,6 +52,7 @@ Route::middleware(['auth:sanctum'])->prefix('tenant')->group(function () {
     Route::prefix('documents')->group(function () {
         Route::get('/', [DocumentController::class, 'index']);
         Route::post('/', [DocumentController::class, 'store']);
+        Route::post('/bulk-upload', [DocumentController::class, 'bulkStore']);
         Route::get('/statistics', [DocumentController::class, 'statistics']);
         Route::post('/bulk-categorize', [DocumentController::class, 'bulkCategorize']);
         Route::post('/bulk-ai-categorize', [DocumentController::class, 'bulkAiCategorize']);
@@ -95,6 +97,18 @@ Route::middleware(['auth:sanctum'])->prefix('tenant')->group(function () {
         Route::patch('/{workflow}', [WorkflowController::class, 'update']);
         Route::delete('/{workflow}', [WorkflowController::class, 'destroy']);
         Route::post('/{workflow}/execute', [WorkflowController::class, 'execute']);
+    });
+    
+    // Partner Management
+    Route::prefix('partners')->group(function () {
+        Route::get('/', [PartnerController::class, 'index']);
+        Route::post('/', [PartnerController::class, 'store']);
+        Route::get('/search', [PartnerController::class, 'search']);
+        Route::get('/statistics', [PartnerController::class, 'statistics']);
+        Route::get('/needs-attention', [PartnerController::class, 'needsAttention']);
+        Route::get('/{partner}', [PartnerController::class, 'show']);
+        Route::patch('/{partner}', [PartnerController::class, 'update']);
+        Route::delete('/{partner}', [PartnerController::class, 'destroy']);
     });
     
 });
