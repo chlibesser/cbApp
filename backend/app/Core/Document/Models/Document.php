@@ -6,6 +6,7 @@ use App\Core\Shared\Models\BaseModel;
 use App\Core\Auth\Models\Account;
 use App\Core\Tenant\Models\Tenant;
 use App\Core\Category\Models\Category;
+use App\Core\Category\Enums\SelectionType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -262,38 +263,58 @@ class Document extends BaseModel
         string $reason = null,
         array $context = []
     ): void {
-        // Handle single-select groups - remove existing categories from same group
-        if ($category->categoryGroup->selection_type === 'single') {
-            $this->categories()
-                 ->whereHas('categoryGroup', fn($q) => $q->where('id', $category->category_group_id))
-                 ->detach();
-        }
+        try {
+            // Handle single-select groups - remove existing categories from same group
+            if ($category->categoryGroup->selection_type === SelectionType::SINGLE) {
+                // Get IDs of categories in the same group to detach
+                $categoriesToDetach = $this->categories()
+                    ->whereHas('categoryGroup', fn($q) => $q->where('id', $category->category_group_id))
+                    ->pluck('categories.id')
+                    ->toArray();
+                
+                if (!empty($categoriesToDetach)) {
+                    $this->categories()->detach($categoriesToDetach);
+                }
+            }
 
-        // Attach new category with pivot data
-        $this->categories()->attach($category->id, [
-            'tenant_id' => $this->tenant_id,
-            'assignment_type' => $assignmentType,
-            'confidence_score' => $confidenceScore,
-            'assigned_by' => $assignedBy?->id,
-            'assignment_reason' => $reason,
-            'assignment_context' => $context,
-            'assigned_at' => now(),
-        ]);
+            // Check if category is already assigned to avoid duplicate key errors
+            if (!$this->hasCategory($category)) {
+                // Attach new category with pivot data
+                $this->categories()->attach($category->id, [
+                    'tenant_id' => $this->tenant_id,
+                    'assignment_type' => $assignmentType,
+                    'confidence_score' => $confidenceScore,
+                    'assigned_by' => $assignedBy?->id,
+                    'assignment_reason' => $reason,
+                    'assignment_context' => json_encode($context),
+                    'assigned_at' => now(),
+                ]);
 
-        // Record usage in category
-        $category->recordUsage();
+                // Record usage in category
+                $category->recordUsage();
 
-        // Log the categorization
-        DocumentActivity::logCategorization(
-            $this,
-            $category->name,
-            $assignedBy,
-            [
+                // Log the categorization
+                DocumentActivity::logCategorization(
+                    $this,
+                    $category->name,
+                    $assignedBy,
+                    [
+                        'assignment_type' => $assignmentType,
+                        'confidence_score' => $confidenceScore,
+                        'category_group' => $category->categoryGroup->name,
+                    ]
+                );
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to assign category to document", [
+                'document_id' => $this->id,
+                'category_id' => $category->id,
+                'error' => $e->getMessage(),
                 'assignment_type' => $assignmentType,
-                'confidence_score' => $confidenceScore,
-                'category_group' => $category->categoryGroup->name,
-            ]
-        );
+                'confidence_score' => $confidenceScore
+            ]);
+            throw $e;
+        }
     }
 
     public function updateAIProcessingStatus(string $status, array $data = []): void
