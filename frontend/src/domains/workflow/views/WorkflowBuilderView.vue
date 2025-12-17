@@ -9,17 +9,26 @@
           class="mr-2"
           @click="handleBack"
         />
-        <h1>{{ pageTitle }}</h1>
+        <div class="workflow-title">
+          <h1 v-if="!editingName" @click="editingName = true" class="clickable-title">
+            {{ pageTitle }}
+            <v-icon size="small" class="ml-2 edit-icon">mdi-pencil</v-icon>
+          </h1>
+          <v-text-field
+            v-if="editingName"
+            v-model="workflowName"
+            density="compact"
+            variant="outlined"
+            hide-details
+            autofocus
+            @blur="finishNameEdit"
+            @keyup.enter="finishNameEdit"
+            @keyup.escape="cancelNameEdit"
+            class="name-editor"
+          />
+        </div>
       </div>
       <div class="d-flex align-center gap-2">
-        <v-btn
-          color="secondary"
-          prepend-icon="mdi-test-tube"
-          @click="testButton"
-          variant="outlined"
-        >
-          Test
-        </v-btn>
         <v-btn
           color="primary"
           prepend-icon="mdi-content-save"
@@ -35,10 +44,14 @@
     <!-- Vue Flow Canvas -->
     <div class="workflow-canvas">
       <VueFlow 
+        :key="vueFlowKey"
         v-model:nodes="nodes"
         v-model:edges="edges"
+        :node-types="nodeTypes"
         @paneContextMenu="onPaneContextMenu"
         @connect="onConnect"
+        @node-click="onNodeClick"
+        @node-double-click="onNodeDoubleClick"
       >
         <Background />
         <MiniMap />
@@ -59,7 +72,7 @@
       >
         <v-card elevation="8" rounded="lg">
           <v-list density="compact" class="pa-0">
-            <v-list-item @click="addNode('trigger')" class="context-menu-item">
+            <v-list-item @click="addTriggerNode" class="context-menu-item">
               <template #prepend>
                 <v-icon color="success">mdi-flash</v-icon>
               </template>
@@ -91,6 +104,14 @@
       </div>
     </div>
 
+    <!-- Node Properties Panel -->
+    <NodePropertiesPanel
+      v-model="showPropertiesPanel"
+      :selected-node="selectedNode"
+      @nodeUpdated="handleNodeUpdated"
+      @nodeDeleted="handleNodeDeleted"
+    />
+
     <!-- Snackbar für Feedback -->
     <v-snackbar
       v-model="snackbar"
@@ -120,6 +141,16 @@ import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
 
+// Import custom node components
+import TriggerNode from '../components/TriggerNode.vue'
+import ActionNode from '../components/ActionNode.vue'
+import ConditionNode from '../components/ConditionNode.vue'
+import EndNode from '../components/EndNode.vue'
+import NodePropertiesPanel from '../components/NodePropertiesPanel.vue'
+
+// Import types
+import type { WorkflowNode } from '../types'
+
 // Import Vue Flow CSS
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -129,15 +160,28 @@ import '@vue-flow/minimap/dist/style.css'
 const router = useRouter()
 const route = useRoute()
 
+// Node type registry for Vue Flow
+const nodeTypes = {
+  trigger: TriggerNode,
+  action: ActionNode,
+  condition: ConditionNode,
+  end: EndNode
+}
+
 // State
-const nodes = ref([])
-const edges = ref([])
+const nodes = ref<any[]>([])
+const edges = ref<any[]>([])
+const vueFlowKey = ref(0)
 const contextMenu = ref({
   show: false,
   x: 0,
   y: 0,
   nodePosition: { x: 0, y: 0 }
 })
+
+// Properties Panel State
+const showPropertiesPanel = ref(false)
+const selectedNode = ref<WorkflowNode | null>(null)
 
 // Workflow metadata
 const currentWorkflowId = ref<string | null>(null)
@@ -149,6 +193,11 @@ const loading = ref(false)
 const snackbar = ref(false)
 const snackbarText = ref('')
 const snackbarColor = ref('success')
+
+// Name editing state
+const editingName = ref(false)
+const originalName = ref('')
+
 
 // Computed
 const isEditMode = computed(() => !!currentWorkflowId.value)
@@ -190,31 +239,71 @@ function onPaneContextMenu(event: any) {
   }
 }
 
+function addTriggerNode() {
+  const id = `trigger_${Date.now()}`
+  
+  const newNode: WorkflowNode = {
+    id,
+    type: 'trigger',
+    position: contextMenu.value.nodePosition,
+    data: {
+      id,
+      label: 'Event Trigger',
+      triggerType: 'event',
+      eventType: '',
+      description: 'Startet bei bestimmten Events'
+    }
+  }
+  
+  nodes.value.push(newNode)
+  contextMenu.value.show = false
+  
+  // Open properties panel for the new node
+  selectedNode.value = newNode
+  showPropertiesPanel.value = true
+}
+
 function addNode(nodeType: string) {
   const id = `${nodeType}_${Date.now()}`
   
-  const nodeConfig = {
-    trigger: { label: 'Trigger Node', color: '#4caf50' },
-    action: { label: 'Action Node', color: '#2196f3' },
-    condition: { label: 'Condition Node', color: '#ff9800' },
-    end: { label: 'End Node', color: '#f44336' }
+  // Create node data based on type
+  const nodeDataMap = {
+    action: {
+      id,
+      label: 'Neue Action',
+      actionType: 'api' as const,
+      method: 'GET',
+      endpoint: '',
+      description: '',
+      parameters: {},
+      timeout: 30,
+      retries: 3
+    },
+    condition: {
+      id,
+      label: 'Neue Condition',
+      conditionType: 'if-else' as const,
+      operator: 'equals' as const,
+      leftValue: '',
+      rightValue: '',
+      description: ''
+    },
+    end: {
+      id,
+      label: 'Workflow Ende',
+      endType: 'success' as const,
+      message: 'Workflow erfolgreich beendet',
+      description: ''
+    }
   }
   
-  const config = nodeConfig[nodeType] || nodeConfig.trigger
+  const nodeData = nodeDataMap[nodeType as keyof typeof nodeDataMap] || nodeDataMap.action
   
   const newNode = {
     id,
-    type: 'default',
+    type: nodeType,
     position: contextMenu.value.nodePosition,
-    data: {
-      label: config.label
-    },
-    style: {
-      backgroundColor: config.color,
-      color: 'white',
-      border: `2px solid ${config.color}`,
-      borderRadius: '8px'
-    }
+    data: nodeData
   }
   
   nodes.value.push(newNode)
@@ -233,6 +322,27 @@ function onConnect(connection: any) {
   edges.value.push(newEdge)
 }
 
+// Node interaction handlers
+function onNodeClick(event: any) {
+  const node = event.node || event
+  if (node) {
+    // Always get the latest node data from the nodes array
+    const currentNode = nodes.value.find(n => n.id === node.id)
+    selectedNode.value = currentNode || node
+  }
+}
+
+function onNodeDoubleClick(event: any) {
+  const node = event.node || event
+  if (node) {
+    // Always get the latest node data from the nodes array
+    const currentNode = nodes.value.find(n => n.id === node.id)
+    selectedNode.value = currentNode || node
+    showPropertiesPanel.value = true
+  }
+}
+
+
 // Load existing workflow data
 async function loadWorkflow(workflowId: string) {
   try {
@@ -243,6 +353,7 @@ async function loadWorkflow(workflowId: string) {
     currentWorkflowId.value = workflow.id
     workflowName.value = workflow.name
     workflowDescription.value = workflow.description || ''
+    originalName.value = workflow.name
     
     // Set nodes and edges
     nodes.value = workflow.nodes || []
@@ -285,15 +396,22 @@ async function saveWorkflow() {
       showSuccess(`Workflow "${result.name}" erfolgreich aktualisiert`)
 
     } else {
-      const name = prompt('Workflow Name:')
-      
-      if (!name) {
-        loading.value = false
-        return
+      // Create new workflow - name should be set from route query or ask for it
+      if (!workflowName.value) {
+        const name = prompt('Workflow Name:')
+        if (!name) {
+          loading.value = false
+          return
+        }
+        workflowName.value = name
+        workflowData.name = name
+      } else {
+        workflowData.name = workflowName.value
       }
       
-      workflowData.name = name
-      workflowData.description = `Workflow mit ${nodes.value.length} Nodes und ${edges.value.length} Verbindungen`
+      if (!workflowData.description) {
+        workflowData.description = workflowDescription.value || `Workflow mit ${nodes.value.length} Nodes und ${edges.value.length} Verbindungen`
+      }
       
       result = await workflowService.createWorkflow(workflowData)
       showSuccess(`Workflow "${result.name}" erfolgreich erstellt`)
@@ -301,7 +419,12 @@ async function saveWorkflow() {
       currentWorkflowId.value = result.id
       workflowName.value = result.name
       workflowDescription.value = result.description || ''
-
+      
+      // Clear query parameters by replacing the current route
+      router.replace({ 
+        name: 'workflow-builder', 
+        params: { id: result.id }
+      })
     }
     
   } catch (error: any) {
@@ -313,12 +436,47 @@ async function saveWorkflow() {
   }
 }
 
-function testButton() {
-  // Simple test function
-}
 
 function handleBack() {
   router.push({ name: 'workflows' })
+}
+
+// Name editing functions
+function finishNameEdit() {
+  editingName.value = false
+  if (workflowName.value.trim() !== originalName.value) {
+    // Auto-save the name change
+    saveWorkflow()
+  }
+}
+
+function cancelNameEdit() {
+  workflowName.value = originalName.value
+  editingName.value = false
+}
+
+// Node properties panel handlers
+function handleNodeUpdated(updatedNode: WorkflowNode) {
+  // Find and update the node in the nodes array
+  const nodeIndex = nodes.value.findIndex(n => n.id === updatedNode.id)
+  if (nodeIndex !== -1) {
+    // Force complete replacement to trigger reactivity
+    nodes.value.splice(nodeIndex, 1, updatedNode)
+    
+    // Update selected node
+    if (selectedNode.value && selectedNode.value.id === updatedNode.id) {
+      selectedNode.value = updatedNode
+    }
+    
+    // Force Vue Flow to re-render by updating key
+    vueFlowKey.value++
+  }
+}
+
+function handleNodeDeleted() {
+  // The deletion is already handled by onNodeDeleted
+  selectedNode.value = null
+  showSuccess('Node gelöscht')
 }
 
 onMounted(async () => {
@@ -331,6 +489,19 @@ onMounted(async () => {
   const workflowId = route.params.id
   if (workflowId && typeof workflowId === 'string') {
     await loadWorkflow(workflowId)
+  } else {
+    // Set name from query parameters for new workflows
+    const queryName = route.query.name
+    const queryDescription = route.query.description
+    
+    if (queryName && typeof queryName === 'string') {
+      workflowName.value = queryName
+      originalName.value = queryName
+    }
+    
+    if (queryDescription && typeof queryDescription === 'string') {
+      workflowDescription.value = queryDescription
+    }
   }
 })
 </script>
@@ -351,6 +522,34 @@ onMounted(async () => {
 }
 
 .context-menu-item:hover {
-  background: rgba(var(--v-theme-primary), 0.08);
+  background: rgba(33, 150, 243, 0.08);
+}
+
+.workflow-title {
+  flex: 1;
+}
+
+.clickable-title {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.clickable-title:hover {
+  color: rgb(33, 150, 243);
+}
+
+.edit-icon {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.clickable-title:hover .edit-icon {
+  opacity: 1;
+}
+
+.name-editor {
+  max-width: 400px;
 }
 </style>

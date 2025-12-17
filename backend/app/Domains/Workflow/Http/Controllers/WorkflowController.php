@@ -52,7 +52,7 @@ class WorkflowController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'nodes' => 'required|array',
+            'nodes' => 'present|array',
             'edges' => 'present|array',
             'metadata' => 'nullable|array'
         ]);

@@ -130,6 +130,13 @@
         </AdvancedDataTable>
       </v-card-text>
     </v-card>
+
+    <!-- Workflow Name Dialog -->
+    <WorkflowNameDialog
+      v-model="showNameDialog"
+      @create="handleCreateWorkflow"
+      @cancel="showNameDialog = false"
+    />
   </div>
 </template>
 
@@ -138,6 +145,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/shared/composables/useToast'
 import AdvancedDataTable from '@/shared/components/tables/AdvancedDataTable.vue'
+import WorkflowNameDialog from '../components/WorkflowNameDialog.vue'
 import { workflowService, type Workflow } from '../services/workflowService'
 
 const router = useRouter()
@@ -146,6 +154,7 @@ const toast = useToast()
 // State
 const workflows = ref<Workflow[]>([])
 const loading = ref(false)
+const showNameDialog = ref(false)
 
 // ADT Column Configuration
 const workflowColumns = [
@@ -202,7 +211,21 @@ const workflowStats = computed(() => {
 
 // Methods
 function createWorkflow() {
-  router.push({ name: 'workflow-builder' })
+  showNameDialog.value = true
+}
+
+function handleCreateWorkflow(data: { name: string; description?: string }) {
+  // Close dialog
+  showNameDialog.value = false
+  
+  // Navigate to workflow builder with name as query parameter
+  router.push({ 
+    name: 'workflow-builder',
+    query: { 
+      name: data.name,
+      description: data.description 
+    }
+  })
 }
 
 function editWorkflow(workflow: any) {
