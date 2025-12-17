@@ -178,12 +178,53 @@
               size="small"
               @click.stop="viewDocument(item)"
             />
-            <v-btn
-              icon="mdi-dots-vertical"
-              variant="text"
-              size="small"
-              @click.stop="showDocumentMenu(item, $event)"
-            />
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  icon="mdi-dots-vertical"
+                  variant="text"
+                  size="small"
+                  v-bind="props"
+                  @click.stop
+                />
+              </template>
+              <v-list>
+                <v-list-item @click="editDocument(item)">
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-pencil" size="16" />
+                  </template>
+                  <v-list-item-title>Bearbeiten</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="shareDocument(item)">
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-share-variant" size="16" />
+                  </template>
+                  <v-list-item-title>Teilen</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="manageCategories(item)">
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-tag-multiple" size="16" />
+                  </template>
+                  <v-list-item-title>Kategorien verwalten</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="processDocumentWithAi(item)">
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-robot" size="16" color="purple" />
+                  </template>
+                  <v-list-item-title class="text-purple">Mit Claude kategorisieren</v-list-item-title>
+                </v-list-item>
+                <v-divider />
+                <v-list-item 
+                  @click="deleteDocument(item)"
+                  :disabled="item.status === 'deleted'"
+                >
+                  <template v-slot:prepend>
+                    <v-icon icon="mdi-delete" size="16" color="error" />
+                  </template>
+                  <v-list-item-title class="text-error">Löschen</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </div>
         </template>
 
@@ -269,51 +310,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Document Context Menu -->
-    <v-menu
-      v-model="documentMenu.show"
-      :position-x="documentMenu.x"
-      :position-y="documentMenu.y"
-      absolute
-      offset-y
-    >
-      <v-list dense>
-        <v-list-item @click="editDocument(documentMenu.item)">
-          <v-list-item-title>
-            <v-icon icon="mdi-pencil" size="16" class="mr-2" />
-            Bearbeiten
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="shareDocument(documentMenu.item)">
-          <v-list-item-title>
-            <v-icon icon="mdi-share-variant" size="16" class="mr-2" />
-            Teilen
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="manageCategories(documentMenu.item)">
-          <v-list-item-title>
-            <v-icon icon="mdi-tag-multiple" size="16" class="mr-2" />
-            Kategorien verwalten
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="processDocumentWithAi(documentMenu.item)">
-          <v-list-item-title class="text-purple">
-            <v-icon icon="mdi-robot" size="16" class="mr-2" />
-            Mit Claude kategorisieren
-          </v-list-item-title>
-        </v-list-item>
-        <v-divider />
-        <v-list-item 
-          @click="deleteDocument(documentMenu.item)"
-          :disabled="documentMenu.item?.status === 'deleted'"
-        >
-          <v-list-item-title class="text-error">
-            <v-icon icon="mdi-delete" size="16" class="mr-2" />
-            Löschen
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
   </div>
 </template>
 
@@ -421,12 +417,6 @@ const bulkAiProcessing = ref(false)
 const selectedDocuments = ref<Document[]>([])
 const selectedCategoryId = ref<string>('')
 
-const documentMenu = ref({
-  show: false,
-  x: 0,
-  y: 0,
-  item: null as Document | null
-})
 
 // Computed properties
 const documentCount = computed(() => statistics.value.total_documents || null)
@@ -543,14 +533,6 @@ const manageCategories = (document: Document) => {
   rsdStore.openEdit('documentCategories', { document })
 }
 
-const showDocumentMenu = (document: Document, event: MouseEvent) => {
-  documentMenu.value = {
-    show: true,
-    x: event.clientX,
-    y: event.clientY,
-    item: document
-  }
-}
 
 const bulkCategorize = (documents: Document[]) => {
   selectedDocuments.value = documents

@@ -111,14 +111,19 @@ const componentMap = {
   'user-create': defineAsyncComponent(() => import('@/domains/tenant/components/UserCreateForm.vue')),
   'user-edit': defineAsyncComponent(() => import('@/domains/tenant/components/UserEditForm.vue')),
   'user-view': defineAsyncComponent(() => import('@/domains/tenant/components/UserViewDetails.vue')),
+
+  // Partner management (separate components for each mode)
+  'partner-create': defineAsyncComponent(() => import('@/domains/partner/components/PartnerCreateForm.vue')),
+  'partner-edit': defineAsyncComponent(() => import('@/domains/partner/components/PartnerEditForm.vue')),
+  'partner-view': defineAsyncComponent(() => import('@/domains/partner/components/PartnerViewDetails.vue')),
 }
 
 // Computed component
 const currentComponent = computed(() => {
   if (!rsdStore.entity || !rsdStore.mode) return null
   
-  // For user entity, use mode-specific components
-  if (rsdStore.entity === 'user') {
+  // For user and partner entities, use mode-specific components
+  if (rsdStore.entity === 'user' || rsdStore.entity === 'partner') {
     const componentKey = `${rsdStore.entity}-${rsdStore.mode}` as keyof typeof componentMap
     return componentMap[componentKey] || null
   }

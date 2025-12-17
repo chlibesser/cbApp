@@ -62,10 +62,24 @@
           <v-list-item-title>{{ file.name }}</v-list-item-title>
           <v-list-item-subtitle>
             {{ formatFileSize(file.size) }} • {{ file.type || 'Unbekannter Typ' }}
+            <span v-if="fileUploadStatus[index]?.message" class="ml-2" :class="getStatusTextColor(fileUploadStatus[index]?.status)">
+              {{ fileUploadStatus[index]?.message }}
+            </span>
           </v-list-item-subtitle>
 
           <template #append>
+            <!-- Status Icon -->
+            <v-icon 
+              v-if="fileUploadStatus[index]"
+              :icon="getStatusIcon(fileUploadStatus[index]?.status)" 
+              :color="getStatusColor(fileUploadStatus[index]?.status)"
+              size="20"
+              class="mr-2"
+            />
+            
+            <!-- Remove Button (only show if not uploading) -->
             <v-btn
+              v-if="!uploading"
               icon="mdi-close"
               variant="text"
               size="small"
@@ -256,6 +270,11 @@ const fileSettings = ref<Array<{
   description: string
 }>>([])
 
+const fileUploadStatus = ref<Array<{
+  status: 'pending' | 'uploading' | 'success' | 'error'
+  message?: string
+}>>([])
+
 // Computed
 const currentTenant = computed(() => {
   // TODO: Get from auth store
@@ -278,10 +297,14 @@ watch(() => selectedFiles.value.length, (newLength, oldLength) => {
         title: '',
         description: ''
       })
+      fileUploadStatus.value.push({
+        status: 'pending'
+      })
     }
   } else if (newLength < oldLength) {
     // Remove settings for removed files
     fileSettings.value = fileSettings.value.slice(0, newLength)
+    fileUploadStatus.value = fileUploadStatus.value.slice(0, newLength)
   }
 })
 
@@ -341,6 +364,7 @@ const removeFile = (index: number) => {
 const clearFiles = () => {
   selectedFiles.value = []
   fileSettings.value = []
+  fileUploadStatus.value = []
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -356,27 +380,73 @@ const handleSubmit = async () => {
   uploading.value = true
   uploadProgress.value = 0
   
+  // Reset all file statuses to uploading
+  fileUploadStatus.value.forEach((status, index) => {
+    status.status = 'uploading'
+    status.message = undefined
+  })
+  
   try {
-    for (let i = 0; i < selectedFiles.value.length; i++) {
-      const file = selectedFiles.value[i]
-      currentFile.value = file.name
-      
-      await uploadFile(file, i)
-      
-      uploadProgress.value = Math.round(((i + 1) / selectedFiles.value.length) * 100)
+    const response = await uploadFilesBulk()
+    const result = response.data.data // Extract nested data from response
+    const message = response.data.message // Extract message
+    
+    // Ensure result has the expected structure
+    if (!result || !result.successful || !result.failed || !result.summary) {
+      console.error('Invalid response structure:', { response, result })
+      throw new Error('Invalid response format from server')
     }
     
-    showSuccess(`${selectedFiles.value.length} Datei(en) erfolgreich hochgeladen`)
+    // Update file statuses based on results
+    fileUploadStatus.value.forEach((status, index) => {
+      status.status = 'pending' // Default
+      status.message = undefined
+    })
     
-    // Emit success for the last uploaded document
-    emit('uploaded', { success: true })
+    // Mark successful uploads
+    result.successful.forEach((success: any) => {
+      if (success.index < fileUploadStatus.value.length) {
+        fileUploadStatus.value[success.index].status = 'success'
+        fileUploadStatus.value[success.index].message = success.message
+      }
+    })
     
-    // Reset form
-    clearFiles()
+    // Mark failed uploads
+    result.failed.forEach((failed: any) => {
+      if (failed.index < fileUploadStatus.value.length) {
+        fileUploadStatus.value[failed.index].status = 'error'
+        fileUploadStatus.value[failed.index].message = failed.error
+      }
+    })
+    
+    // Show result message
+    if (result.summary.success_count > 0 && result.summary.error_count > 0) {
+      showSuccess(message)
+    } else if (result.summary.success_count === result.summary.total) {
+      showSuccess(message)
+    } else {
+      showError(message)
+    }
+    
+    // Emit success with details
+    emit('uploaded', {
+      success: result.summary.success_count > 0,
+      data: result
+    })
+    
+    // Reset form only if all files were successful
+    if (result.summary.error_count === 0) {
+      clearFiles()
+    }
     
   } catch (error) {
     console.error('Upload error:', error)
     showError('Fehler beim Upload')
+    // Mark all files as error
+    fileUploadStatus.value.forEach((status) => {
+      status.status = 'error'
+      status.message = 'Netzwerkfehler'
+    })
   } finally {
     uploading.value = false
     uploadProgress.value = 0
@@ -384,35 +454,37 @@ const handleSubmit = async () => {
   }
 }
 
-const uploadFile = async (file: File, index: number): Promise<void> => {
+const uploadFilesBulk = async (): Promise<any> => {
   const formData = new FormData()
-  formData.append('file', file)
   
-  // Add settings
-  formData.append('visibility', uploadSettings.visibility)
+  // Add all files
+  selectedFiles.value.forEach((file, index) => {
+    formData.append(`files[${index}]`, file)
+  })
   
+  // Add common settings
+  formData.append('common_settings[visibility]', uploadSettings.visibility)
   if (uploadSettings.expires_at) {
-    formData.append('expires_at', uploadSettings.expires_at)
+    formData.append('common_settings[expires_at]', uploadSettings.expires_at)
   }
+  formData.append('common_settings[auto_categorize]', uploadSettings.auto_categorize.toString())
+  if (uploadSettings.manual_category_id) {
+    formData.append('common_settings[manual_category_id]', uploadSettings.manual_category_id)
+  }
+  formData.append('common_settings[upload_batch_id]', Date.now().toString())
   
   // Add individual file settings
-  const settings = fileSettings.value[index]
-  if (settings?.title) {
-    formData.append('title', settings.title)
-  }
-  if (settings?.description) {
-    formData.append('description', settings.description)
-  }
+  fileSettings.value.forEach((settings, index) => {
+    if (settings?.title) {
+      formData.append(`file_settings[${index}][title]`, settings.title)
+    }
+    if (settings?.description) {
+      formData.append(`file_settings[${index}][description]`, settings.description)
+    }
+  })
   
-  // Add metadata as individual fields instead of nested object
-  formData.append('metadata[auto_categorize]', uploadSettings.auto_categorize.toString())
-  if (uploadSettings.manual_category_id) {
-    formData.append('metadata[manual_category_id]', uploadSettings.manual_category_id)
-  }
-  formData.append('metadata[upload_batch_id]', Date.now().toString())
-  
-  const response = await api.postFile('/tenant/documents', formData)
-  return response.data
+  const response = await api.postFile('/tenant/documents/bulk-upload', formData)
+  return response
 }
 
 const handleCancel = () => {
@@ -448,6 +520,34 @@ const getFileIconColor = (mimeType: string): string => {
   if (mimeType.includes('excel')) return 'green'
   if (mimeType.includes('powerpoint')) return 'orange'
   return 'grey'
+}
+
+const getStatusIcon = (status?: string): string => {
+  switch (status) {
+    case 'uploading': return 'mdi-loading'
+    case 'success': return 'mdi-check-circle'
+    case 'error': return 'mdi-alert-circle'
+    case 'pending':
+    default: return 'mdi-circle-outline'
+  }
+}
+
+const getStatusColor = (status?: string): string => {
+  switch (status) {
+    case 'uploading': return 'primary'
+    case 'success': return 'success'
+    case 'error': return 'error'
+    case 'pending':
+    default: return 'grey'
+  }
+}
+
+const getStatusTextColor = (status?: string): string => {
+  switch (status) {
+    case 'success': return 'text-success'
+    case 'error': return 'text-error'
+    default: return 'text-medium-emphasis'
+  }
 }
 
 </script>

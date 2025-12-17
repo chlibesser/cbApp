@@ -100,6 +100,17 @@ const routes = [
             component: () => import('../../domains/workflow/views/WorkflowBuilderView.vue'),
             props: true
           },
+          {
+            path: 'partners',
+            name: 'partners',
+            component: () => import('../../domains/partner/views/PartnerListView.vue'),
+          },
+          {
+            path: 'partners/:id',
+            name: 'partner-detail',
+            component: () => import('../../domains/partner/views/PartnerDetailView.vue'),
+            props: true
+          },
           // TODO: Add other tenant admin routes
           // {
           //   path: 'settings',

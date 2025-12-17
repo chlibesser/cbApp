@@ -41,7 +41,7 @@
     >
       <!-- Dynamic Slots for Custom Cell Content -->
       <template
-        v-for="column in columns"
+        v-for="column in (columns || [])"
         :key="column.key"
         #[`item.${column.key}`]="slotProps"
       >
@@ -128,6 +128,9 @@ const internalLoading = ref(false)
 const loading = computed(() => props.loading || internalLoading.value)
 
 const computedHeaders = computed(() => {
+  if (!props.columns || !Array.isArray(props.columns)) {
+    return []
+  }
   return props.columns.map(column => ({
     title: column.label,
     key: column.key,

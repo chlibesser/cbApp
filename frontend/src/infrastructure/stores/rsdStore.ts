@@ -7,7 +7,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
 
 export type RSDMode = 'view' | 'edit' | 'create'
-export type RSDEntity = 'account' | 'tenant' | 'profile' | 'permission' | 'role' | 'user'
+export type RSDEntity = 'account' | 'tenant' | 'profile' | 'permission' | 'role' | 'user' | 'partner'
 
 interface RSDState {
   isOpen: boolean
@@ -50,7 +50,8 @@ export const useRSDStore = defineStore('rsd', () => {
       profile: 'Profile',
       permission: 'Berechtigung',
       role: 'Rolle',
-      user: 'Benutzer'
+      user: 'Benutzer',
+      partner: 'Partner'
     }
 
     const entityName = entityNames[state.value.entity]
@@ -83,6 +84,8 @@ export const useRSDStore = defineStore('rsd', () => {
       case 'permission':
         return state.value.data.name || state.value.data.key || ''
       case 'role':
+        return state.value.data.name || ''
+      case 'partner':
         return state.value.data.name || ''
       default:
         return ''
