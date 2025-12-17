@@ -83,7 +83,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '@/core/api'
-import { useToast } from '@/shared/composables/useToast'
+import { useNotifications } from '@/core/composables/useNotifications'
 
 export interface TableColumn {
   key: string
@@ -117,7 +117,7 @@ const emit = defineEmits<{
 
 // Composables
 const api = useApi()
-const toast = useToast()
+const { showSuccess, showError } = useNotifications()
 
 // State
 const search = ref('')
@@ -156,7 +156,7 @@ const loadData = async () => {
     
   } catch (error: any) {
     console.error('Error loading data:', error)
-    toast.error('Fehler beim Laden der Daten')
+    showError('Fehler beim Laden der Daten')
     items.value = []
   } finally {
     internalLoading.value = false

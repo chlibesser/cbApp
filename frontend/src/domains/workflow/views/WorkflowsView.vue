@@ -143,13 +143,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from '@/shared/composables/useToast'
+import { useNotifications } from '@/core/composables/useNotifications'
 import AdvancedDataTable from '@/shared/components/tables/AdvancedDataTable.vue'
 import WorkflowNameDialog from '../components/WorkflowNameDialog.vue'
 import { workflowService, type Workflow } from '../services/workflowService'
 
 const router = useRouter()
-const toast = useToast()
+const { showSuccess, showError } = useNotifications()
 
 // State
 const workflows = ref<Workflow[]>([])
@@ -236,10 +236,10 @@ async function runWorkflow(workflow: Workflow) {
   try {
     loading.value = true
     const result = await workflowService.executeWorkflow(workflow.id)
-    toast.success(`Workflow "${workflow.name}" wird ausgeführt (ID: ${result.execution_id})`)
+    showSuccess(`Workflow "${workflow.name}" wird ausgeführt (ID: ${result.execution_id})`)
   } catch (error: any) {
     console.error('Fehler beim Ausführen des Workflows:', error)
-    toast.error(error.response?.data?.message || 'Fehler beim Ausführen des Workflows')
+    showError(error.response?.data?.message || 'Fehler beim Ausführen des Workflows')
   } finally {
     loading.value = false
   }

@@ -321,7 +321,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
-import { useToast } from '@/shared/composables/useToast'
+import { useNotifications } from '@/core/composables/useNotifications'
 import { useApi } from '@/core/api'
 import AdvancedDataTable from '@/shared/components/tables/AdvancedDataTable.vue'
 import GenericRSDWrapper from '@/shared/components/GenericRSDWrapper.vue'
@@ -332,7 +332,7 @@ import type { Document, DocumentStatistics } from '@/shared/types/document'
 
 const router = useRouter()
 const rsdStore = useRSDStore()
-const { showSuccess, showError } = useToast()
+const { showSuccess, showError } = useNotifications()
 const api = useApi()
 
 // Table configuration

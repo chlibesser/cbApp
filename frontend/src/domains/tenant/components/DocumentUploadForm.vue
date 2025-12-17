@@ -213,7 +213,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useToast } from '@/shared/composables/useToast'
+import { useNotifications } from '@/core/composables/useNotifications'
 import { useApi } from '@/core/api'
 import CategorySelector from '@/shared/components/form/CategorySelector.vue'
 
@@ -231,7 +231,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
-const { showSuccess, showError } = useToast()
+const { showSuccess, showError } = useNotifications()
 const api = useApi()
 
 // Reactive data

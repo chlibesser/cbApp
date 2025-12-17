@@ -510,13 +510,13 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '@/core/api'
-import { useToast } from '@/shared/composables/useToast'
+import { useNotifications } from '@/core/composables/useNotifications'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
 import type { Document } from '@/shared/types/document'
 
 const route = useRoute()
 const router = useRouter()
-const { showSuccess, showError } = useToast()
+const { showSuccess, showError } = useNotifications()
 const rsdStore = useRSDStore()
 const api = useApi()
 
