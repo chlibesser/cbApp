@@ -8,9 +8,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\ShouldNotQueue;
 
-class DocumentUploaded implements ShouldNotQueue
+class DocumentUploaded
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

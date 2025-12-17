@@ -138,6 +138,7 @@ class WorkflowTriggerListener
                     'size' => $event->document->file_size,
                     'uploader_id' => $event->uploader->id
                 ],
+                'tenant_id' => $event->document->tenant_id,
                 'execution_type' => 'auto_trigger',
                 'trigger_event' => 'document_uploaded'
             ];
@@ -267,16 +268,16 @@ class WorkflowTriggerListener
     }
 
     /**
-     * Execute API call action (simplified version)
+     * Execute API call action with full variable support
      */
     private function executeApiCall(array $node, string $executionId, array $context = []): void
     {
         $data = $node['data'];
         $method = strtoupper($data['method'] ?? 'GET');
-        $endpoint = $data['endpoint'] ?? '';
+        $rawEndpoint = $data['endpoint'] ?? '';
         $timeout = $data['timeout'] ?? 30;
         
-        if (empty($endpoint)) {
+        if (empty($rawEndpoint)) {
             Log::warning('API call skipped - no endpoint configured', [
                 'node_id' => $node['id'],
                 'execution_id' => $executionId
@@ -285,36 +286,57 @@ class WorkflowTriggerListener
         }
         
         try {
+            // Process variables in endpoint URL
+            $endpoint = $this->processVariables($rawEndpoint, $context);
+            
             $client = new \GuzzleHttp\Client([
                 'timeout' => $timeout,
                 'verify' => false
             ]);
             
-            $options = [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                    'User-Agent' => 'cbApp-AutoWorkflow/' . $executionId
-                ]
+            // Build headers with variable processing
+            $headers = [
+                'Accept' => 'application/json',
+                'User-Agent' => 'cbApp-AutoWorkflow/' . $executionId
             ];
             
-            // Add request body with context for POST/PUT/PATCH requests
-            if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-                $parameters = $data['parameters'] ?? [];
-                // Merge context data into parameters
-                $options['json'] = array_merge($parameters, [
-                    'workflow_context' => $context
-                ]);
+            // Process custom headers
+            if (!empty($data['headers']) && is_array($data['headers'])) {
+                foreach ($data['headers'] as $header) {
+                    if (!empty($header['key']) && !empty($header['value'])) {
+                        $headerKey = $this->processVariables($header['key'], $context);
+                        $headerValue = $this->processVariables($header['value'], $context);
+                        $headers[$headerKey] = $headerValue;
+                    }
+                }
             }
+            
+            $options = ['headers' => $headers];
+            
+            // Process request body for POST/PUT/PATCH requests
+            if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
+                $this->processRequestBody($data, $context, $options);
+            }
+            
+            Log::info('Executing API call with variables', [
+                'node_id' => $node['id'],
+                'method' => $method,
+                'original_endpoint' => $rawEndpoint,
+                'processed_endpoint' => $endpoint,
+                'headers' => $headers,
+                'execution_id' => $executionId
+            ]);
             
             $response = $client->request($method, $endpoint, $options);
             $statusCode = $response->getStatusCode();
+            $responseBody = $response->getBody()->getContents();
             
-            Log::info('Auto-workflow API call executed', [
+            Log::info('Auto-workflow API call executed successfully', [
                 'node_id' => $node['id'],
                 'method' => $method,
                 'endpoint' => $endpoint,
                 'status_code' => $statusCode,
+                'response_length' => strlen($responseBody),
                 'execution_id' => $executionId
             ]);
             
@@ -322,10 +344,120 @@ class WorkflowTriggerListener
             Log::error('Auto-workflow API call failed', [
                 'node_id' => $node['id'],
                 'method' => $method,
-                'endpoint' => $endpoint,
+                'endpoint' => $rawEndpoint,
                 'error' => $e->getMessage(),
                 'execution_id' => $executionId
             ]);
         }
+    }
+    
+    /**
+     * Process request body based on configuration
+     */
+    private function processRequestBody(array $data, array $context, array &$options): void
+    {
+        $body = $data['body'] ?? [];
+        $bodyType = $body['type'] ?? 'json';
+        
+        switch ($bodyType) {
+            case 'json':
+                $jsonBody = $body['json'] ?? '';
+                if (!empty($jsonBody)) {
+                    $processedJson = $this->processVariables($jsonBody, $context);
+                    try {
+                        $decodedJson = json_decode($processedJson, true);
+                        if ($decodedJson !== null) {
+                            $options['json'] = $decodedJson;
+                            $options['headers']['Content-Type'] = 'application/json';
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Invalid JSON in request body, sending as raw', [
+                            'json' => $processedJson,
+                            'error' => $e->getMessage()
+                        ]);
+                        $options['body'] = $processedJson;
+                        $options['headers']['Content-Type'] = 'application/json';
+                    }
+                }
+                break;
+                
+            case 'form':
+                $formData = $body['formData'] ?? [];
+                $processedFormData = [];
+                foreach ($formData as $field) {
+                    if (!empty($field['key']) && isset($field['value'])) {
+                        $key = $this->processVariables($field['key'], $context);
+                        $value = $this->processVariables($field['value'], $context);
+                        $processedFormData[$key] = $value;
+                    }
+                }
+                if (!empty($processedFormData)) {
+                    $options['form_params'] = $processedFormData;
+                    $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+                }
+                break;
+                
+            case 'raw':
+                $rawBody = $body['raw'] ?? '';
+                if (!empty($rawBody)) {
+                    $processedRaw = $this->processVariables($rawBody, $context);
+                    $options['body'] = $processedRaw;
+                    if (!isset($options['headers']['Content-Type'])) {
+                        $options['headers']['Content-Type'] = 'text/plain';
+                    }
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Process variables in text templates
+     */
+    private function processVariables(string $template, array $context): string
+    {
+        if (empty($template) || !isset($context['trigger_document'])) {
+            return $template;
+        }
+        
+        $document = $context['trigger_document'];
+        $variables = [
+            '{{document.name}}' => $document['filename'] ?? '',
+            '{{document.size}}' => $document['size'] ?? 0,
+            '{{document.type}}' => $document['mime_type'] ?? '',
+            '{{document.extension}}' => pathinfo($document['filename'] ?? '', PATHINFO_EXTENSION),
+            '{{document.uploader}}' => $document['uploader_id'] ?? '',
+            '{{document.id}}' => $document['id'] ?? '',
+            '{{document.tenant}}' => $context['tenant_id'] ?? '',
+            '{{document.url}}' => $this->generateDocumentUrl($document['id'] ?? '')
+        ];
+        
+        // Replace variables in template
+        $processed = $template;
+        foreach ($variables as $variable => $value) {
+            $processed = str_replace($variable, (string)$value, $processed);
+        }
+        
+        Log::debug('Variable processing', [
+            'original' => $template,
+            'processed' => $processed,
+            'variables_used' => array_keys(array_filter($variables, function($var) use ($template) {
+                return strpos($template, $var) !== false;
+            }, ARRAY_FILTER_USE_KEY))
+        ]);
+        
+        return $processed;
+    }
+    
+    /**
+     * Generate document download URL
+     */
+    private function generateDocumentUrl(string $documentId): string
+    {
+        if (empty($documentId)) {
+            return '';
+        }
+        
+        $baseUrl = config('app.url', 'http://localhost:8004');
+        return "{$baseUrl}/api/tenant/documents/{$documentId}/download";
     }
 }
