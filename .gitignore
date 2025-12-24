@@ -91,3 +91,6 @@ uploadFiles/
 docker-compose.override.yml
 .env.docker
 postgres_data/
+
+## Others
+docs/

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class ClaudeProvider implements AIProviderInterface
 {
-    private string $apiKey;
+    private ?string $apiKey;
     private string $baseUrl = 'https://api.anthropic.com';
     private string $defaultModel = 'claude-3-haiku-20240307'; // Schneller und günstiger für Demo
 
