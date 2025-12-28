@@ -12,6 +12,7 @@ use App\Infrastructure\Http\Controllers\Tenant\CategoryController;
 use App\Infrastructure\Http\Controllers\Documents\SignedDocumentController;
 use App\Domains\Workflow\Http\Controllers\WorkflowController;
 use App\Domains\Partner\Controllers\PartnerController;
+use App\Infrastructure\Http\Controllers\TranslationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -118,3 +119,47 @@ Route::get('/documents/{document}/signed/{filename}', [SignedDocumentController:
     ->name('documents.signed-download')
     ->middleware(['signed']);
 
+/*
+|--------------------------------------------------------------------------
+| Translation Routes
+|--------------------------------------------------------------------------
+| Routes for handling translations and locale management
+| Public routes for getting translations, authenticated for user preferences
+*/
+
+// Public translation endpoints - no authentication required
+Route::prefix('translations')->name('translations.')->group(function () {
+    // GET /api/translations/locales - Get all available locales
+    Route::get('locales', [TranslationController::class, 'getLocales'])->name('locales');
+    
+    // GET /api/translations/{locale} - Get all translations for locale
+    Route::get('{locale}', [TranslationController::class, 'getAllTranslations'])
+        ->name('all')
+        ->where('locale', '[a-z]{2}');  // Only 2-letter locale codes
+    
+    // GET /api/translations/{locale}/{namespace} - Get namespace translations
+    Route::get('{locale}/{namespace}', [TranslationController::class, 'getNamespaceTranslations'])
+        ->name('namespace')
+        ->where([
+            'locale' => '[a-z]{2}',      // 2-letter locale codes
+            'namespace' => '.*'          // Allow dots in namespace (admin.tenants)
+        ]);
+});
+
+// Authenticated user locale routes - requires authentication
+Route::middleware('auth:sanctum')->prefix('user')->name('user.')->group(function () {
+    // GET /api/user/locale - Get user's current locale info
+    Route::get('locale', [TranslationController::class, 'getUserLocale'])
+        ->name('locale.get');
+    
+    // PUT /api/user/locale - Update user's locale preference
+    Route::put('locale', [TranslationController::class, 'updateUserLocale'])
+        ->name('locale.update');
+});
+
+// Development/Admin routes - should be protected in production
+Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
+    // DELETE /api/translations/cache - Clear translation cache
+    Route::delete('translations/cache', [TranslationController::class, 'clearCache'])
+        ->name('translations.cache.clear');
+});

@@ -24,10 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Development: Skip Authorization für alle API-Routen
         $middleware->api([
             \App\Infrastructure\Http\Middleware\SkipAuthorizationInDevelopment::class,
+            'locale', // Apply to ALL API routes automatically
         ]);
         
         $middleware->alias([
             'admin.only' => \App\Infrastructure\Http\Middleware\AdminOnly::class,
+            // Add locale middleware alias
+            'locale' => \App\Infrastructure\Http\Middleware\SetLocaleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

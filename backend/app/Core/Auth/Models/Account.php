@@ -4,6 +4,7 @@ namespace App\Core\Auth\Models;
 
 use App\Core\Auth\Enums\SystemRole;
 use App\Core\Shared\Models\BaseModel;
+use App\Core\Localization\Enums\SupportedLocale;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
@@ -33,6 +34,7 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
         'password',
         'is_active',
         'system_role',
+        'preferred_locale',// User's language preference
     ];
 
     protected $hidden = [
@@ -209,5 +211,43 @@ class Account extends BaseModel implements AuthenticatableContract, Authorizable
     {
         $this->system_role = $role;
         $this->save();
+    }
+
+    /**
+     * Get user's preferred locale using enum validation
+     * Returns enum case if valid, default if not set/invalid
+     */
+    public function getPreferredLocale(): string
+    {
+        if ($this->preferred_locale && SupportedLocale::isSupported($this->preferred_locale)) {
+            return $this->preferred_locale;
+        }
+        
+        return SupportedLocale::getDefault()->value;
+    }
+
+    /**
+     * Set user's preferred locale with enum validation
+     * Only allows setting supported locales
+     */
+    public function setPreferredLocale(string $locale): bool
+    {
+        if (!SupportedLocale::isSupported($locale)) {
+            return false;
+        }
+        
+        $this->preferred_locale = $locale;
+        $this->save();
+        return true;
+    }
+
+    /**
+     * Get user's preferred locale as enum case
+     * Provides type-safe access to locale
+     */
+    public function getPreferredLocaleEnum(): SupportedLocale
+    {
+        $locale = $this->getPreferredLocale();
+        return SupportedLocale::from($locale);
     }
 }
