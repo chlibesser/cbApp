@@ -1,15 +1,24 @@
 import { createVuetify } from 'vuetify'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import { de, en } from 'vuetify/locale' // ADD THIS IMPORT
+import type { SupportedLocale } from '@/core/localization/types/locale.types' // ADD THIS IMPORT
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-
-// Styles
-import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
+import 'vuetify/styles'
 
-export default createVuetify({
+const vuetify = createVuetify({
   components,
   directives,
+
+  // LOCALE CONFIGURATION (NEW)
+  locale: {
+    locale: (import.meta.env.DEFAULT_LOCALE || 'de') as SupportedLocale,           // Default locale from env
+    fallback: (import.meta.env.FALLBACK_LOCALE || 'de') as SupportedLocale,         // Fallback from env
+    messages: { de, en },   // Vuetify's built-in translations
+  },
+
+  // ICONS CONFIGURATION (EXISTING)
   icons: {
     defaultSet: 'mdi',
     aliases,
@@ -17,6 +26,8 @@ export default createVuetify({
       mdi,
     },
   },
+
+  // THEME CONFIGURATION (EXISTING)
   theme: {
     defaultTheme: 'light',
     themes: {
@@ -45,3 +56,12 @@ export default createVuetify({
     },
   },
 })
+
+// Sync Vuetify locale with app locale
+export function syncVuetifyLocale(locale: SupportedLocale): void {
+  vuetify.locale.current.value = locale
+  console.log('[Vuetify] Locale synced to:', locale)
+}
+
+export { vuetify }
+export default vuetify
