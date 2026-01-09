@@ -13,16 +13,6 @@
  * ARCHITECTURE:
  * Component → Store → Service → API Client → Backend
  *
- * CACHING STRATEGY:
- * 1. Check in-memory cache (instant)
- * 2. Check localStorage cache (fast)
- * 3. Fetch from API (network)
- * 4. Save to both caches
- *
- * WHY SINGLETON:
- * - Shared cache across entire app
- * - Consistent state
- * - No duplicate API calls
  */
 
 import { apiClient } from '@/core/api/apiClient'
@@ -31,6 +21,7 @@ import type {
   LocaleInfo,
   TranslationMessages,
   LocaleCache,
+  NamespaceCache,
   LocalesResponse,
   TranslationsResponse,
   UserLocaleResponse,
@@ -39,29 +30,66 @@ import type {
 
 // Translation Service Class
 class TranslationService {
-  // In-memory cache - PRIMARY cache
+
+  private availableLocalesCache: LocaleInfo[] | null = null
+  private readonly LOCALES_STORAGE_KEY = 'cb_available_locales'
   private cache: LocaleCache = {}
+  private readonly STORAGE_KEY = 'cb_translations_cache'
 
-  // localStorage key for caching
-  private readonly STORAGE_KEY = 'cbapp_translations_cache'
+  // Cache version for invalidation
+  // PURPOSE: When we change translation structure, increment this to invalidate old caches automatically.
+  private readonly CACHE_VERSION = 'v2'
 
-  /**
-   * Cache version for invalidation
-   *
-   * PURPOSE: When we change translation structure, increment this
-   * to invalidate old caches automatically.
-   *
-   * EXAMPLE: Change from v1 to v2 when adding new translation fields
-   */
-  private readonly CACHE_VERSION = 'v1'
+  // Get available locales with smart caching
+  async getAvailableLocales(): Promise<LocaleInfo[]> {
 
-  // Fetch available locales from backend
-  async fetchAvailableLocales(): Promise<LocaleInfo[]> {
+    // 1. Check in-memory cache first (fastest)
+    if (this.availableLocalesCache) {
+      return this.availableLocalesCache
+    }
+
+    // 2. Try localStorage cache (persistent across sessions)
+    const cachedLocales = this.loadLocalesFromStorage()
+
+    if (cachedLocales) {
+      const hasTranslationData = cachedLocales.some(locale => {
+        const translationCache = this.loadFromLocalStorage(locale.code as SupportedLocale, true)
+        return translationCache && Object.keys(translationCache).length > 0
+      })
+
+      if (hasTranslationData) {
+        this.availableLocalesCache = cachedLocales
+        return cachedLocales
+      } else {
+        // Clear invalid locale cache
+        localStorage.removeItem(this.LOCALES_STORAGE_KEY)
+      }
+    }
+
+    // 3. Fetch from API (fallback)
+    return await this.fetchAvailableLocales()
+  }
+
+  // Fetch available locales from backend (internal method)
+  private async fetchAvailableLocales(): Promise<LocaleInfo[]> {
     try {
       const response = await apiClient.get<LocalesResponse>('/translations/locales')
-      return response.data.locales
+      const locales = response.data.locales
+
+      // Cache in both memory and localStorage
+      this.availableLocalesCache = locales
+      this.saveLocalesToStorage(locales)
+
+      return locales
     } catch (error) {
-      return this.getFallbackLocales()
+      console.warn('[TranslationService] API failed, using fallback locales')
+      const fallback = this.getFallbackLocales()
+
+      // Cache fallback to avoid repeated API failures
+      this.availableLocalesCache = fallback
+      this.saveLocalesToStorage(fallback)
+
+      return fallback
     }
   }
 
@@ -110,16 +138,17 @@ class TranslationService {
         `/translations/${locale}/${namespace}`
       )
 
-      // Initialize locale cache if needed
+      // Load existing cache from localStorage first
+      // This prevents overwriting previously cached namespaces
       if (!this.cache[locale]) {
-        this.cache[locale] = {}
+        const existingCache = this.loadFromLocalStorage(locale)
+        this.cache[locale] = (existingCache as NamespaceCache) || {}
       }
 
-      // Store namespace in cache
+      // Store namespace in cache (merges with existing)
       this.cache[locale][namespace] = response.data.translations
       this.saveToLocalStorage(locale)
       return response.data.translations
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error(
@@ -128,13 +157,13 @@ class TranslationService {
       )
 
       // Try in-memory cache first
-      if (this.cache[locale]?.[namespace]) {       
+      if (this.cache[locale]?.[namespace]) {
         return this.cache[locale][namespace]
       }
 
       // Try localStorage
       const cached = this.loadFromLocalStorage(locale)
-      if (cached?.[namespace]) {        
+      if (cached?.[namespace]) {
         const namespaceData = cached[namespace]
         // Ensure we return TranslationMessages object, not string
         return typeof namespaceData === 'object' && namespaceData !== null ? namespaceData : {}
@@ -155,7 +184,7 @@ class TranslationService {
       return response.data.preferred_locale
     } catch (error) {
       // Use fallback locale from environment (same as localeStore)
-      return (import.meta.env.FALLBACK_LOCALE || 'de') as SupportedLocale
+      return (import.meta.env.VITE_FALLBACK_LOCALE || 'de') as SupportedLocale
     }
   }
 
@@ -178,7 +207,20 @@ class TranslationService {
 
   // Get all cached translations for a locale
   getCachedLocale(locale: SupportedLocale): TranslationMessages {
-    return this.cache[locale] || {}
+    
+    // First check in-memory cache (fastest)
+    if (this.cache[locale]) {
+      return this.cache[locale]
+    }
+
+    // If not in memory, try localStorage (persistent)
+    const cached = this.loadFromLocalStorage(locale)
+    if (cached) {
+      return cached
+    }
+
+    // No cache available
+    return {}
   }
 
   // Check if namespace is already loaded in cache
@@ -207,6 +249,8 @@ class TranslationService {
     } else {
       // Clear all locales
       this.cache = {}
+      this.availableLocalesCache = null
+      localStorage.removeItem(this.LOCALES_STORAGE_KEY)
 
       // Clear all locale caches from localStorage
       Object.keys(localStorage).forEach((key) => {
@@ -232,34 +276,98 @@ class TranslationService {
     }
   }
 
-  // Load translations from localStorage   
-  private loadFromLocalStorage(locale: SupportedLocale): TranslationMessages | null {
+  // Load translations from localStorage
+  // @param validateOnly - If true, only validates cache exists without restoring to in-memory cache
+  private loadFromLocalStorage(locale: SupportedLocale, validateOnly: boolean = false): TranslationMessages | null {
+
     try {
-      const stored = localStorage.getItem(`${this.STORAGE_KEY}_${locale}`)
-      if (!stored) return null
+      const storageKey = `${this.STORAGE_KEY}_${locale}`
+
+      const stored = localStorage.getItem(storageKey)
+
+      if (!stored) {        
+        return null
+      }
 
       const data = JSON.parse(stored)
 
       // Validate version - invalidate if mismatch
-      if (data.version !== this.CACHE_VERSION) {
-        localStorage.removeItem(`${this.STORAGE_KEY}_${locale}`)
+      if (data.version !== this.CACHE_VERSION) {       
+        localStorage.removeItem(storageKey)
         return null
       }
 
       // Check if cache is too old (7 days = 604800000ms)
       const MAX_AGE = 7 * 24 * 60 * 60 * 1000
-      if (Date.now() - data.timestamp > MAX_AGE) {
-        localStorage.removeItem(`${this.STORAGE_KEY}_${locale}`)
+      const age = Date.now() - data.timestamp
+      if (age > MAX_AGE) {        
+        localStorage.removeItem(storageKey)
         return null
       }
 
-      // Valid cache - restore to in-memory cache
-      this.cache[locale] = data.translations
+      // Only restore to in-memory cache if NOT validating
+      // During validation, we just check existence without overwriting in-memory cache
+      if (!validateOnly) {
+        this.cache[locale] = data.translations
+      }
+
       return data.translations
     } catch (error) {
-      console.warn('[TranslationService] Failed to load from localStorage:', error)
+      if (!validateOnly) {
+        console.error(`[TranslationService] Error loading from localStorage for ${locale}:`, error)
+      }
       return null
     }
+  }
+
+  // Save available locales to localStorage
+  private saveLocalesToStorage(locales: LocaleInfo[]): void {
+    try {
+      const data = {
+        version: this.CACHE_VERSION,
+        timestamp: Date.now(),
+        locales: locales,
+      }
+      localStorage.setItem(this.LOCALES_STORAGE_KEY, JSON.stringify(data))
+    } catch (error) {
+      console.warn('[TranslationService] Failed to save locales to localStorage:', error)
+    }
+  }
+
+  // Load available locales from localStorage
+  private loadLocalesFromStorage(): LocaleInfo[] | null {
+    try {
+      const stored = localStorage.getItem(this.LOCALES_STORAGE_KEY)
+      if (!stored) return null
+
+      const data = JSON.parse(stored)
+
+      // Validate version
+      if (data.version !== this.CACHE_VERSION) {
+        localStorage.removeItem(this.LOCALES_STORAGE_KEY)
+        return null
+      }
+
+      // Check if cache is too old (24 hours = 86400000ms)
+      // Locales change very rarely, so longer cache is acceptable
+      const MAX_AGE = 24 * 60 * 60 * 1000
+      if (Date.now() - data.timestamp > MAX_AGE) {
+        localStorage.removeItem(this.LOCALES_STORAGE_KEY)
+        return null
+      }
+
+      return data.locales
+    } catch (error) {
+      console.warn('[TranslationService] Failed to load locales from localStorage:', error)
+      return null
+    }
+  }
+
+  // Force refresh available locales (for admin use)
+  async refreshAvailableLocales(): Promise<LocaleInfo[]> {
+    this.availableLocalesCache = null
+    localStorage.removeItem(this.LOCALES_STORAGE_KEY)
+    return await this.fetchAvailableLocales()
   }
 
   // Fallback locales if API completely fails
@@ -271,11 +379,5 @@ class TranslationService {
   }
 }
 
-/**
- * Singleton instance - exported for use across the app
- *
- * USAGE:
- * import { translationService } from '@/core/localization/services/translationService'
- * const translations = await translationService.fetchNamespace('de', 'admin.tenants')
- */
+// Singleton instance - exported for use across the app
 export const translationService = new TranslationService()

@@ -31,11 +31,11 @@ class RegisterController extends Controller
             'company_name' => 'nullable|string|max:255',
             'accept_terms' => 'required|accepted',
         ], [
-            'email.unique' => 'Diese E-Mail-Adresse ist bereits registriert.',
-            'username.unique' => 'Dieser Benutzername ist bereits vergeben.',
-            'username.regex' => 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Bindestriche und Unterstriche enthalten.',
-            'password.confirmed' => 'Passwort-Bestätigung stimmt nicht überein.',
-            'accept_terms.accepted' => 'Sie müssen die Nutzungsbedingungen akzeptieren.',
+            'email.unique' => __('auth/register.validation.email_unique'),
+            'username.unique' => __('auth/register.validation.username_unique'),
+            'username.regex' => __('auth/register.validation.username_regex'),
+            'password.confirmed' => __('auth/register.validation.password_confirmed'),
+            'accept_terms.accepted' => __('auth/register.validation.accept_terms_required'),
         ]);
 
         // Create tenant name: Company name or personal workspace
@@ -108,7 +108,7 @@ class RegisterController extends Controller
         $token = $account->createToken('registration-' . $account->username)->plainTextToken;
 
         return response()->json([
-            'message' => 'Registrierung erfolgreich!',
+            'message' => __('auth/register.success'),
             'account' => [
                 'id' => $account->id,
                 'username' => $account->username,
@@ -139,9 +139,9 @@ class RegisterController extends Controller
 
         return response()->json([
             'available' => !$exists,
-            'message' => $exists 
-                ? 'Benutzername bereits vergeben' 
-                : 'Benutzername verfügbar'
+            'message' => $exists
+                ? __('auth/register.username_taken')
+                : __('auth/register.username_available')
         ]);
     }
 
@@ -158,9 +158,9 @@ class RegisterController extends Controller
 
         return response()->json([
             'available' => !$exists,
-            'message' => $exists 
-                ? 'E-Mail-Adresse bereits registriert' 
-                : 'E-Mail-Adresse verfügbar'
+            'message' => $exists
+                ? __('auth/register.email_taken')
+                : __('auth/register.email_available')
         ]);
     }
 
@@ -172,24 +172,24 @@ class RegisterController extends Controller
         // Owner Role (für Personal Tenants oder Firmen-Owner)
         $ownerRole = Role::create([
             'tenant_id' => $tenant->id,
-            'name' => 'Owner',
-            'description' => 'Vollzugriff auf alles',
+            'name' => __('auth/register.roles.owner.name'),
+            'description' => __('auth/register.roles.owner.description'),
             'is_system' => true,
         ]);
 
         // Admin Role
         $adminRole = Role::create([
             'tenant_id' => $tenant->id,
-            'name' => 'Admin',
-            'description' => 'Administrator mit fast allen Rechten',
+            'name' => __('auth/register.roles.admin.name'),
+            'description' => __('auth/register.roles.admin.description'),
             'is_system' => true,
         ]);
 
         // User Role
         $userRole = Role::create([
             'tenant_id' => $tenant->id,
-            'name' => 'User',
-            'description' => 'Basis-Benutzer',
+            'name' => __('auth/register.roles.user.name'),
+            'description' => __('auth/register.roles.user.description'),
             'is_system' => true,
         ]);
 

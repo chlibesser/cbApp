@@ -3,9 +3,9 @@
     <!-- Page Header -->
     <div class="d-flex align-center justify-space-between mb-4">
       <div>
-        <h1 class="text-h4 font-weight-bold">Account-Verwaltung</h1>
+        <h1 class="text-h4 font-weight-bold">{{ $t('admin.accounts.page_title') }}</h1>
         <p class="text-subtitle-1 text-medium-emphasis">
-          Verwalten Sie alle System-Accounts
+          {{ $t('admin.accounts.page_description') }}
         </p>
       </div>
       
@@ -16,14 +16,16 @@
         size="large"
         class="px-4"
       >
-        {{ totalCount }} Accounts
+        {{ totalCount }} {{ $t('admin.accounts.counter_text') }}
       </v-chip>
     </div>
 
     <!-- Advanced Data Table -->
     <v-card>
       <AdvancedDataTable
-        :entity-config="accountEntityConfig"
+        :columns="accountEntityConfig.fields"
+        :api-endpoint="accountEntityConfig.apiEndpoint"
+        enable-create
         @item-selected="handleItemSelected"
         @item-double-click="viewAccount"
         @create="createAccount"
@@ -36,7 +38,7 @@
             variant="tonal"
             size="x-small"
           >
-            {{ item.email_verified_at ? 'Verifiziert' : 'Nicht verifiziert' }}
+            {{ item.email_verified_at ? $t('admin.accounts.verification_status.verified') : $t('admin.accounts.verification_status.not_verified') }}
           </v-chip>
         </template>
 
@@ -61,7 +63,7 @@
               @click="viewAccount(item)"
             >
               <v-icon size="18">mdi-eye</v-icon>
-              <v-tooltip activator="parent">Ansehen</v-tooltip>
+              <v-tooltip activator="parent">{{ $t('admin.accounts.tooltips.view') }}</v-tooltip>
             </v-btn>
             
             <v-btn 
@@ -71,7 +73,7 @@
               @click="editAccount(item)"
             >
               <v-icon size="18">mdi-pencil</v-icon>
-              <v-tooltip activator="parent">Bearbeiten</v-tooltip>
+              <v-tooltip activator="parent">{{ $t('admin.accounts.tooltips.edit') }}</v-tooltip>
             </v-btn>
             
             <v-btn 
@@ -82,7 +84,7 @@
               @click="deleteAccount(item)"
             >
               <v-icon size="18">mdi-delete</v-icon>
-              <v-tooltip activator="parent">Löschen</v-tooltip>
+              <v-tooltip activator="parent">{{ $t('admin.accounts.tooltips.delete') }}</v-tooltip>
             </v-btn>
           </div>
         </template>
@@ -93,12 +95,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { AdvancedDataTable } from '@/shared/components'
 import { accountEntityConfig } from '@/config/entities'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
 import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
 import { accountService } from '../services/accountService'
 import type { Account } from '../types'
+
+const { t } = useI18n()
 
 const rsdStore = useRSDStore()
 const layoutStore = useLayoutStore()
@@ -127,19 +132,19 @@ function createAccount() {
 async function deleteAccount(item: Account) {
   const confirmed = await new Promise<boolean>(resolve => {
     // Using browser confirm for now - can be replaced with custom dialog
-    resolve(confirm(`Möchten Sie den Account "${item.email}" wirklich löschen?`))
+    resolve(confirm(t('admin.accounts.messages.delete_confirm', { email: item.email })))
   })
-  
+
   if (!confirmed) return
 
   try {
     await accountService.deleteAccount(item.id)
-    layoutStore.showSuccess('Account wurde gelöscht')
-    
+    layoutStore.showSuccess(t('admin.accounts.messages.delete_success'))
+
     // Trigger table refresh
     window.dispatchEvent(new CustomEvent('refresh-tables'))
   } catch (error: any) {
-    layoutStore.showError(error.response?.data?.message || 'Fehler beim Löschen des Accounts')
+    layoutStore.showError(error.response?.data?.message || t('admin.accounts.messages.delete_error'))
   }
 }
 
@@ -154,9 +159,9 @@ function getSystemRoleColor(role: string): string {
 
 function getSystemRoleLabel(role: string): string {
   const labels: Record<string, string> = {
-    global_admin: 'Global Admin',
-    tenant_admin: 'Tenant Admin',
-    tenant_member: 'Mitglied'
+    global_admin: t('admin.accounts.roles.global_admin'),
+    tenant_admin: t('admin.accounts.roles.tenant_admin'),
+    tenant_member: t('admin.accounts.roles.member')
   }
   return labels[role] || role
 }

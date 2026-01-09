@@ -10,10 +10,12 @@
     <v-main data-testid="dashboard-content" class="dashboard-main">
       <div class="dashboard-content">
         <v-container fluid class="pa-4 h-100">
+        <TranslationErrorBoundary>
           <!-- Page Content -->
           <div class="page-content" data-testid="page-content">
             <router-view />
           </div>
+        </TranslationErrorBoundary>
         </v-container>
       </div>
     </v-main>
@@ -36,6 +38,7 @@ import { useLayoutStore } from '../../infrastructure/stores/layoutStore'
 import AppSidebar from '../components/AppSidebar.vue'
 import RightDrawer from '../components/RightDrawer.vue'
 import ToastNotifications from '../components/ToastNotifications.vue'
+import TranslationErrorBoundary from '../components/TranslationErrorBoundary.vue'
 
 const authStore = useAuthStore()
 const layoutStore = useLayoutStore()

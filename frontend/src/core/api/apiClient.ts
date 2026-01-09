@@ -1,4 +1,5 @@
 import type { ApiResponse, ApiError } from './types'
+import { useLocaleStore } from '@/core/localization/stores/localeStore'
 
 export class ApiClient {
   private baseURL: string
@@ -30,18 +31,33 @@ export class ApiClient {
     return null
   }
 
+  private getCurrentLocale(): string {
+    // Get current locale from localeStore
+    try {
+      const localeStore = useLocaleStore()
+      return localeStore.currentLocale || 'de'
+    } catch {
+      // Fallback to default if store not available
+      return 'de'
+    }
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
 
-    const headers = {
+    const headers: Record<string, string> = {
       ...this.defaultHeaders,
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     }
 
     const token = this.getAuthToken()
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
+
+    // Add locale header for backend translations
+    const locale = this.getCurrentLocale()
+    headers['Accept-Language'] = locale
 
     // Add tenant ID header for tenant-specific requests
     if (endpoint.includes('/tenant/')) {

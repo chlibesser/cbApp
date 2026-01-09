@@ -4,7 +4,7 @@
       <v-card-text>
         <div v-if="loading" class="text-center py-8">
           <v-progress-circular indeterminate />
-          <p class="mt-2">Tenant-Details werden geladen...</p>
+          <p class="mt-2">{{ $t('admin.tenants.components.view.loading') }}</p>
         </div>
 
         <div v-else-if="tenant">
@@ -25,29 +25,29 @@
               <v-card variant="outlined">
                 <v-card-title class="text-h6 bg-grey-lighten-5">
                   <v-icon class="mr-2">mdi-information</v-icon>
-                  Allgemeine Informationen
+                  {{ $t('admin.tenants.components.view.general_info') }}
                 </v-card-title>
                 <v-card-text>
                   <v-list lines="two">
                     <v-list-item>
-                      <v-list-item-title>Name</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.detail.fields.name') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ tenant.name }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Slug</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.detail.fields.slug') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ tenant.slug }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item v-if="tenant.description">
-                      <v-list-item-title>Beschreibung</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.detail.fields.description') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ tenant.description }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Typ</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.detail.fields.type') }}</v-list-item-title>
                       <v-list-item-subtitle>
-                        <v-chip 
+                        <v-chip
                           :color="tenant.is_personal ? 'info' : 'primary'"
                           size="small"
                           variant="flat"
@@ -55,15 +55,15 @@
                           <v-icon size="small" class="mr-1">
                             {{ tenant.is_personal ? 'mdi-account' : 'mdi-office-building' }}
                           </v-icon>
-                          {{ tenant.is_personal ? 'Persönlich' : 'Unternehmen' }}
+                          {{ tenant.is_personal ? $t('admin.tenants.detail.tenant_types.personal') : $t('admin.tenants.detail.tenant_types.company') }}
                         </v-chip>
                       </v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Status</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.table.status') }}</v-list-item-title>
                       <v-list-item-subtitle>
-                        <v-chip 
+                        <v-chip
                           :color="tenant.is_active ? 'success' : 'error'"
                           size="small"
                           variant="flat"
@@ -71,7 +71,7 @@
                           <v-icon size="small" class="mr-1">
                             {{ tenant.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}
                           </v-icon>
-                          {{ tenant.is_active ? 'Aktiv' : 'Inaktiv' }}
+                          {{ tenant.is_active ? $t('admin.tenants.status.active') : $t('admin.tenants.status.inactive') }}
                         </v-chip>
                       </v-list-item-subtitle>
                     </v-list-item>
@@ -84,26 +84,26 @@
               <v-card variant="outlined">
                 <v-card-title class="text-h6 bg-grey-lighten-5">
                   <v-icon class="mr-2">mdi-chart-line</v-icon>
-                  Statistiken
+                  {{ $t('admin.tenants.components.view.statistics') }}
                 </v-card-title>
                 <v-card-text>
                   <v-list lines="two">
                     <v-list-item>
-                      <v-list-item-title>Benutzer</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.view.users_label') }}</v-list-item-title>
                       <v-list-item-subtitle>
                         <v-chip color="info" size="small" variant="outlined">
-                          {{ tenant.users_count || 0 }} Benutzer
+                          {{ $t('admin.tenants.components.view.users_count', { count: tenant.users_count || 0 }) }}
                         </v-chip>
                       </v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Erstellt am</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.view.created_label') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ formatDate(tenant.created_at) }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Zuletzt aktualisiert</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.view.updated_label') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ formatDate(tenant.updated_at) }}</v-list-item-subtitle>
                     </v-list-item>
                   </v-list>
@@ -115,14 +115,14 @@
           <!-- Tenant Users Section -->
           <div class="mt-6">
             <div class="d-flex justify-space-between align-center mb-4">
-              <h3 class="text-h6">Benutzer in diesem Tenant</h3>
+              <h3 class="text-h6">{{ $t('admin.tenants.components.view.users_title') }}</h3>
               <v-btn
                 color="primary"
                 variant="outlined"
                 @click="openUserManagement"
               >
                 <v-icon class="mr-1">mdi-account-plus</v-icon>
-                Benutzer verwalten
+                {{ $t('admin.tenants.components.view.manage_users') }}
               </v-btn>
             </div>
 
@@ -130,17 +130,17 @@
               <v-card-text>
                 <div v-if="loadingUsers" class="text-center py-4">
                   <v-progress-circular indeterminate size="32" />
-                  <p class="mt-2">Benutzer werden geladen...</p>
+                  <p class="mt-2">{{ $t('admin.tenants.components.view.users_loading') }}</p>
                 </div>
 
                 <div v-else-if="users.length === 0" class="text-center py-8">
                   <v-icon size="64" color="grey-lighten-1">mdi-account-off</v-icon>
-                  <p class="text-h6 mt-2">Keine Benutzer zugewiesen</p>
+                  <p class="text-h6 mt-2">{{ $t('admin.tenants.components.view.no_users_title') }}</p>
                   <p class="text-body-2 text-medium-emphasis">
-                    Diesem Tenant sind noch keine Benutzer zugewiesen.
+                    {{ $t('admin.tenants.components.view.no_users_description') }}
                   </p>
                   <v-btn color="primary" @click="openUserManagement">
-                    Ersten Benutzer hinzufügen
+                    {{ $t('admin.tenants.components.view.add_first_user') }}
                   </v-btn>
                 </div>
 
@@ -170,17 +170,17 @@
                           size="small"
                           variant="flat"
                         >
-                          {{ user.is_active ? 'Aktiv' : 'Inaktiv' }}
+                          {{ user.is_active ? $t('admin.tenants.status.active') : $t('admin.tenants.status.inactive') }}
                         </v-chip>
                       </template>
                     </v-list-item>
                   </v-list>
 
                   <v-divider v-if="users.length > 5" class="my-2" />
-                  
+
                   <div v-if="users.length > 5" class="text-center">
                     <v-btn variant="text" @click="openUserManagement">
-                      Alle {{ users.length }} Benutzer anzeigen
+                      {{ $t('admin.tenants.components.view.show_all_users', { count: users.length }) }}
                       <v-icon class="ml-1">mdi-arrow-right</v-icon>
                     </v-btn>
                   </div>
@@ -192,7 +192,7 @@
 
         <div v-else class="text-center py-8">
           <v-icon size="64" color="grey-lighten-1">mdi-alert-circle</v-icon>
-          <p class="text-h6 mt-2">Tenant nicht gefunden</p>
+          <p class="text-h6 mt-2">{{ $t('admin.tenants.messages.not_found') }}</p>
         </div>
       </v-card-text>
     </v-card>
@@ -201,9 +201,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Tenant, TenantUser } from '../types'
 import { tenantService } from '../services/tenantService'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
+
+const { t } = useI18n()
 
 interface Props {
   data: Tenant | null

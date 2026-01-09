@@ -8,20 +8,20 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4">
                 <v-icon class="mr-2">mdi-information</v-icon>
-                Neuen Account erstellen
+                {{ $t('admin.accounts.components.create.title') }}
               </h3>
               <p class="text-body-2 text-medium-emphasis mb-4">
-                Erstellen Sie einen neuen Account im System. Der Account erhält standardmäßig die Mitglieder-Rolle.
+                {{ $t('admin.accounts.components.create.description') }}
               </p>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.username"
-                label="Benutzername"
+                :label="$t('admin.accounts.components.create.fields.username')"
                 variant="outlined"
                 :disabled="loading"
-                hint="Eindeutiger Benutzername für die Anmeldung"
+                :hint="$t('admin.accounts.components.create.fields.username_hint')"
                 persistent-hint
               />
             </v-col>
@@ -29,11 +29,11 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.email"
-                label="E-Mail"
+                :label="$t('admin.accounts.components.create.fields.email')"
                 type="email"
                 variant="outlined"
                 :disabled="loading"
-                hint="E-Mail-Adresse für Benachrichtigungen"
+                :hint="$t('admin.accounts.components.create.fields.email_hint')"
                 persistent-hint
               />
             </v-col>
@@ -41,11 +41,11 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.password"
-                label="Passwort"
+                :label="$t('admin.accounts.components.create.fields.password')"
                 type="password"
                 variant="outlined"
                 :disabled="loading"
-                hint="Mindestens 8 Zeichen"
+                :hint="$t('admin.accounts.components.create.fields.password_hint')"
                 persistent-hint
               />
             </v-col>
@@ -53,11 +53,11 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.password_confirmation"
-                label="Passwort bestätigen"
+                :label="$t('admin.accounts.components.create.fields.password_confirmation')"
                 type="password"
                 variant="outlined"
                 :disabled="loading"
-                hint="Passwort erneut eingeben"
+                :hint="$t('admin.accounts.components.create.fields.password_confirmation_hint')"
                 persistent-hint
               />
             </v-col>
@@ -66,20 +66,20 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4 mt-4">
                 <v-icon class="mr-2">mdi-cog</v-icon>
-                Grundeinstellungen
+                {{ $t('admin.accounts.components.create.settings') }}
               </h3>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-select
                 v-model="formData.system_role"
-                label="System-Rolle"
+                :label="$t('admin.accounts.components.create.fields.system_role')"
                 :items="systemRoles"
                 variant="outlined"
                 :disabled="loading"
                 item-title="text"
                 item-value="value"
-                hint="Globale Berechtigungen im System"
+                :hint="$t('admin.accounts.components.create.fields.system_role_hint')"
                 persistent-hint
               />
             </v-col>
@@ -87,13 +87,13 @@
             <v-col cols="12" md="6">
               <v-switch
                 v-model="formData.is_active"
-                label="Account sofort aktivieren"
+                :label="$t('admin.accounts.components.create.fields.activate')"
                 :disabled="loading"
                 color="success"
                 hide-details
               />
               <p class="text-caption text-medium-emphasis mt-1">
-                Der Account kann sich sofort nach der Erstellung anmelden
+                {{ $t('admin.accounts.components.create.fields.activate_hint') }}
               </p>
             </v-col>
 
@@ -102,38 +102,38 @@
               <v-card variant="outlined" class="mt-4">
                 <v-card-title class="text-subtitle-1 bg-grey-lighten-5">
                   <v-icon class="mr-2">mdi-eye</v-icon>
-                  Vorschau
+                  {{ $t('admin.accounts.components.create.preview') }}
                 </v-card-title>
                 <v-card-text>
                   <v-list lines="one" density="compact">
                     <v-list-item>
-                      <v-list-item-title>Benutzername:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.create.preview_labels.username') }}</v-list-item-title>
                       <template #append>
-                        <span class="font-weight-medium">{{ formData.username || '(Noch kein Benutzername)' }}</span>
+                        <span class="font-weight-medium">{{ formData.username || $t('admin.accounts.components.create.preview_labels.no_username') }}</span>
                       </template>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>E-Mail:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.create.preview_labels.email') }}</v-list-item-title>
                       <template #append>
-                        <span class="font-weight-medium">{{ formData.email || '(Noch keine E-Mail)' }}</span>
+                        <span class="font-weight-medium">{{ formData.email || $t('admin.accounts.components.create.preview_labels.no_email') }}</span>
                       </template>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>System-Rolle:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.create.preview_labels.system_role') }}</v-list-item-title>
                       <template #append>
                         <v-chip size="small" :color="getSystemRoleColor(formData.system_role)">
                           {{ getSystemRoleLabel(formData.system_role) }}
                         </v-chip>
                       </template>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Status:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.create.preview_labels.status') }}</v-list-item-title>
                       <template #append>
                         <v-chip size="small" :color="formData.is_active ? 'success' : 'warning'">
-                          {{ formData.is_active ? 'Aktiv' : 'Inaktiv' }}
+                          {{ formData.is_active ? $t('admin.accounts.status.active') : $t('admin.accounts.status.locked') }}
                         </v-chip>
                       </template>
                     </v-list-item>
@@ -158,7 +158,7 @@
             @click="$emit('close')"
             :disabled="loading"
           >
-            Abbrechen
+            {{ $t('admin.accounts.components.create.buttons.cancel') }}
           </v-btn>
           <v-btn
             type="submit"
@@ -167,7 +167,7 @@
             :disabled="false"
           >
             <v-icon class="mr-1">mdi-plus</v-icon>
-            Account erstellen
+            {{ $t('admin.accounts.components.create.buttons.create') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -176,9 +176,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { CreateAccountRequest } from '../types'
 import { accountService } from '../services/accountService'
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   success: [message: string]
@@ -202,30 +205,27 @@ const formData = ref<CreateAccountRequest>({
 })
 
 // Computed
-const systemRoles = [
-  { 
-    value: 'member', 
-    text: 'Mitglied',
-    description: 'Standard-Benutzer ohne besondere Rechte'
+const systemRoles = computed(() => [
+  {
+    value: 'member',
+    text: t('admin.accounts.system_roles.member')
   },
-  { 
-    value: 'tenant_admin', 
-    text: 'Tenant Administrator',
-    description: 'Kann eigene Tenants verwalten'
+  {
+    value: 'tenant_admin',
+    text: t('admin.accounts.system_roles.tenant_admin')
   },
-  { 
-    value: 'admin', 
-    text: 'Administrator',
-    description: 'Vollzugriff auf alle Funktionen'
+  {
+    value: 'admin',
+    text: t('admin.accounts.system_roles.admin')
   }
-]
+])
 
 
 // Methods
 const getSystemRoleLabel = (role: string | null) => {
-  if (!role) return 'Keine Rolle'
-  const roleItem = systemRoles.find(r => r.value === role)
-  return roleItem?.text || role
+  if (!role) return t('admin.accounts.system_roles.no_role')
+  const roleKey = role.replace(/_/g, '_')
+  return t(`admin.accounts.system_roles.${roleKey}`, role)
 }
 
 const getSystemRoleColor = (role: string | null) => {
@@ -245,9 +245,9 @@ const handleSubmit = async () => {
 
   try {
     const response = await accountService.createAccount(formData.value)
-    emit('success', response.message || 'Account erfolgreich erstellt')
+    emit('success', response.message || t('admin.accounts.messages.create_success'))
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Fehler beim Erstellen des Accounts'
+    error.value = err.response?.data?.message || err.message || t('admin.accounts.messages.create_error')
     emit('error', error.value)
   } finally {
     loading.value = false

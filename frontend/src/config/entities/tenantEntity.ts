@@ -4,13 +4,12 @@
  */
 
 import type { EntityConfig } from '../../types/entity'
-
 export const tenantEntityConfig: EntityConfig = {
   name: 'tenant',
   apiEndpoint: '/admin/tenants',
   itemKey: 'id',
-  searchPlaceholder: 'Tenants durchsuchen...',
-  emptyText: 'Keine Tenants gefunden',
+  searchPlaceholder: 'admin.tenants.search_placeholder',
+  emptyText: 'admin.tenants.empty_text',
   defaultSort: {
     field: 'created_at',
     direction: 'desc'
@@ -19,7 +18,7 @@ export const tenantEntityConfig: EntityConfig = {
   fields: [
     {
       key: 'id',
-      label: 'ID',
+      label: 'admin.common.fields.id',
       type: 'text',
       sortable: true,
       filterable: false,
@@ -28,7 +27,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'name',
-      label: 'Name',
+      label: 'admin.tenants.table.name',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -39,7 +38,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'slug',
-      label: 'Slug',
+      label: 'admin.tenants.table.slug',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -49,7 +48,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'description',
-      label: 'Beschreibung',
+      label: 'admin.common.fields.description',
       type: 'text',
       sortable: false,
       filterable: true,
@@ -59,35 +58,35 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'is_personal',
-      label: 'Typ',
+      label: 'admin.common.fields.type',
       type: 'boolean',
       sortable: true,
       filterable: true,
       filterType: 'select',
       filterOptions: [
-        { value: false, text: 'Unternehmen' },
-        { value: true, text: 'Persönlich' }
+        { value: false, text: 'admin.tenants.types.company' },
+        { value: true, text: 'admin.tenants.types.personal' }
       ],
       width: 120,
-      format: (value: boolean) => value ? 'Persönlich' : 'Unternehmen'
+      format: (value: boolean) => value ? 'admin.tenants.types.personal' : 'admin.tenants.types.company'
     },
     {
       key: 'is_active',
-      label: 'Status',
+      label: 'admin.tenants.table.status',
       type: 'boolean',
       sortable: true,
       filterable: true,
       filterType: 'select',
       filterOptions: [
-        { value: true, text: 'Aktiv' },
-        { value: false, text: 'Inaktiv' }
+        { value: true, text: 'admin.tenants.status.active' },
+        { value: false, text: 'admin.tenants.status.inactive' }
       ],
       width: 100,
-      format: (value: boolean) => value ? 'Aktiv' : 'Inaktiv'
+      format: (value: boolean) => value ? 'admin.tenants.status.active' : 'admin.tenants.status.inactive'
     },
     {
       key: 'users_count',
-      label: 'Benutzer',
+      label: 'admin.tenants.table.users_count',
       type: 'number',
       sortable: true,
       filterable: false,
@@ -96,7 +95,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'created_at',
-      label: 'Erstellt am',
+      label: 'admin.common.fields.created_at',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -106,7 +105,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'updated_at',
-      label: 'Aktualisiert am',
+      label: 'admin.common.fields.updated_at',
       type: 'datetime',
       sortable: true,
       filterable: false,

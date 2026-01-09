@@ -1,5 +1,24 @@
 <template>
   <v-app>
+    <v-app-bar 
+      elevation="0" 
+      color="transparent" 
+      class="auth-app-bar"
+      height="64"
+    >
+      <v-spacer />
+      
+      <LanguageSwitcher class="me-2" />
+      
+      <!-- Dark Mode Toggle (Moved here from footer) -->
+      <v-btn 
+        icon
+        @click="toggleDarkMode"
+        class="me-3"
+      >
+        <v-icon>{{ darkModeIcon }}</v-icon>
+      </v-btn>
+    </v-app-bar>
     <v-main class="auth-main">
       <v-container fluid class="fill-height">
         <v-row justify="center" align="center" class="fill-height">
@@ -19,7 +38,9 @@
               elevation="8"
               rounded="lg"
             >
+            <TranslationErrorBoundary>
               <router-view />
+            </TranslationErrorBoundary>
             </v-card>
 
             <!-- Footer -->
@@ -46,13 +67,18 @@
 
     <!-- Background Pattern -->
     <div class="auth-background" />
+
+    <!-- Toast Notifications -->
+    <ToastNotifications />
   </v-app>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useTheme } from 'vuetify'
-
+import TranslationErrorBoundary from '../components/TranslationErrorBoundary.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import ToastNotifications from '../components/ToastNotifications.vue'
 const theme = useTheme()
 
 const currentYear = computed(() => new Date().getFullYear())
@@ -71,6 +97,14 @@ const toggleDarkMode = () => {
 </script>
 
 <style scoped>
+/* Auth App Bar */
+.auth-app-bar {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
 .auth-main {
   position: relative;
   overflow: hidden;

@@ -106,7 +106,8 @@
         </v-card-text>
       </v-card>
     </v-menu>
-
+    <!-- LANGUAGE SWITCHER -->
+    <LanguageSwitcher class="me-2" />
     <v-menu>
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props">
@@ -158,7 +159,7 @@
   import { useRouter, useRoute } from 'vue-router'
   import { useAuthStore } from '../../infrastructure/stores/authStore'
   import { useLayoutStore } from '../../infrastructure/stores/layoutStore'
-
+  import LanguageSwitcher from './LanguageSwitcher.vue'
   const router = useRouter()
   const route = useRoute()
   const authStore = useAuthStore()

@@ -12,9 +12,9 @@
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
         <div>
-          <h1 class="text-h4 font-weight-bold">{{ tenant?.name || 'Tenant Details' }}</h1>
+          <h1 class="text-h4 font-weight-bold">{{ tenant?.name || $t('admin.tenants.detail.fallback_title') }}</h1>
           <p class="text-subtitle-1 text-medium-emphasis">
-            {{ tenant?.description || 'Detaillierte Ansicht und Verwaltung des Tenants' }}
+            {{ tenant?.description || $t('admin.tenants.detail.description') }}
           </p>
         </div>
       </div>
@@ -29,14 +29,14 @@
         <v-icon size="16" start>
           {{ tenant.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}
         </v-icon>
-        {{ tenant.is_active ? 'Aktiv' : 'Inaktiv' }}
+        {{ tenant.is_active ? $t('admin.tenants.status.active') : $t('admin.tenants.status.inactive') }}
       </v-chip>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-8">
       <v-progress-circular indeterminate size="48" />
-      <p class="mt-2">Tenant-Details werden geladen...</p>
+      <p class="mt-2">{{ $t('admin.tenants.detail.loading') }}</p>
     </div>
 
     <!-- Error State -->
@@ -51,10 +51,10 @@
       class="mb-4"
       color="primary"
     >
-      <v-tab value="overview">Übersicht</v-tab>
-      <v-tab value="users">Benutzer</v-tab>
-      <v-tab value="settings">Einstellungen</v-tab>
-      <v-tab value="statistics">Statistiken</v-tab>
+      <v-tab value="overview">{{ $t('admin.tenants.detail.tabs.overview') }}</v-tab>
+      <v-tab value="users">{{ $t('admin.tenants.detail.tabs.users') }}</v-tab>
+      <v-tab value="settings">{{ $t('admin.tenants.detail.tabs.settings') }}</v-tab>
+      <v-tab value="statistics">{{ $t('admin.tenants.detail.tabs.statistics') }}</v-tab>
     </v-tabs>
 
     <!-- Tab Inhalt -->
@@ -64,34 +64,34 @@
         <v-row>
           <v-col cols="12" md="8">
             <v-card>
-              <v-card-title>Basis-Informationen</v-card-title>
+              <v-card-title>{{ $t('admin.tenants.detail.basic_info') }}</v-card-title>
               <v-card-text>
                 <v-list>
                   <v-list-item>
-                    <v-list-item-title>Name</v-list-item-title>
+                    <v-list-item-title>{{ $t('admin.tenants.detail.fields.name') }}</v-list-item-title>
                     <v-list-item-subtitle>{{ tenant.name }}</v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>Slug</v-list-item-title>
+                    <v-list-item-title>{{ $t('admin.tenants.detail.fields.slug') }}</v-list-item-title>
                     <v-list-item-subtitle>{{ tenant.slug }}</v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>Beschreibung</v-list-item-title>
-                    <v-list-item-subtitle>{{ tenant.description || 'Keine Beschreibung' }}</v-list-item-subtitle>
+                    <v-list-item-title>{{ $t('admin.tenants.detail.fields.description') }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ tenant.description || $t('admin.tenants.detail.no_description') }}</v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>Typ</v-list-item-title>
+                    <v-list-item-title>{{ $t('admin.tenants.detail.fields.type') }}</v-list-item-title>
                     <v-list-item-subtitle>
                       <v-chip size="small" :color="tenant.is_personal ? 'info' : 'success'" variant="tonal">
                         <v-icon size="12" start>
                           {{ tenant.is_personal ? 'mdi-account' : 'mdi-domain' }}
                         </v-icon>
-                        {{ tenant.is_personal ? 'Persönlich' : 'Unternehmen' }}
+                        {{ tenant.is_personal ? $t('admin.tenants.detail.tenant_types.personal') : $t('admin.tenants.detail.tenant_types.company') }}
                       </v-chip>
                     </v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>Erstellt am</v-list-item-title>
+                    <v-list-item-title>{{ $t('admin.tenants.detail.fields.created_at') }}</v-list-item-title>
                     <v-list-item-subtitle>{{ formatDate(tenant.created_at) }}</v-list-item-subtitle>
                   </v-list-item>
                 </v-list>
@@ -101,7 +101,7 @@
 
           <v-col cols="12" md="4">
             <v-card>
-              <v-card-title>Aktionen</v-card-title>
+              <v-card-title>{{ $t('admin.tenants.detail.actions_title') }}</v-card-title>
               <v-card-text>
                 <div class="d-flex flex-column gap-2">
                   <v-btn
@@ -111,9 +111,9 @@
                     @click="editTenant"
                     block
                   >
-                    Bearbeiten
+                    {{ $t('admin.tenants.actions.edit') }}
                   </v-btn>
-                  
+
                   <v-btn
                     color="success"
                     variant="outlined"
@@ -121,7 +121,7 @@
                     @click="switchToTenant"
                     block
                   >
-                    Zu diesem Tenant wechseln
+                    {{ $t('admin.tenants.detail.switch_button') }}
                   </v-btn>
 
                   <v-btn
@@ -131,7 +131,7 @@
                     @click="toggleTenantStatus"
                     block
                   >
-                    {{ tenant.is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                    {{ tenant.is_active ? $t('admin.tenants.detail.toggle_deactivate') : $t('admin.tenants.detail.toggle_activate') }}
                   </v-btn>
 
                   <v-divider class="my-2" />
@@ -143,7 +143,7 @@
                     @click="deleteTenant"
                     block
                   >
-                    Löschen
+                    {{ $t('admin.tenants.actions.delete') }}
                   </v-btn>
                 </div>
               </v-card-text>
@@ -156,20 +156,20 @@
       <v-window-item value="users">
         <v-card>
           <v-card-title class="d-flex justify-space-between">
-            Benutzer-Verwaltung
+            {{ $t('admin.tenants.detail.user_management') }}
             <v-btn color="primary" prepend-icon="mdi-plus">
-              Benutzer hinzufügen
+              {{ $t('admin.tenants.detail.add_user') }}
             </v-btn>
           </v-card-title>
           <v-card-text>
             <div class="text-center py-8">
               <v-icon size="64" color="grey-lighten-1">mdi-account-group</v-icon>
-              <h3 class="text-h6 mt-4">Benutzer-Verwaltung</h3>
+              <h3 class="text-h6 mt-4">{{ $t('admin.tenants.detail.users_empty.title') }}</h3>
               <p class="text-body-2 text-grey mt-2">
-                Hier würde eine Tabelle mit den Benutzern dieses Tenants angezeigt.
+                {{ $t('admin.tenants.detail.users_empty.description') }}
               </p>
               <p class="text-caption">
-                Aktuell: {{ tenant.users_count || 0 }} / {{ tenant.max_users || '∞' }} Benutzer
+                {{ $t('admin.tenants.detail.user_count_label', { current: tenant.users_count || 0, max: tenant.max_users || '∞' }) }}
               </p>
             </div>
           </v-card-text>
@@ -179,17 +179,17 @@
       <!-- Einstellungen Tab -->
       <v-window-item value="settings">
         <v-card>
-          <v-card-title>Tenant-Einstellungen</v-card-title>
+          <v-card-title>{{ $t('admin.tenants.detail.settings_title') }}</v-card-title>
           <v-card-text>
             <v-form>
               <v-row>
                 <v-col cols="12" md="6">
                   <v-text-field
                     v-model="tenantSettings.maxUsers"
-                    label="Maximale Anzahl Benutzer"
+                    :label="$t('admin.tenants.detail.form.max_users')"
                     type="number"
                     variant="outlined"
-                    :hint="tenant.max_users ? `Aktuell: ${tenant.max_users}` : 'Unbegrenzt'"
+                    :hint="tenant.max_users ? $t('admin.tenants.detail.form.max_users_hint_current', { count: tenant.max_users }) : $t('admin.tenants.detail.form.max_users_hint_unlimited')"
                     persistent-hint
                   />
                 </v-col>
@@ -197,7 +197,7 @@
                   <v-select
                     v-model="tenantSettings.tenantType"
                     :items="tenantTypes"
-                    label="Tenant-Typ"
+                    :label="$t('admin.tenants.detail.form.tenant_type')"
                     variant="outlined"
                   />
                 </v-col>
@@ -207,7 +207,7 @@
                 <v-col cols="12">
                   <v-textarea
                     v-model="tenantSettings.description"
-                    label="Beschreibung"
+                    :label="$t('admin.tenants.detail.form.description')"
                     variant="outlined"
                     rows="3"
                   />
@@ -218,7 +218,7 @@
                 <v-col cols="12">
                   <v-switch
                     v-model="tenantSettings.isActive"
-                    label="Tenant aktiv"
+                    :label="$t('admin.tenants.detail.form.is_active')"
                     color="primary"
                   />
                 </v-col>
@@ -228,10 +228,10 @@
 
               <div class="d-flex justify-end gap-2">
                 <v-btn variant="outlined" @click="resetSettings">
-                  Zurücksetzen
+                  {{ $t('admin.tenants.detail.form.reset_button') }}
                 </v-btn>
                 <v-btn color="primary" @click="saveTenantSettings">
-                  Speichern
+                  {{ $t('admin.tenants.detail.form.save_button') }}
                 </v-btn>
               </div>
             </v-form>
@@ -247,7 +247,7 @@
               <v-card-text class="d-flex flex-column justify-center align-center h-100 pa-4">
                 <v-icon size="32" color="info" class="mb-2">mdi-account-multiple</v-icon>
                 <h3 class="text-h5 font-weight-bold mb-1">{{ tenant.users_count || 0 }}</h3>
-                <p class="text-body-2 text-medium-emphasis mb-0">Aktive Benutzer</p>
+                <p class="text-body-2 text-medium-emphasis mb-0">{{ $t('admin.tenants.detail.statistics.active_users') }}</p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -257,7 +257,7 @@
               <v-card-text class="d-flex flex-column justify-center align-center h-100 pa-4">
                 <v-icon size="32" color="success" class="mb-2">mdi-calendar-check</v-icon>
                 <h3 class="text-h5 font-weight-bold mb-1">{{ daysActive }}</h3>
-                <p class="text-body-2 text-medium-emphasis mb-0">Tage aktiv</p>
+                <p class="text-body-2 text-medium-emphasis mb-0">{{ $t('admin.tenants.detail.statistics.days_active') }}</p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -267,7 +267,7 @@
               <v-card-text class="d-flex flex-column justify-center align-center h-100 pa-4">
                 <v-icon size="32" color="warning" class="mb-2">mdi-chart-line</v-icon>
                 <h3 class="text-h5 font-weight-bold mb-1">-</h3>
-                <p class="text-body-2 text-medium-emphasis mb-0">Aktivität</p>
+                <p class="text-body-2 text-medium-emphasis mb-0">{{ $t('admin.tenants.detail.statistics.activity') }}</p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -277,7 +277,7 @@
               <v-card-text class="d-flex flex-column justify-center align-center h-100 pa-4">
                 <v-icon size="32" color="purple" class="mb-2">mdi-storage</v-icon>
                 <h3 class="text-h5 font-weight-bold mb-1">-</h3>
-                <p class="text-body-2 text-medium-emphasis mb-0">Speicher</p>
+                <p class="text-body-2 text-medium-emphasis mb-0">{{ $t('admin.tenants.detail.statistics.storage') }}</p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -286,13 +286,13 @@
         <v-row class="mt-4">
           <v-col cols="12">
             <v-card>
-              <v-card-title>Aktivitäts-Verlauf</v-card-title>
+              <v-card-title>{{ $t('admin.tenants.detail.statistics.activity_title') }}</v-card-title>
               <v-card-text>
                 <div class="text-center py-8">
                   <v-icon size="64" color="grey-lighten-1">mdi-chart-timeline</v-icon>
-                  <h3 class="text-h6 mt-4">Statistiken in Entwicklung</h3>
+                  <h3 class="text-h6 mt-4">{{ $t('admin.tenants.detail.activity_empty.title') }}</h3>
                   <p class="text-body-2 text-grey mt-2">
-                    Hier werden zukünftig detaillierte Aktivitäts-Statistiken angezeigt.
+                    {{ $t('admin.tenants.detail.activity_empty.description') }}
                   </p>
                 </div>
               </v-card-text>
@@ -307,11 +307,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
 import { useTenantStore } from '@/infrastructure/stores/tenantStore'
 import { tenantService } from '../services/tenantService'
 import type { Tenant } from '../types'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -337,10 +340,10 @@ const tenantSettings = ref({
   isActive: true
 })
 
-const tenantTypes = [
-  { title: 'Unternehmen', value: 'company' },
-  { title: 'Persönlich', value: 'personal' }
-]
+const tenantTypes = computed(() => [
+  { title: t('admin.tenants.detail.tenant_types.company'), value: 'company' },
+  { title: t('admin.tenants.detail.tenant_types.personal'), value: 'personal' }
+])
 
 // Computed
 const daysActive = computed(() => {
@@ -376,13 +379,13 @@ function editTenant() {
 
 async function switchToTenant() {
   if (!tenant.value) return
-  
+
   try {
     await tenantStore.switchTenant(tenant.value.id)
-    layoutStore.showSuccess(`Zu Tenant "${tenant.value.name}" gewechselt`)
+    layoutStore.showSuccess(t('admin.tenants.messages.switch_success', { name: tenant.value.name }))
     router.push('/dashboard')
   } catch (error: any) {
-    layoutStore.showError(error.response?.data?.message || 'Fehler beim Wechseln des Tenants')
+    layoutStore.showError(error.response?.data?.message || t('admin.tenants.messages.switch_error'))
   }
 }
 
@@ -391,11 +394,11 @@ async function toggleTenantStatus() {
 
   try {
     const newStatus = !tenant.value.is_active
-    // API-Call würde hier stattfinden
+    // API-Call would happen here
     tenant.value.is_active = newStatus
-    layoutStore.showSuccess(`Tenant ${newStatus ? 'aktiviert' : 'deaktiviert'}`)
+    layoutStore.showSuccess(newStatus ? t('admin.tenants.messages.status_activated') : t('admin.tenants.messages.status_deactivated'))
   } catch (error: any) {
-    layoutStore.showError('Fehler beim Ändern des Status')
+    layoutStore.showError(t('admin.tenants.messages.status_error'))
   }
 }
 
@@ -403,17 +406,17 @@ async function deleteTenant() {
   if (!tenant.value) return
 
   const confirmed = await new Promise<boolean>(resolve => {
-    resolve(confirm(`Möchten Sie den Tenant "${tenant.value!.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`))
+    resolve(confirm(t('admin.tenants.messages.delete_confirm', { name: tenant.value!.name })))
   })
-  
+
   if (!confirmed) return
 
   try {
     await tenantService.deleteTenant(tenant.value.id)
-    layoutStore.showSuccess('Tenant wurde gelöscht')
+    layoutStore.showSuccess(t('admin.tenants.messages.delete_success'))
     router.push('/admin/tenants')
   } catch (error: any) {
-    layoutStore.showError(error.response?.data?.message || 'Fehler beim Löschen des Tenants')
+    layoutStore.showError(error.response?.data?.message || t('admin.tenants.messages.delete_error'))
   }
 }
 
@@ -432,13 +435,13 @@ async function saveTenantSettings() {
   if (!tenant.value) return
 
   try {
-    // API-Call würde hier stattfinden
+    // API-Call would happen here
     // const updatedTenant = await tenantService.updateTenant(tenant.value.id, tenantSettings.value)
     // tenant.value = updatedTenant
-    
-    layoutStore.showSuccess('Tenant-Einstellungen wurden gespeichert')
+
+    layoutStore.showSuccess(t('admin.tenants.messages.settings_saved'))
   } catch (error: any) {
-    layoutStore.showError('Fehler beim Speichern der Einstellungen')
+    layoutStore.showError(t('admin.tenants.messages.settings_error'))
   }
 }
 

@@ -1,31 +1,31 @@
 <template>
   <v-container class="fill-height" fluid>
     <v-row justify="center" align="center">
-      <v-col cols="12" md="6" lg="5">
+      <v-col cols="12" md="12" lg="12">
         <div class="text-center mb-4">
           <h1 class="text-h4 font-weight-light">
             <v-icon class="me-2">mdi-account-plus</v-icon>
-            Registrierung
+            {{ t('auth.register.title') }}
           </h1>
         </div>
             <v-form @submit.prevent="handleRegister">
               <v-text-field
                 v-model="formData.first_name"
-                label="Vorname"
+                :label="t('auth.register.first_name')"
                 variant="outlined"
                 class="mb-3"
               />
 
               <v-text-field
                 v-model="formData.last_name"
-                label="Nachname"
+                :label="t('auth.register.last_name')"
                 variant="outlined"
                 class="mb-3"
               />
 
               <v-text-field
                 v-model="formData.email"
-                label="E-Mail-Adresse"
+                :label="t('auth.register.email')"
                 type="email"
                 variant="outlined"
                 class="mb-3"
@@ -33,25 +33,25 @@
 
               <v-text-field
                 v-model="formData.username"
-                label="Benutzername (optional)"
+                :label="t('auth.register.username')"
                 variant="outlined"
                 class="mb-3"
-                hint="Leer lassen für automatische Generierung"
+                :hint="t('auth.register.username_hint')"
                 persistent-hint
               />
 
               <v-text-field
                 v-model="formData.company_name"
-                label="Firmenname (optional)"
+                :label="t('auth.register.company_name')"
                 variant="outlined"
                 class="mb-3"
-                hint="Leer lassen für persönlichen Workspace"
+                :hint="t('auth.register.company_name_hint')"
                 persistent-hint
               />
 
               <v-text-field
                 v-model="formData.password"
-                label="Passwort"
+                :label="t('auth.register.password')"
                 type="password"
                 variant="outlined"
                 class="mb-3"
@@ -59,7 +59,7 @@
 
               <v-text-field
                 v-model="formData.password_confirmation"
-                label="Passwort bestätigen"
+                :label="t('auth.register.password_confirmation')"
                 type="password"
                 variant="outlined"
                 class="mb-3"
@@ -70,9 +70,9 @@
               >
                 <template #label>
                   <span class="text-body-2">
-                    Ich akzeptiere die 
+                    {{ t('auth.register.accept_terms') }}
                     <v-btn variant="text" size="small" class="pa-0" style="height: auto;">
-                      Nutzungsbedingungen
+                      {{ t('auth.register.terms_link') }}
                     </v-btn>
                   </span>
                 </template>
@@ -97,15 +97,15 @@
                 class="mb-3"
               >
                 <v-icon start>mdi-account-plus</v-icon>
-                Registrieren
+                {{ t('auth.register.register_button') }}
               </v-btn>
 
               <div class="text-center">
                 <span class="text-body-2 text-medium-emphasis">
-                  Bereits ein Konto? 
+                  {{ t('auth.register.already_have_account') }}
                 </span>
                 <router-link to="/auth/login" class="text-primary text-decoration-none">
-                  Hier anmelden
+                  {{ t('auth.register.login_here') }}
                 </router-link>
               </div>
             </v-form>
@@ -118,9 +118,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../../infrastructure/stores/authStore'
+import { useTranslations } from '../../../core/localization/composables/useTranslations'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useTranslations()
 
 const formData = ref({
   first_name: '',
@@ -144,7 +146,7 @@ const handleRegister = async () => {
     await authStore.register(formData.value)
     router.push('/dashboard')
   } catch (error: any) {
-    errorMessage.value = error.message || 'Registrierung fehlgeschlagen'
+    errorMessage.value = error.message || t('auth.register.failed')
   } finally {
     isLoading.value = false
   }

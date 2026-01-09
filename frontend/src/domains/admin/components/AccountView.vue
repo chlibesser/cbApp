@@ -4,7 +4,7 @@
       <v-card-text>
         <div v-if="loading" class="text-center py-8">
           <v-progress-circular indeterminate />
-          <p class="mt-2">Account-Details werden geladen...</p>
+          <p class="mt-2">{{ $t('admin.accounts.components.view.loading') }}</p>
         </div>
 
         <div v-else-if="account">
@@ -25,24 +25,24 @@
               <v-card variant="outlined">
                 <v-card-title class="text-h6 bg-grey-lighten-5">
                   <v-icon class="mr-2">mdi-information</v-icon>
-                  Allgemeine Informationen
+                  {{ $t('admin.accounts.components.view.general_info') }}
                 </v-card-title>
                 <v-card-text>
                   <v-list lines="two">
                     <v-list-item>
-                      <v-list-item-title>Benutzername</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.fields.username') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ account.username }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>E-Mail</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.fields.email') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ account.email }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>System-Rolle</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.fields.system_role') }}</v-list-item-title>
                       <v-list-item-subtitle>
-                        <v-chip 
+                        <v-chip
                           :color="getSystemRoleColor(account.system_role)"
                           size="small"
                           variant="flat"
@@ -51,11 +51,11 @@
                         </v-chip>
                       </v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Status</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.fields.status') }}</v-list-item-title>
                       <v-list-item-subtitle>
-                        <v-chip 
+                        <v-chip
                           :color="account.is_active ? 'success' : 'error'"
                           size="small"
                           variant="flat"
@@ -63,7 +63,7 @@
                           <v-icon size="small" class="mr-1">
                             {{ account.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}
                           </v-icon>
-                          {{ account.is_active ? 'Aktiv' : 'Gesperrt' }}
+                          {{ account.is_active ? $t('admin.accounts.status.active') : $t('admin.accounts.status.locked') }}
                         </v-chip>
                       </v-list-item-subtitle>
                     </v-list-item>
@@ -76,22 +76,22 @@
               <v-card variant="outlined">
                 <v-card-title class="text-h6 bg-grey-lighten-5">
                   <v-icon class="mr-2">mdi-clock</v-icon>
-                  Zeitstempel
+                  {{ $t('admin.accounts.components.view.timestamps') }}
                 </v-card-title>
                 <v-card-text>
                   <v-list lines="two">
                     <v-list-item>
-                      <v-list-item-title>Erstellt am</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.view.created_label') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ formatDate(account.created_at) }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Zuletzt aktualisiert</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.view.updated_label') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ formatDate(account.updated_at) }}</v-list-item-subtitle>
                     </v-list-item>
-                    
+
                     <v-list-item v-if="account.email_verified_at">
-                      <v-list-item-title>E-Mail verifiziert</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.accounts.components.view.email_verified_label') }}</v-list-item-title>
                       <v-list-item-subtitle>{{ formatDate(account.email_verified_at) }}</v-list-item-subtitle>
                     </v-list-item>
                   </v-list>
@@ -102,15 +102,15 @@
 
           <!-- Associated Tenants Section -->
           <div class="mt-6">
-            <h3 class="text-h6 mb-4">Zugewiesene Tenants</h3>
+            <h3 class="text-h6 mb-4">{{ $t('admin.accounts.components.view.assigned_tenants') }}</h3>
 
             <v-card variant="outlined">
               <v-card-text>
                 <div v-if="!account.tenants || account.tenants.length === 0" class="text-center py-8">
                   <v-icon size="64" color="grey-lighten-1">mdi-office-building-off</v-icon>
-                  <p class="text-h6 mt-2">Keine Tenants zugewiesen</p>
+                  <p class="text-h6 mt-2">{{ $t('admin.accounts.components.view.no_tenants_title') }}</p>
                   <p class="text-body-2 text-medium-emphasis">
-                    Dieser Account ist noch keinem Tenant zugewiesen.
+                    {{ $t('admin.accounts.components.view.no_tenants_description') }}
                   </p>
                 </div>
 
@@ -128,7 +128,7 @@
                     <v-list-item-title>
                       {{ tenant.name }}
                     </v-list-item-title>
-                    
+
                     <v-list-item-subtitle>
                       {{ tenant.slug }}
                     </v-list-item-subtitle>
@@ -139,7 +139,7 @@
                         size="small"
                         variant="flat"
                       >
-                        {{ tenant.is_personal ? 'Persönlich' : 'Unternehmen' }}
+                        {{ tenant.is_personal ? $t('admin.tenants.detail.tenant_types.personal') : $t('admin.tenants.detail.tenant_types.company') }}
                       </v-chip>
                     </template>
                   </v-list-item>
@@ -151,7 +151,7 @@
 
         <div v-else class="text-center py-8">
           <v-icon size="64" color="grey-lighten-1">mdi-alert-circle</v-icon>
-          <p class="text-h6 mt-2">Account nicht gefunden</p>
+          <p class="text-h6 mt-2">{{ $t('admin.accounts.messages.not_found') }}</p>
         </div>
       </v-card-text>
     </v-card>
@@ -160,8 +160,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Account } from '../types'
 import { accountService } from '../services/accountService'
+
+const { t } = useI18n()
 
 interface Props {
   data: Account | null
@@ -185,13 +188,9 @@ const formatDate = (dateString: string) => {
 }
 
 const getSystemRoleLabel = (role: string | null) => {
-  if (!role) return 'Keine Rolle'
-  const roleMap: Record<string, string> = {
-    'admin': 'Administrator',
-    'tenant_admin': 'Tenant Administrator',
-    'member': 'Mitglied'
-  }
-  return roleMap[role] || role
+  if (!role) return t('admin.accounts.system_roles.no_role')
+  const roleKey = role.replace(/_/g, '_')
+  return t(`admin.accounts.system_roles.${roleKey}`, role)
 }
 
 const getSystemRoleColor = (role: string | null) => {

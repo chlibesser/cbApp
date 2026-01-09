@@ -45,8 +45,8 @@ function handleMissing(locale: string, key: string): string {
 export const i18n: I18n = createI18n({
   
   legacy: false,
-  locale: import.meta.env.DEFAULT_LOCALE || 'de',
-  fallbackLocale: import.meta.env.FALLBACK_LOCALE || 'de',
+  locale: import.meta.env.VITE_DEFAULT_LOCALE || 'de',
+  fallbackLocale: import.meta.env.VITE_FALLBACK_LOCALE || 'de',
   messages: {},
   missingWarn: import.meta.env.DEV, // Only warn in development
   fallbackWarn: false, // Don't warn on fallback usage

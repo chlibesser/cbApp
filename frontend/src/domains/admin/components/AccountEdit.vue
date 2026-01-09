@@ -8,14 +8,14 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4">
                 <v-icon class="mr-2">mdi-information</v-icon>
-                Allgemeine Informationen
+                {{ $t('admin.accounts.components.edit.general_info') }}
               </h3>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.username"
-                label="Benutzername"
+                :label="$t('admin.accounts.components.edit.fields.username')"
                 variant="outlined"
                 :disabled="loading"
               />
@@ -24,7 +24,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.email"
-                label="E-Mail"
+                :label="$t('admin.accounts.components.edit.fields.email')"
                 type="email"
                 variant="outlined"
                 :disabled="loading"
@@ -35,14 +35,14 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4 mt-4">
                 <v-icon class="mr-2">mdi-cog</v-icon>
-                Einstellungen
+                {{ $t('admin.accounts.components.edit.settings') }}
               </h3>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-select
                 v-model="formData.system_role"
-                label="System-Rolle"
+                :label="$t('admin.accounts.components.edit.fields.system_role')"
                 :items="systemRoles"
                 variant="outlined"
                 :disabled="loading"
@@ -54,13 +54,13 @@
             <v-col cols="12" md="6">
               <v-switch
                 v-model="formData.is_active"
-                label="Account aktiv"
+                :label="$t('admin.accounts.components.edit.fields.is_active')"
                 :disabled="loading"
                 color="success"
                 hide-details
               />
               <p class="text-caption text-medium-emphasis mt-1">
-                Inaktive Accounts können sich nicht anmelden
+                {{ $t('admin.accounts.components.edit.fields.is_active_hint') }}
               </p>
             </v-col>
 
@@ -70,14 +70,14 @@
                 <v-expansion-panel>
                   <v-expansion-panel-title>
                     <v-icon class="mr-2">mdi-lock</v-icon>
-                    Passwort ändern
+                    {{ $t('admin.accounts.components.edit.password_change') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
                     <v-row>
                       <v-col cols="12" md="6">
                         <v-text-field
                           v-model="passwordData.password"
-                          label="Neues Passwort"
+                          :label="$t('admin.accounts.components.edit.fields.new_password')"
                           type="password"
                           variant="outlined"
                           :disabled="loading"
@@ -87,7 +87,7 @@
                       <v-col cols="12" md="6">
                         <v-text-field
                           v-model="passwordData.password_confirmation"
-                          label="Passwort bestätigen"
+                          :label="$t('admin.accounts.components.edit.fields.password_confirmation')"
                           type="password"
                           variant="outlined"
                           :disabled="loading"
@@ -115,7 +115,7 @@
             @click="$emit('close')"
             :disabled="loading"
           >
-            Abbrechen
+            {{ $t('admin.accounts.components.edit.buttons.cancel') }}
           </v-btn>
           <v-btn
             type="submit"
@@ -124,7 +124,7 @@
             :disabled="false"
           >
             <v-icon class="mr-1">mdi-content-save</v-icon>
-            Speichern
+            {{ $t('admin.accounts.components.edit.buttons.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -134,8 +134,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Account, UpdateAccountRequest } from '../types'
 import { accountService } from '../services/accountService'
+
+const { t } = useI18n()
 
 interface Props {
   data: Account | null
@@ -173,12 +176,12 @@ const changePassword = computed(() => {
   return passwordPanel.value === 0 && (passwordData.value.password || passwordData.value.password_confirmation)
 })
 
-const systemRoles = [
-  { value: null, text: 'Keine System-Rolle' },
-  { value: 'admin', text: 'Administrator' },
-  { value: 'tenant_admin', text: 'Tenant Administrator' },
-  { value: 'member', text: 'Mitglied' }
-]
+const systemRoles = computed(() => [
+  { value: null, text: t('admin.accounts.system_roles.no_role') },
+  { value: 'admin', text: t('admin.accounts.system_roles.admin') },
+  { value: 'tenant_admin', text: t('admin.accounts.system_roles.tenant_admin') },
+  { value: 'member', text: t('admin.accounts.system_roles.member') }
+])
 
 
 // Methods
@@ -209,9 +212,9 @@ const handleSubmit = async () => {
     }
 
     const response = await accountService.updateAccount(props.data.id, updateData)
-    emit('success', response.message || 'Account erfolgreich aktualisiert')
+    emit('success', response.message || t('admin.accounts.messages.update_success'))
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Fehler beim Speichern'
+    error.value = err.response?.data?.message || err.message || t('admin.accounts.messages.update_error')
     emit('error', error.value)
   } finally {
     loading.value = false

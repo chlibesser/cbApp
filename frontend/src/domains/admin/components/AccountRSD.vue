@@ -4,17 +4,17 @@
     <v-container v-if="rsdStore.isViewMode" class="pa-4 pl-2 pr-4">
       <v-row>
         <v-col cols="12">
-          <h3 class="text-h6 mb-4">Account-Details</h3>
+          <h3 class="text-h6 mb-4">{{ $t('admin.accounts.components.view.general_info') }}</h3>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">E-Mail</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.accounts.fields.email') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.email || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">System-Rolle</div>
-          <v-chip 
+          <div class="text-caption text-grey mb-1">{{ $t('admin.accounts.fields.system_role') }}</div>
+          <v-chip
             :color="getSystemRoleColor(rsdStore.data?.system_role)"
             variant="tonal"
             size="small"
@@ -22,10 +22,10 @@
             {{ getSystemRoleLabel(rsdStore.data?.system_role) }}
           </v-chip>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Status</div>
-          <v-chip 
+          <div class="text-caption text-grey mb-1">{{ $t('admin.accounts.fields.status') }}</div>
+          <v-chip
             :color="rsdStore.data?.email_verified_at ? 'success' : 'warning'"
             variant="tonal"
             size="small"
@@ -33,17 +33,17 @@
             <v-icon size="small" class="mr-1">
               {{ rsdStore.data?.email_verified_at ? 'mdi-check-circle' : 'mdi-clock-outline' }}
             </v-icon>
-            {{ rsdStore.data?.email_verified_at ? 'Verifiziert' : 'Nicht verifiziert' }}
+            {{ rsdStore.data?.email_verified_at ? $t('admin.accounts.verification_status.verified') : $t('admin.accounts.verification_status.not_verified') }}
           </v-chip>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Erstellt am</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.accounts.components.view.created_label') }}</div>
           <div class="text-body-1">{{ formatDateTime(rsdStore.data?.created_at) }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Aktualisiert am</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.accounts.components.view.updated_label') }}</div>
           <div class="text-body-1">{{ formatDateTime(rsdStore.data?.updated_at) }}</div>
         </v-col>
       </v-row>
@@ -54,36 +54,36 @@
       <v-row>
         <v-col cols="12">
           <h3 class="text-h6 mb-4">
-            {{ rsdStore.isCreateMode ? 'Neuen Account erstellen' : 'Account bearbeiten' }}
+            {{ rsdStore.isCreateMode ? $t('admin.accounts.components.create.title') : $t('admin.accounts.components.edit.title') }}
           </h3>
         </v-col>
-        
+
         <v-col cols="12">
           <v-text-field
             v-model="form.email"
-            label="E-Mail *"
+            :label="$t('admin.accounts.components.edit.fields.email') + ' *'"
             variant="outlined"
             density="compact"
             type="email"
             :error-messages="errors.email"
           />
         </v-col>
-        
+
         <v-col cols="12" v-if="rsdStore.isCreateMode">
           <v-text-field
             v-model="form.password"
-            label="Passwort *"
+            :label="$t('admin.accounts.components.create.fields.password') + ' *'"
             variant="outlined"
             density="compact"
             type="password"
             :error-messages="errors.password"
           />
         </v-col>
-        
+
         <v-col cols="12">
           <v-select
             v-model="form.system_role"
-            label="System-Rolle *"
+            :label="$t('admin.accounts.components.edit.fields.system_role') + ' *'"
             variant="outlined"
             density="compact"
             :items="systemRoles"
@@ -92,7 +92,7 @@
             :error-messages="errors.system_role"
           />
         </v-col>
-        
+
         <v-col cols="12" class="pt-6">
           <div class="d-flex gap-2">
             <v-btn
@@ -101,14 +101,14 @@
               :loading="loading"
               @click="handleSave"
             >
-              {{ rsdStore.isCreateMode ? 'Erstellen' : 'Speichern' }}
+              {{ rsdStore.isCreateMode ? $t('admin.accounts.components.create.buttons.create') : $t('admin.accounts.components.edit.buttons.save') }}
             </v-btn>
-            
+
             <v-btn
               variant="outlined"
               @click="handleCancel"
             >
-              Abbrechen
+              {{ $t('admin.accounts.components.create.buttons.cancel') }}
             </v-btn>
           </div>
         </v-col>
@@ -118,11 +118,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRSDStore } from '../../../infrastructure/stores/rsdStore'
 import { accountService } from '../services/accountService'
 import type { Account } from '../types'
 
+const { t } = useI18n()
 const rsdStore = useRSDStore()
 
 // Form data
@@ -135,13 +137,19 @@ const form = ref({
 // Form state
 const loading = ref(false)
 const errors = ref<Record<string, string[]>>({})
-const systemRoles = ref<Array<{ value: string, text: string }>>([])
 
 // Emits
 const emit = defineEmits<{
   success: [message: string]
   error: [message: string]
 }>()
+
+// Computed
+const systemRoles = computed(() => [
+  { value: 'admin', text: t('admin.accounts.system_roles.admin') },
+  { value: 'tenant_admin', text: t('admin.accounts.system_roles.tenant_admin') },
+  { value: 'member', text: t('admin.accounts.system_roles.member') }
+])
 
 // Watch for data changes (when opening edit mode)
 watch(() => rsdStore.data, (newData) => {
@@ -166,20 +174,6 @@ watch(() => rsdStore.mode, (newMode) => {
   }
 })
 
-// Load system roles on mount
-onMounted(async () => {
-  try {
-    // For now, use static roles - could be loaded from API later
-    systemRoles.value = [
-      { value: 'global_admin', text: 'Global Administrator' },
-      { value: 'tenant_admin', text: 'Tenant Administrator' },
-      { value: 'member', text: 'Mitglied' },
-    ]
-  } catch (error) {
-    console.error('Error loading system roles:', error)
-  }
-})
-
 // Methods
 const formatDateTime = (dateString?: string) => {
   if (!dateString) return '-'
@@ -195,21 +189,19 @@ const formatDateTime = (dateString?: string) => {
 }
 
 const getSystemRoleLabel = (role?: string) => {
-  const roleMap = {
-    'global_admin': 'Global Administrator',
-    'tenant_admin': 'Tenant Administrator', 
-    'member': 'Mitglied'
-  }
-  return roleMap[role as keyof typeof roleMap] || role || '-'
+  if (!role) return t('admin.accounts.system_roles.no_role')
+  const roleKey = role.replace(/_/g, '_')
+  return t(`admin.accounts.system_roles.${roleKey}`, role)
 }
 
 const getSystemRoleColor = (role?: string) => {
-  const colorMap = {
-    'global_admin': 'error',
+  if (!role) return 'grey'
+  const colorMap: Record<string, string> = {
+    'admin': 'error',
     'tenant_admin': 'warning',
-    'member': 'primary'
+    'member': 'info'
   }
-  return colorMap[role as keyof typeof colorMap] || 'grey'
+  return colorMap[role] || 'grey'
 }
 
 const handleSave = async () => {
@@ -221,27 +213,27 @@ const handleSave = async () => {
     
     if (rsdStore.isCreateMode) {
       result = await accountService.createAccount(form.value)
-      emit('success', 'Account wurde erfolgreich erstellt')
+      emit('success', t('admin.accounts.messages.create_success'))
     } else {
       result = await accountService.updateAccount(rsdStore.data.id, {
         email: form.value.email,
         system_role: form.value.system_role
       })
-      emit('success', 'Account wurde erfolgreich aktualisiert')
+      emit('success', t('admin.accounts.messages.update_success'))
     }
-    
+
     // Update RSD data with result
     rsdStore.setData(result)
     rsdStore.handleSuccess()
-    
+
   } catch (error: any) {
     console.error('Error saving account:', error)
-    
+
     if (error.response?.data?.errors) {
       errors.value = error.response.data.errors
     }
-    
-    const message = error.response?.data?.message || 'Fehler beim Speichern des Accounts'
+
+    const message = error.response?.data?.message || t(rsdStore.isCreateMode ? 'admin.accounts.messages.create_error' : 'admin.accounts.messages.update_error')
     emit('error', message)
   } finally {
     loading.value = false

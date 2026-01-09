@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <v-icon class="mr-2">mdi-account-multiple</v-icon>
-        Benutzer-Verwaltung: {{ tenant?.name }}
+        {{ $t('admin.tenants.components.user_management.title', { name: tenant?.name }) }}
       </v-card-title>
 
       <v-card-text>
@@ -18,7 +18,7 @@
             <div>
               <strong>{{ tenant.name }}</strong> ({{ tenant.slug }})
               <br>
-              <small>{{ tenant.users_count || 0 }} Benutzer zugewiesen</small>
+              <small>{{ $t('admin.tenants.components.user_management.users_assigned', { count: tenant.users_count || 0 }) }}</small>
             </div>
           </div>
         </v-alert>
@@ -27,7 +27,7 @@
         <div class="d-flex justify-space-between align-center mb-4">
           <v-text-field
             v-model="searchQuery"
-            label="Benutzer durchsuchen..."
+            :label="$t('admin.tenants.components.user_management.search_placeholder')"
             variant="outlined"
             prepend-inner-icon="mdi-magnify"
             density="compact"
@@ -42,14 +42,14 @@
             :disabled="loading"
           >
             <v-icon class="mr-1">mdi-account-plus</v-icon>
-            Benutzer hinzufügen
+            {{ $t('admin.tenants.components.user_management.add_user_button') }}
           </v-btn>
         </div>
 
         <!-- Users Table -->
         <div v-if="loading && users.length === 0" class="text-center py-8">
           <v-progress-circular indeterminate />
-          <p class="mt-2">Benutzer werden geladen...</p>
+          <p class="mt-2">{{ $t('admin.tenants.components.user_management.loading') }}</p>
         </div>
 
         <div v-else-if="filteredUsers.length === 0" class="text-center py-8">
@@ -57,16 +57,16 @@
             {{ users.length === 0 ? 'mdi-account-off' : 'mdi-account-search' }}
           </v-icon>
           <p class="text-h6 mt-2">
-            {{ users.length === 0 ? 'Keine Benutzer zugewiesen' : 'Keine Benutzer gefunden' }}
+            {{ users.length === 0 ? $t('admin.tenants.components.user_management.no_users_assigned') : $t('admin.tenants.components.user_management.no_users_found') }}
           </p>
           <p class="text-body-2 text-medium-emphasis">
-            {{ users.length === 0 
-              ? 'Diesem Tenant sind noch keine Benutzer zugewiesen.' 
-              : 'Versuchen Sie einen anderen Suchbegriff.'
+            {{ users.length === 0
+              ? $t('admin.tenants.components.user_management.no_users_assigned_description')
+              : $t('admin.tenants.components.user_management.no_users_found_description')
             }}
           </p>
           <v-btn v-if="users.length === 0" color="primary" @click="showAssignDialog = true">
-            Ersten Benutzer hinzufügen
+            {{ $t('admin.tenants.components.user_management.add_first_user') }}
           </v-btn>
         </div>
 
@@ -116,7 +116,7 @@
               <v-icon size="small" class="mr-1">
                 {{ item.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}
               </v-icon>
-              {{ item.is_active ? 'Aktiv' : 'Inaktiv' }}
+              {{ item.is_active ? $t('admin.tenants.components.user_management.status.active') : $t('admin.tenants.components.user_management.status.inactive') }}
             </v-chip>
           </template>
 
@@ -133,7 +133,7 @@
                 @click="editUser(item)"
               >
                 <v-icon>mdi-pencil</v-icon>
-                <v-tooltip activator="parent">Rolle bearbeiten</v-tooltip>
+                <v-tooltip activator="parent">{{ $t('admin.tenants.components.user_management.tooltips.edit_role') }}</v-tooltip>
               </v-btn>
 
               <v-btn
@@ -144,7 +144,7 @@
                 @click="removeUser(item)"
               >
                 <v-icon>mdi-delete</v-icon>
-                <v-tooltip activator="parent">Aus Tenant entfernen</v-tooltip>
+                <v-tooltip activator="parent">{{ $t('admin.tenants.components.user_management.tooltips.remove') }}</v-tooltip>
               </v-btn>
             </div>
           </template>
@@ -177,14 +177,14 @@
     <!-- Assign User Dialog -->
     <v-dialog v-model="showAssignDialog" max-width="600">
       <v-card>
-        <v-card-title>Benutzer zum Tenant hinzufügen</v-card-title>
+        <v-card-title>{{ $t('admin.tenants.components.user_management.assign_dialog.title') }}</v-card-title>
         <v-card-text>
           <v-form ref="assignForm">
             <v-row>
               <v-col cols="12">
                 <v-select
                   v-model="assignForm.account_id"
-                  label="Account auswählen"
+                  :label="$t('admin.tenants.components.user_management.assign_dialog.account_label')"
                   :items="availableAccounts"
                   :loading="loadingAccounts"
                   variant="outlined"
@@ -198,7 +198,7 @@
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="assignForm.first_name"
-                  label="Vorname"
+                  :label="$t('admin.tenants.components.user_management.assign_dialog.first_name')"
                   variant="outlined"
                 />
               </v-col>
@@ -206,7 +206,7 @@
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="assignForm.last_name"
-                  label="Nachname"
+                  :label="$t('admin.tenants.components.user_management.assign_dialog.last_name')"
                   variant="outlined"
                 />
               </v-col>
@@ -214,7 +214,7 @@
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="assignForm.email"
-                  label="E-Mail"
+                  :label="$t('admin.tenants.components.user_management.assign_dialog.email')"
                   type="email"
                   variant="outlined"
                 />
@@ -223,7 +223,7 @@
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="assignForm.phone"
-                  label="Telefon (optional)"
+                  :label="$t('admin.tenants.components.user_management.assign_dialog.phone')"
                   variant="outlined"
                 />
               </v-col>
@@ -231,7 +231,7 @@
               <v-col cols="12">
                 <v-select
                   v-model="assignForm.system_role"
-                  label="Rolle"
+                  :label="$t('admin.tenants.components.user_management.assign_dialog.role')"
                   :items="tenantRoles"
                   variant="outlined"
                   item-title="text"
@@ -241,17 +241,17 @@
             </v-row>
           </v-form>
         </v-card-text>
-        
+
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="showAssignDialog = false">Abbrechen</v-btn>
+          <v-btn @click="showAssignDialog = false">{{ $t('admin.tenants.components.user_management.assign_dialog.cancel') }}</v-btn>
           <v-btn
             color="primary"
             :loading="assignLoading"
             :disabled="false"
             @click="assignUser"
           >
-            Hinzufügen
+            {{ $t('admin.tenants.components.user_management.assign_dialog.add') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -260,30 +260,30 @@
     <!-- Edit Role Dialog -->
     <v-dialog v-model="showEditDialog" max-width="400">
       <v-card>
-        <v-card-title>Benutzerrolle bearbeiten</v-card-title>
+        <v-card-title>{{ $t('admin.tenants.components.user_management.edit_dialog.title') }}</v-card-title>
         <v-card-text>
           <p class="mb-4">
             <strong>{{ editingUser?.first_name }} {{ editingUser?.last_name }}</strong>
           </p>
           <v-select
             v-model="newRole"
-            label="Neue Rolle"
+            :label="$t('admin.tenants.components.user_management.edit_dialog.new_role')"
             :items="tenantRoles"
             variant="outlined"
             item-title="text"
             item-value="value"
           />
         </v-card-text>
-        
+
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="showEditDialog = false">Abbrechen</v-btn>
+          <v-btn @click="showEditDialog = false">{{ $t('admin.tenants.components.user_management.edit_dialog.cancel') }}</v-btn>
           <v-btn
             color="primary"
             :loading="editLoading"
             @click="updateRole"
           >
-            Speichern
+            {{ $t('admin.tenants.components.user_management.edit_dialog.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -293,9 +293,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Tenant, TenantUser, AssignUserToTenantRequest } from '../types'
 import { tenantService } from '../services/tenantService'
 import { accountService } from '../services/accountService'
+
+const { t } = useI18n()
 
 interface Props {
   tenant: Tenant | null
@@ -345,19 +348,19 @@ const filteredUsers = computed(() => {
   )
 })
 
-const tableHeaders = [
-  { title: 'Name', key: 'name', sortable: true },
-  { title: 'Account', key: 'account', sortable: false },
-  { title: 'Rolle', key: 'system_role', sortable: true },
-  { title: 'Status', key: 'is_active', sortable: true },
-  { title: 'Hinzugefügt', key: 'created_at', sortable: true },
-  { title: 'Aktionen', key: 'actions', sortable: false }
-]
+const tableHeaders = computed(() => [
+  { title: t('admin.tenants.components.user_management.table.name'), key: 'name', sortable: true },
+  { title: t('admin.tenants.components.user_management.table.account'), key: 'account', sortable: false },
+  { title: t('admin.tenants.components.user_management.table.role'), key: 'system_role', sortable: true },
+  { title: t('admin.tenants.components.user_management.table.status'), key: 'is_active', sortable: true },
+  { title: t('admin.tenants.components.user_management.table.added'), key: 'created_at', sortable: true },
+  { title: t('admin.tenants.components.user_management.table.actions'), key: 'actions', sortable: false }
+])
 
-const tenantRoles = [
-  { value: 'tenant_admin', text: 'Tenant Admin' },
-  { value: 'tenant_member', text: 'Tenant Member' }
-]
+const tenantRoles = computed(() => [
+  { value: 'tenant_admin', text: t('admin.tenants.components.user_management.roles.tenant_admin') },
+  { value: 'tenant_member', text: t('admin.tenants.components.user_management.roles.tenant_member') }
+])
 
 
 // Methods
@@ -370,12 +373,8 @@ const formatDate = (dateString: string) => {
 }
 
 const getRoleLabel = (role: string) => {
-  const roleMap: Record<string, string> = {
-    'global_admin': 'Global Admin',
-    'tenant_admin': 'Tenant Admin',
-    'tenant_member': 'Tenant Member'
-  }
-  return roleMap[role] || role
+  const roleKey = role.replace(/_/g, '_')
+  return t(`admin.tenants.components.user_management.roles.${roleKey}`, role)
 }
 
 const getRoleColor = (role: string) => {
@@ -395,7 +394,7 @@ const loadUsers = async () => {
     const response = await tenantService.getTenantUsers(tenant.value.id)
     users.value = response.users
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Laden der Benutzer'
+    error.value = err.response?.data?.message || t('admin.tenants.components.user_management.messages.load_users_error')
   } finally {
     loading.value = false
   }
@@ -410,7 +409,7 @@ const loadAvailableAccounts = async () => {
       text: `${account.username} (${account.email})`
     }))
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Laden der Accounts'
+    error.value = err.response?.data?.message || t('admin.tenants.components.user_management.messages.load_accounts_error')
   } finally {
     loadingAccounts.value = false
   }
@@ -430,7 +429,7 @@ const assignUser = async () => {
     resetAssignForm()
     await loadUsers()
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Hinzufügen des Benutzers'
+    error.value = err.response?.data?.message || t('admin.tenants.components.user_management.messages.assign_error')
   } finally {
     assignLoading.value = false
   }
@@ -456,17 +455,18 @@ const updateRole = async () => {
     showEditDialog.value = false
     await loadUsers()
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Aktualisieren der Rolle'
+    error.value = err.response?.data?.message || t('admin.tenants.components.user_management.messages.update_role_error')
   } finally {
     editLoading.value = false
   }
 }
 
 const removeUser = async (user: TenantUser) => {
+  const userName = `${user.first_name} ${user.last_name}`
   const confirmed = confirm(
-    `Möchten Sie ${user.first_name} ${user.last_name} wirklich aus diesem Tenant entfernen?`
+    t('admin.tenants.components.user_management.messages.remove_confirm', { name: userName })
   )
-  
+
   if (!confirmed) return
 
   try {
@@ -474,7 +474,7 @@ const removeUser = async (user: TenantUser) => {
     success.value = response.message
     await loadUsers()
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Entfernen des Benutzers'
+    error.value = err.response?.data?.message || t('admin.tenants.components.user_management.messages.remove_error')
   }
 }
 

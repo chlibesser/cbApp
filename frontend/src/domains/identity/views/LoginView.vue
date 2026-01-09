@@ -1,21 +1,21 @@
 <template>
   <v-container class="fill-height" fluid>
     <v-row justify="center" align="center">
-      <v-col cols="12" md="6" lg="4">
+      <v-col cols="12" md="12" lg="12">
         <v-form @submit.prevent="handleLogin" data-testid="login-form">
               <v-text-field
                 v-model="credentials.identifier"
-                label="Username or Email"
+                :label="$t('auth.login.fields.identifier.label')"
                 type="text"
                 variant="outlined"
                 class="mb-3"
-                hint="You can login with your username or email address"
+                :hint="$t('auth.login.fields.identifier.hint')"
                 data-testid="login-identifier"
               />
 
               <v-text-field
                 v-model="credentials.password"
-                label="Password"
+                :label="$t('auth.login.fields.password.label')"
                 type="password"
                 variant="outlined"
                 class="mb-3"
@@ -49,15 +49,17 @@
                   size="20"
                   data-testid="login-loading"
                 />
-                Login
+                
+                {{ $t('auth.login.buttons.submit') }}
+
               </v-btn>
 
               <div class="text-center">
                 <span class="text-body-2 text-medium-emphasis">
-                  Noch kein Konto? 
+                  {{$t('auth.login.links.no_account')}} 
                 </span>
                 <router-link to="/auth/register" class="text-primary text-decoration-none">
-                  Hier registrieren
+                  {{$t('auth.login.links.register')}}
                 </router-link>
               </div>
             </v-form>
@@ -97,7 +99,7 @@
       await authStore.login(credentials.value)
       router.push('/dashboard')
     } catch (error: any) {
-      errorMessage.value = error.message || 'Login failed'
+      errorMessage.value = error.message || $t('auth.login.errors.general')
     } finally {
       isLoading.value = false
     }

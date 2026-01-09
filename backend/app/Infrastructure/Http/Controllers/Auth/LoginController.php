@@ -24,13 +24,16 @@ class LoginController extends Controller
         $credentials = $request->validate([
             'identifier' => ['required', 'string'], // username or email
             'password' => ['required', 'string'],
+        ], [
+            'identifier.required' => __('auth/login.validation.identifier_required'),
+            'password.required' => __('auth/login.validation.password_required'),
         ]);
 
         $account = $this->authService->attempt($credentials);
 
         if (!$account) {
             return response()->json([
-                'message' => 'Invalid credentials or account inactive',
+                'message' => __('auth/login.messages.failed'),
             ], 401);
         }
 
@@ -38,7 +41,7 @@ class LoginController extends Controller
         $token = $this->authService->createToken($account);
 
         return response()->json([
-            'message' => 'Successfully logged in',
+            'message' => __('auth/login.messages.success'),
             'token' => $token,
             'account' => [
                 'id' => $account->id,
@@ -56,13 +59,13 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         $account = $request->user();
-        
+
         if ($account) {
             $this->authService->logout($account);
         }
 
         return response()->json([
-            'message' => 'Successfully logged out',
+            'message' => __('auth/login.messages.logout_success'),
         ]);
     }
 
@@ -75,7 +78,7 @@ class LoginController extends Controller
 
         if (!$account) {
             return response()->json([
-                'message' => 'Unauthenticated',
+                'message' => __('auth/login.messages.unauthenticated'),
             ], 401);
         }
 
@@ -121,6 +124,7 @@ class LoginController extends Controller
                 'username' => $account->username,
                 'email' => $account->email,
                 'is_active' => $account->is_active,
+                'preferred_locale' => $account->preferred_locale,
                 'email_verified_at' => $account->email_verified_at,
                 'system_role' => $account->system_role?->value,
                 'system_role_label' => $account->system_role?->label(),

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { authGuard, adminGuard } from './guards'
+import { i18nGuard } from '../localization/guards/i18nGuard'
 
 // Lazy load layouts
 const AuthLayout = () => import('../../shared/layouts/AuthLayout.vue')
@@ -159,6 +160,7 @@ export const router = createRouter({
 
 // Apply guards
 router.beforeEach(authGuard)
+router.beforeEach(i18nGuard)
 router.beforeEach(adminGuard)
 
 export default router

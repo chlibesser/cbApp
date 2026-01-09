@@ -13,8 +13,8 @@ const vuetify = createVuetify({
 
   // LOCALE CONFIGURATION (NEW)
   locale: {
-    locale: (import.meta.env.DEFAULT_LOCALE || 'de') as SupportedLocale,           // Default locale from env
-    fallback: (import.meta.env.FALLBACK_LOCALE || 'de') as SupportedLocale,         // Fallback from env
+    locale: (import.meta.env.VITE_DEFAULT_LOCALE || 'de') as SupportedLocale,           // Default locale from env
+    fallback: (import.meta.env.VITE_FALLBACK_LOCALE || 'de') as SupportedLocale,         // Fallback from env
     messages: { de, en },   // Vuetify's built-in translations
   },
 
@@ -60,7 +60,6 @@ const vuetify = createVuetify({
 // Sync Vuetify locale with app locale
 export function syncVuetifyLocale(locale: SupportedLocale): void {
   vuetify.locale.current.value = locale
-  console.log('[Vuetify] Locale synced to:', locale)
 }
 
 export { vuetify }

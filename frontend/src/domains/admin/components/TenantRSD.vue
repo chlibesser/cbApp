@@ -4,38 +4,38 @@
     <v-container v-if="rsdStore.isViewMode" class="pa-4 pl-2 pr-4">
       <v-row>
         <v-col cols="12">
-          <h3 class="text-h6 mb-4">Tenant-Details</h3>
+          <h3 class="text-h6 mb-4">{{ $t('admin.tenants.detail.fallback_title') }}</h3>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Name</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.detail.fields.name') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.name || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Slug</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.detail.fields.slug') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.slug || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Beschreibung</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.detail.fields.description') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.description || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Typ</div>
-          <v-chip 
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.detail.fields.type') }}</div>
+          <v-chip
             :color="rsdStore.data?.is_personal ? 'info' : 'primary'"
             variant="tonal"
             size="small"
           >
-            {{ rsdStore.data?.is_personal ? 'Persönlicher Workspace' : 'Unternehmen' }}
+            {{ rsdStore.data?.is_personal ? $t('admin.tenants.detail.tenant_types.personal') : $t('admin.tenants.detail.tenant_types.company') }}
           </v-chip>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Status</div>
-          <v-chip 
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.table.status') }}</div>
+          <v-chip
             :color="rsdStore.data?.is_active ? 'success' : 'error'"
             variant="tonal"
             size="small"
@@ -43,22 +43,22 @@
             <v-icon size="small" class="mr-1">
               {{ rsdStore.data?.is_active ? 'mdi-check-circle' : 'mdi-cancel' }}
             </v-icon>
-            {{ rsdStore.data?.is_active ? 'Aktiv' : 'Inaktiv' }}
+            {{ rsdStore.data?.is_active ? $t('admin.tenants.status.active') : $t('admin.tenants.status.inactive') }}
           </v-chip>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Benutzer</div>
-          <div class="text-body-1">{{ rsdStore.data?.users_count || 0 }} Benutzer</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.components.view.users_label') }}</div>
+          <div class="text-body-1">{{ $t('admin.tenants.components.view.users_count', { count: rsdStore.data?.users_count || 0 }) }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Erstellt am</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.components.view.created_label') }}</div>
           <div class="text-body-1">{{ formatDateTime(rsdStore.data?.created_at) }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Aktualisiert am</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.tenants.components.view.updated_label') }}</div>
           <div class="text-body-1">{{ formatDateTime(rsdStore.data?.updated_at) }}</div>
         </v-col>
       </v-row>
@@ -69,61 +69,61 @@
       <v-row>
         <v-col cols="12">
           <h3 class="text-h6 mb-4">
-            {{ rsdStore.isCreateMode ? 'Neuen Tenant erstellen' : 'Tenant bearbeiten' }}
+            {{ rsdStore.isCreateMode ? $t('admin.tenants.components.create.title') : $t('admin.tenants.actions.edit') }}
           </h3>
         </v-col>
-        
+
         <v-col cols="12">
           <v-text-field
             v-model="form.name"
-            label="Name *"
+            :label="$t('admin.tenants.components.create.fields.name') + ' *'"
             variant="outlined"
             density="compact"
             :error-messages="errors.name"
           />
         </v-col>
-        
+
         <v-col cols="12">
           <v-text-field
             v-model="form.slug"
-            label="Slug *"
+            :label="$t('admin.tenants.components.create.fields.slug') + ' *'"
             variant="outlined"
             density="compact"
             :error-messages="errors.slug"
-            hint="URL-freundliche Version des Namens"
+            :hint="$t('admin.tenants.components.create.fields.slug_hint')"
             persistent-hint
           />
         </v-col>
-        
+
         <v-col cols="12">
           <v-textarea
             v-model="form.description"
-            label="Beschreibung"
+            :label="$t('admin.tenants.components.create.fields.description')"
             variant="outlined"
             density="compact"
             rows="3"
             :error-messages="errors.description"
           />
         </v-col>
-        
+
         <v-col cols="12">
           <v-checkbox
             v-model="form.is_personal"
-            label="Persönlicher Workspace"
+            :label="$t('admin.tenants.detail.tenant_types.personal')"
             :error-messages="errors.is_personal"
             hide-details="auto"
           />
         </v-col>
-        
+
         <v-col cols="12">
           <v-checkbox
             v-model="form.is_active"
-            label="Aktiv"
+            :label="$t('admin.tenants.status.active')"
             :error-messages="errors.is_active"
             hide-details="auto"
           />
         </v-col>
-        
+
         <v-col cols="12" class="pt-6">
           <div class="d-flex gap-2">
             <v-btn
@@ -132,14 +132,14 @@
               :loading="loading"
               @click="handleSave"
             >
-              {{ rsdStore.isCreateMode ? 'Erstellen' : 'Speichern' }}
+              {{ rsdStore.isCreateMode ? $t('admin.tenants.components.create.buttons.create') : $t('admin.tenants.components.create.buttons.save') }}
             </v-btn>
-            
+
             <v-btn
               variant="outlined"
               @click="handleCancel"
             >
-              Abbrechen
+              {{ $t('admin.tenants.components.create.buttons.cancel') }}
             </v-btn>
           </div>
         </v-col>
@@ -150,10 +150,12 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRSDStore } from '../../../infrastructure/stores/rsdStore'
 import { tenantService } from '../services/tenantService'
 import type { Tenant } from '../types'
 
+const { t } = useI18n()
 const rsdStore = useRSDStore()
 
 // Form data
@@ -219,30 +221,30 @@ const formatDateTime = (dateString?: string) => {
 const handleSave = async () => {
   loading.value = true
   errors.value = {}
-  
+
   try {
     let result: Tenant
-    
+
     if (rsdStore.isCreateMode) {
       result = await tenantService.createTenant(form.value)
-      emit('success', 'Tenant wurde erfolgreich erstellt')
+      emit('success', t('admin.tenants.messages.create_success'))
     } else {
       result = await tenantService.updateTenant(rsdStore.data.id, form.value)
-      emit('success', 'Tenant wurde erfolgreich aktualisiert')
+      emit('success', t('admin.tenants.messages.update_success'))
     }
-    
+
     // Update RSD data with result
     rsdStore.setData(result)
     rsdStore.handleSuccess()
-    
+
   } catch (error: any) {
     console.error('Error saving tenant:', error)
-    
+
     if (error.response?.data?.errors) {
       errors.value = error.response.data.errors
     }
-    
-    const message = error.response?.data?.message || 'Fehler beim Speichern des Tenants'
+
+    const message = error.response?.data?.message || t(rsdStore.isCreateMode ? 'admin.tenants.messages.create_error' : 'admin.tenants.messages.update_error')
     emit('error', message)
   } finally {
     loading.value = false

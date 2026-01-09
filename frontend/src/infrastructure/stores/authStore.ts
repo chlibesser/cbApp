@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Account, Profile, LoginCredentials, AuthState, Tenant, QuickLoginAccount } from '../../core/auth'
+import type {
+  Account,
+  Profile,
+  LoginCredentials,
+  AuthState,
+  Tenant,
+  QuickLoginAccount,
+} from '../../core/auth'
 import { authService } from '../../core/auth'
+import { useLocaleStore } from '@/core/localization/stores/localeStore'
+import type { SupportedLocale } from '@/core/localization/types/locale.types'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -11,6 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   const currentTenant = ref<Tenant | null>(null)
   const availableQuickLogins = ref<QuickLoginAccount[]>([])
   const quickLogins = ref<QuickLoginAccount[]>([])
+  const preferredLocale = ref<SupportedLocale | null>(null)
 
   // Getters
   const isAuthenticated = computed(() => !!token.value)
@@ -45,7 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Sofort den Auth-Zustand auf false setzen
       token.value = null
       authService.removeToken()
-      
+
       if (account.value) {
         // Nur API-Call machen wenn wir eingeloggt waren
         await authService.logout()
@@ -58,10 +68,14 @@ export const useAuthStore = defineStore('auth', () => {
       profile.value = null
       currentTenant.value = null
       quickLogins.value = []
-      
+      preferredLocale.value = null
+
       // Clear all localStorage data
       localStorage.removeItem('auth_token')
       localStorage.removeItem('auth_user_data')
+      // Clear translation cache
+      const localeStore = useLocaleStore()
+      localeStore.clearCache()
     }
   }
 
@@ -76,6 +90,17 @@ export const useAuthStore = defineStore('auth', () => {
       }
       if (userData.current_tenant) {
         currentTenant.value = userData.current_tenant
+      }
+      // Handle locale preference
+      if (userData.account.preferred_locale) {
+        preferredLocale.value = userData.account.preferred_locale as SupportedLocale
+        // Initialize locale store with user's preference
+        const localeStore = useLocaleStore()
+        if (localeStore.initialized) {
+          await localeStore.setLocale(preferredLocale.value)
+        } else {
+          localeStore.setLocaleFromUser(preferredLocale.value)
+        }
       }
     } catch (error) {
       // If loading user data fails, clear auth state
@@ -125,7 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.token
       account.value = response.account
       authService.setToken(response.token)
-      
+
       // Load full user data after registration
       await loadUserData()
 
@@ -152,7 +177,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const canAccessResource = (resource: string): boolean => {
     if (!currentTenant.value?.role?.permissions) return false
-    return currentTenant.value.role.permissions.some((permission: string) => 
+    return currentTenant.value.role.permissions.some((permission: string) =>
       permission.startsWith(`${resource}.`)
     )
   }
@@ -172,7 +197,8 @@ export const useAuthStore = defineStore('auth', () => {
     currentTenant,
     availableQuickLogins,
     quickLogins,
-
+    // Locale Preference
+    preferredLocale,
     // Getters
     isAuthenticated,
     user,

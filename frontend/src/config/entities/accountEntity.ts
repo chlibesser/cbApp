@@ -1,6 +1,6 @@
 /**
  * Account Entity Configuration für ADT
- * Definiert Spalten und Verhalten der Account-Tabelle
+ * Stores translation keys that will be translated in components
  */
 
 import type { EntityConfig } from '../../types/entity'
@@ -9,8 +9,8 @@ export const accountEntityConfig: EntityConfig = {
   name: 'account',
   apiEndpoint: '/admin/accounts',
   itemKey: 'id',
-  searchPlaceholder: 'Accounts durchsuchen...',
-  emptyText: 'Keine Accounts gefunden',
+  searchPlaceholder: 'admin.accounts.search_placeholder',
+  emptyText: 'admin.accounts.empty_text',
   defaultSort: {
     field: 'created_at',
     direction: 'desc'
@@ -19,16 +19,16 @@ export const accountEntityConfig: EntityConfig = {
   fields: [
     {
       key: 'id',
-      label: 'ID',
+      label: 'admin.common.fields.id',
       type: 'text',
       sortable: true,
       filterable: false,
       width: 100,
-      visible: false // UUID nur bei Bedarf anzeigen
+      visible: false
     },
     {
       key: 'username',
-      label: 'Benutzername',
+      label: 'admin.accounts.table.username',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -39,7 +39,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'email',
-      label: 'E-Mail',
+      label: 'admin.accounts.table.email',
       type: 'email',
       sortable: true,
       filterable: true,
@@ -50,57 +50,47 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'email_verified_at',
-      label: 'E-Mail verifiziert',
+      label: 'admin.accounts.table.verified',
       type: 'boolean',
       sortable: true,
       filterable: true,
       filterType: 'select',
       filterOptions: [
-        { value: true, text: 'Verifiziert' },
-        { value: false, text: 'Nicht verifiziert' }
+        { value: true, text: 'admin.accounts.verification_status.verified' },
+        { value: false, text: 'admin.accounts.verification_status.not_verified' }
       ],
-      width: 140,
-      format: (value: string | null) => value ? 'Verifiziert' : 'Nicht verifiziert'
+      width: 140
     },
     {
       key: 'system_role',
-      label: 'System-Rolle',
+      label: 'admin.accounts.table.role',
       type: 'select',
       sortable: true,
       filterable: true,
       filterType: 'select',
       filterOptions: [
-        { value: 'global_admin', text: 'Global Admin' },
-        { value: 'tenant_admin', text: 'Tenant Admin' },
-        { value: 'tenant_member', text: 'Tenant Member' }
+        { value: 'global_admin', text: 'admin.accounts.roles.global_admin' },
+        { value: 'tenant_admin', text: 'admin.accounts.roles.tenant_admin' },
+        { value: 'tenant_member', text: 'admin.accounts.roles.member' }
       ],
-      width: 140,
-      format: (value: string) => {
-        const roleMap: Record<string, string> = {
-          'global_admin': 'Global Admin',
-          'tenant_admin': 'Tenant Admin',
-          'tenant_member': 'Tenant Member'
-        }
-        return roleMap[value] || value
-      }
+      width: 140
     },
     {
       key: 'is_active',
-      label: 'Status',
+      label: 'admin.common.fields.status',
       type: 'boolean',
       sortable: true,
       filterable: true,
       filterType: 'select',
       filterOptions: [
-        { value: true, text: 'Aktiv' },
-        { value: false, text: 'Inaktiv' }
+        { value: true, text: 'admin.common.status.active' },
+        { value: false, text: 'admin.common.status.inactive' }
       ],
-      width: 100,
-      format: (value: boolean) => value ? 'Aktiv' : 'Inaktiv'
+      width: 100
     },
     {
       key: 'tenants_count',
-      label: 'Tenants',
+      label: 'admin.common.fields.tenants',
       type: 'number',
       sortable: true,
       filterable: false,
@@ -109,7 +99,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'last_login_at',
-      label: 'Letzter Login',
+      label: 'admin.accounts.table.last_login',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -119,7 +109,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'created_at',
-      label: 'Erstellt am',
+      label: 'admin.common.fields.created_at',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -129,13 +119,13 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'updated_at',
-      label: 'Aktualisiert am',
+      label: 'admin.common.fields.updated_at',
       type: 'datetime',
       sortable: true,
       filterable: false,
       width: 160,
       minWidth: 140,
-      visible: false // Standardmäßig ausblenden
+      visible: false
     }
   ]
 }

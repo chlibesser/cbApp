@@ -4,31 +4,31 @@
     <v-container v-if="rsdStore.isViewMode" class="pa-4 pl-2 pr-4">
       <v-row>
         <v-col cols="12">
-          <h3 class="text-h6 mb-4">Role-Details</h3>
+          <h3 class="text-h6 mb-4">{{ $t('admin.roles.components.rsd.view.title') }}</h3>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Name</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.roles.components.rsd.view.name') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.name || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Beschreibung</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.roles.components.rsd.view.description') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.description || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Tenant</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.roles.components.rsd.view.tenant') }}</div>
           <div class="text-body-1">{{ rsdStore.data?.tenant?.name || '-' }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Erstellt am</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.roles.components.rsd.view.created') }}</div>
           <div class="text-body-1">{{ formatDateTime(rsdStore.data?.created_at) }}</div>
         </v-col>
-        
+
         <v-col cols="12">
-          <div class="text-caption text-grey mb-1">Aktualisiert am</div>
+          <div class="text-caption text-grey mb-1">{{ $t('admin.roles.components.rsd.view.updated') }}</div>
           <div class="text-body-1">{{ formatDateTime(rsdStore.data?.updated_at) }}</div>
         </v-col>
       </v-row>
@@ -39,31 +39,31 @@
       <v-row>
         <v-col cols="12">
           <h3 class="text-h6 mb-4">
-            {{ rsdStore.isCreateMode ? 'Neue Role erstellen' : 'Role bearbeiten' }}
+            {{ rsdStore.isCreateMode ? $t('admin.roles.components.rsd.create.title') : $t('admin.roles.components.rsd.edit.title') }}
           </h3>
         </v-col>
-        
+
         <v-col cols="12">
           <v-text-field
             v-model="form.name"
-            label="Name *"
+            :label="$t('admin.roles.components.rsd.fields.name') + ' *'"
             variant="outlined"
             density="compact"
             :error-messages="errors.name"
           />
         </v-col>
-        
+
         <v-col cols="12">
           <v-textarea
             v-model="form.description"
-            label="Beschreibung"
+            :label="$t('admin.roles.components.rsd.fields.description')"
             variant="outlined"
             density="compact"
             rows="3"
             :error-messages="errors.description"
           />
         </v-col>
-        
+
         <v-col cols="12" class="pt-6">
           <div class="d-flex gap-2">
             <v-btn
@@ -72,14 +72,14 @@
               :loading="loading"
               @click="handleSave"
             >
-              {{ rsdStore.isCreateMode ? 'Erstellen' : 'Speichern' }}
+              {{ rsdStore.isCreateMode ? $t('admin.roles.components.rsd.buttons.create') : $t('admin.roles.components.rsd.buttons.save') }}
             </v-btn>
-            
+
             <v-btn
               variant="outlined"
               @click="handleCancel"
             >
-              Abbrechen
+              {{ $t('admin.roles.components.rsd.buttons.cancel') }}
             </v-btn>
           </div>
         </v-col>
@@ -90,8 +90,10 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRSDStore } from '../../../infrastructure/stores/rsdStore'
 
+const { t } = useI18n()
 const rsdStore = useRSDStore()
 
 // Form data
@@ -148,14 +150,14 @@ const formatDateTime = (dateString?: string) => {
 const handleSave = async () => {
   loading.value = true
   errors.value = {}
-  
+
   try {
     // TODO: Implement role service calls
-    emit('success', 'Role-Funktionalität wird noch implementiert')
-    
+    emit('success', t('admin.roles.components.rsd.messages.not_implemented'))
+
   } catch (error: any) {
     console.error('Error saving role:', error)
-    emit('error', 'Fehler beim Speichern der Role')
+    emit('error', t('admin.roles.components.rsd.messages.save_error'))
   } finally {
     loading.value = false
   }

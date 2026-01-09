@@ -8,21 +8,21 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4">
                 <v-icon class="mr-2">mdi-information</v-icon>
-                Neuen Tenant erstellen
+                {{ $t('admin.tenants.components.create.title') }}
               </h3>
               <p class="text-body-2 text-medium-emphasis mb-4">
-                Erstellen Sie einen neuen Tenant für Ihr System. Der Slug wird automatisch generiert, kann aber angepasst werden.
+                {{ $t('admin.tenants.components.create.description') }}
               </p>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.name"
-                label="Tenant-Name"
+                :label="$t('admin.tenants.components.create.fields.name')"
                 variant="outlined"
                 :disabled="loading"
                 @input="generateSlug"
-                hint="Der Name des Tenants, z.B. 'Meine Firma GmbH'"
+                :hint="$t('admin.tenants.components.create.fields.name_hint')"
                 persistent-hint
               />
             </v-col>
@@ -30,10 +30,10 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.slug"
-                label="Slug (URL-Bezeichnung)"
+                :label="$t('admin.tenants.components.create.fields.slug')"
                 variant="outlined"
                 :disabled="loading"
-                hint="URL-freundlicher Name, z.B. 'meine-firma'"
+                :hint="$t('admin.tenants.components.create.fields.slug_hint')"
                 persistent-hint
               />
             </v-col>
@@ -41,12 +41,12 @@
             <v-col cols="12">
               <v-textarea
                 v-model="formData.description"
-                label="Beschreibung (optional)"
+                :label="$t('admin.tenants.components.create.fields.description')"
                 variant="outlined"
                 :disabled="loading"
                 rows="3"
                 counter="500"
-                hint="Kurze Beschreibung des Tenants"
+                :hint="$t('admin.tenants.components.create.fields.description_hint')"
                 persistent-hint
               />
             </v-col>
@@ -55,20 +55,20 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4 mt-4">
                 <v-icon class="mr-2">mdi-cog</v-icon>
-                Grundeinstellungen
+                {{ $t('admin.tenants.components.create.settings') }}
               </h3>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-select
                 v-model="formData.is_personal"
-                label="Tenant-Typ"
+                :label="$t('admin.tenants.components.create.fields.type')"
                 :items="tenantTypes"
                 variant="outlined"
                 :disabled="loading"
                 item-title="text"
                 item-value="value"
-                hint="Art des Tenants - beeinflusst verfügbare Features"
+                :hint="$t('admin.tenants.components.create.fields.type_hint')"
                 persistent-hint
               />
             </v-col>
@@ -76,13 +76,13 @@
             <v-col cols="12" md="6">
               <v-switch
                 v-model="formData.is_active"
-                label="Sofort aktivieren"
+                :label="$t('admin.tenants.components.create.fields.activate')"
                 :disabled="loading"
                 color="success"
                 hide-details
               />
               <p class="text-caption text-medium-emphasis mt-1">
-                Der Tenant kann sich sofort nach der Erstellung anmelden
+                {{ $t('admin.tenants.components.create.fields.activate_hint') }}
               </p>
             </v-col>
 
@@ -91,38 +91,38 @@
               <v-card variant="outlined" class="mt-4">
                 <v-card-title class="text-subtitle-1 bg-grey-lighten-5">
                   <v-icon class="mr-2">mdi-eye</v-icon>
-                  Vorschau
+                  {{ $t('admin.tenants.components.create.preview') }}
                 </v-card-title>
                 <v-card-text>
                   <v-list lines="one" density="compact">
                     <v-list-item>
-                      <v-list-item-title>Name:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.create.preview_labels.name') }}</v-list-item-title>
                       <template #append>
-                        <span class="font-weight-medium">{{ formData.name || '(Noch kein Name)' }}</span>
+                        <span class="font-weight-medium">{{ formData.name || $t('admin.tenants.components.create.preview_labels.no_name') }}</span>
                       </template>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Slug:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.create.preview_labels.slug') }}</v-list-item-title>
                       <template #append>
-                        <span class="font-weight-medium">{{ formData.slug || '(Wird automatisch generiert)' }}</span>
+                        <span class="font-weight-medium">{{ formData.slug || $t('admin.tenants.components.create.preview_labels.auto_generated') }}</span>
                       </template>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Typ:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.create.preview_labels.type') }}</v-list-item-title>
                       <template #append>
                         <v-chip size="small" :color="formData.is_personal ? 'info' : 'primary'">
-                          {{ formData.is_personal ? 'Persönlich' : 'Unternehmen' }}
+                          {{ formData.is_personal ? $t('admin.tenants.detail.tenant_types.personal') : $t('admin.tenants.detail.tenant_types.company') }}
                         </v-chip>
                       </template>
                     </v-list-item>
-                    
+
                     <v-list-item>
-                      <v-list-item-title>Status:</v-list-item-title>
+                      <v-list-item-title>{{ $t('admin.tenants.components.create.preview_labels.status') }}</v-list-item-title>
                       <template #append>
                         <v-chip size="small" :color="formData.is_active ? 'success' : 'warning'">
-                          {{ formData.is_active ? 'Aktiv' : 'Inaktiv' }}
+                          {{ formData.is_active ? $t('admin.tenants.status.active') : $t('admin.tenants.status.inactive') }}
                         </v-chip>
                       </template>
                     </v-list-item>
@@ -147,7 +147,7 @@
             @click="$emit('close')"
             :disabled="loading"
           >
-            Abbrechen
+            {{ $t('admin.tenants.components.create.buttons.cancel') }}
           </v-btn>
           <v-btn
             type="submit"
@@ -156,7 +156,7 @@
             :disabled="false"
           >
             <v-icon class="mr-1">mdi-plus</v-icon>
-            Tenant erstellen
+            {{ $t('admin.tenants.components.create.buttons.create') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -165,13 +165,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { CreateTenantRequest } from '../types'
 import { tenantService } from '../services/tenantService'
 
+const { t } = useI18n()
+
 const emit = defineEmits<{
   success: [message: string]
-  error: [message: string] 
+  error: [message: string]
   close: []
 }>()
 
@@ -191,18 +194,18 @@ const formData = ref<CreateTenantRequest>({
 })
 
 // Computed
-const tenantTypes = [
-  { 
-    value: false, 
-    text: 'Unternehmen',
-    description: 'Für Firmen und Organisationen'
+const tenantTypes = computed(() => [
+  {
+    value: false,
+    text: t('admin.tenants.detail.tenant_types.company'),
+    description: t('admin.tenants.types.company')
   },
-  { 
-    value: true, 
-    text: 'Persönlich',
-    description: 'Für Einzelpersonen'
+  {
+    value: true,
+    text: t('admin.tenants.detail.tenant_types.personal'),
+    description: t('admin.tenants.types.personal')
   }
-]
+])
 
 
 // Methods
@@ -232,7 +235,7 @@ const handleSubmit = async () => {
     const response = await tenantService.createTenant(formData.value)
     emit('success', response.message)
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Fehler beim Erstellen des Tenants'
+    error.value = err.response?.data?.message || err.message || t('admin.tenants.messages.create_error')
     emit('error', error.value)
   } finally {
     loading.value = false

@@ -8,14 +8,14 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4">
                 <v-icon class="mr-2">mdi-information</v-icon>
-                Allgemeine Informationen
+                {{ $t('admin.tenants.components.create.basic_info') }}
               </h3>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.name"
-                label="Tenant-Name"
+                :label="$t('admin.tenants.components.create.fields.name')"
                 variant="outlined"
                 :disabled="loading"
               />
@@ -24,10 +24,10 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="formData.slug"
-                label="Slug (URL-Bezeichnung)"
+                :label="$t('admin.tenants.components.create.fields.slug')"
                 variant="outlined"
                 :disabled="loading"
-                hint="Nur Kleinbuchstaben, Zahlen und Bindestriche"
+                :hint="$t('admin.tenants.components.create.fields.slug_hint_edit')"
                 persistent-hint
               />
             </v-col>
@@ -35,7 +35,7 @@
             <v-col cols="12">
               <v-textarea
                 v-model="formData.description"
-                label="Beschreibung"
+                :label="$t('admin.tenants.detail.form.description')"
                 variant="outlined"
                 :disabled="loading"
                 rows="3"
@@ -47,14 +47,14 @@
             <v-col cols="12">
               <h3 class="text-h6 mb-4 mt-4">
                 <v-icon class="mr-2">mdi-cog</v-icon>
-                Einstellungen
+                {{ $t('admin.tenants.components.create.settings') }}
               </h3>
             </v-col>
 
             <v-col cols="12" md="6">
               <v-select
                 v-model="formData.is_personal"
-                label="Tenant-Typ"
+                :label="$t('admin.tenants.components.create.fields.type')"
                 :items="tenantTypes"
                 variant="outlined"
                 :disabled="loading"
@@ -66,13 +66,13 @@
             <v-col cols="12" md="6">
               <v-switch
                 v-model="formData.is_active"
-                label="Tenant aktiv"
+                :label="$t('admin.tenants.detail.form.is_active')"
                 :disabled="loading"
                 color="success"
                 hide-details
               />
               <p class="text-caption text-medium-emphasis mt-1">
-                Inaktive Tenants können sich nicht anmelden
+                {{ $t('admin.tenants.components.create.fields.inactive_hint') }}
               </p>
             </v-col>
 
@@ -82,19 +82,19 @@
                 <v-expansion-panel>
                   <v-expansion-panel-title>
                     <v-icon class="mr-2">mdi-tune</v-icon>
-                    Erweiterte Einstellungen
+                    {{ $t('admin.tenants.components.create.fields.advanced_settings') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
                     <v-row>
                       <v-col cols="12">
                         <v-textarea
                           v-model="settingsJson"
-                          label="Einstellungen (JSON)"
+                          :label="$t('admin.tenants.components.create.fields.settings_json')"
                           variant="outlined"
                           :disabled="loading"
                           rows="6"
                           placeholder="{}"
-                          hint="Erweiterte Konfiguration als JSON-Objekt"
+                          :hint="$t('admin.tenants.components.create.fields.settings_json_hint')"
                           persistent-hint
                         />
                       </v-col>
@@ -120,7 +120,7 @@
             @click="$emit('close')"
             :disabled="loading"
           >
-            Abbrechen
+            {{ $t('admin.tenants.components.create.buttons.cancel') }}
           </v-btn>
           <v-btn
             type="submit"
@@ -129,7 +129,7 @@
             :disabled="false"
           >
             <v-icon class="mr-1">mdi-content-save</v-icon>
-            Speichern
+            {{ $t('admin.tenants.components.create.buttons.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -139,8 +139,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Tenant, UpdateTenantRequest } from '../types'
 import { tenantService } from '../services/tenantService'
+
+const { t } = useI18n()
 
 interface Props {
   data: Tenant | null
@@ -174,10 +177,10 @@ const formData = ref<UpdateTenantRequest>({
 const settingsJson = ref('{}')
 
 // Computed
-const tenantTypes = [
-  { value: false, text: 'Unternehmen' },
-  { value: true, text: 'Persönlich' }
-]
+const tenantTypes = computed(() => [
+  { value: false, text: t('admin.tenants.detail.tenant_types.company') },
+  { value: true, text: t('admin.tenants.detail.tenant_types.personal') }
+])
 
 
 // Methods
@@ -207,7 +210,7 @@ const handleSubmit = async () => {
     try {
       settings = JSON.parse(settingsJson.value)
     } catch {
-      throw new Error('Ungültiges JSON-Format in den Einstellungen')
+      throw new Error(t('admin.tenants.messages.json_error'))
     }
 
     const updateData: UpdateTenantRequest = {
@@ -218,7 +221,7 @@ const handleSubmit = async () => {
     const response = await tenantService.updateTenant(props.data.id, updateData)
     emit('success', response.message)
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message || 'Fehler beim Speichern'
+    error.value = err.response?.data?.message || err.message || t('admin.tenants.messages.update_error')
     emit('error', error.value)
   } finally {
     loading.value = false

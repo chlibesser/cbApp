@@ -6,6 +6,7 @@ export interface Account {
   email_verified_at?: string
   system_role?: string | null
   system_role_label?: string | null
+  preferred_locale?: string
   created_at: string
   updated_at: string
 }

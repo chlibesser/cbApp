@@ -1,18 +1,18 @@
 <template>
   <v-app>
     <v-navigation-drawer permanent app>
-      <v-list-item title="cbApp Admin" subtitle="Administration Panel" />
+      <v-list-item :title="$t('admin.layout.title')" :subtitle="$t('admin.layout.subtitle')" />
 
       <v-divider />
 
       <v-list nav>
-        <v-list-item prepend-icon="mdi-domain" title="Tenants" to="/admin/tenants" />
-        <v-list-item prepend-icon="mdi-account-multiple" title="Accounts" to="/admin/accounts" />
+        <v-list-item prepend-icon="mdi-domain" :title="$t('admin.layout.nav.tenants')" to="/admin/tenants" />
+        <v-list-item prepend-icon="mdi-account-multiple" :title="$t('admin.layout.nav.accounts')" to="/admin/accounts" />
       </v-list>
     </v-navigation-drawer>
 
     <v-app-bar app>
-      <v-toolbar-title>Admin Panel</v-toolbar-title>
+      <v-toolbar-title>{{ $t('admin.layout.toolbar_title') }}</v-toolbar-title>
       <v-spacer />
       <v-btn icon @click="logout">
         <v-icon>mdi-logout</v-icon>

@@ -12,7 +12,7 @@
           :key="account.username"
           cols="12"
           sm="6"
-          md="4"
+          md="6"
         >
           <v-card variant="outlined" class="mb-2" :data-testid="`account-card-${account.username}`">
             <v-card-title class="text-subtitle-1 d-flex align-center" :data-testid="`account-info-${account.username}`">

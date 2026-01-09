@@ -117,8 +117,8 @@ class TranslationService
             $relativePath = $file->getRelativePathname();
             $key = str_replace(['/', '\\', '.php'], ['.', '.', ''], $relativePath);
             
-            // Skip excluded files
-            if ($this->isExcluded($key)) {
+            // Skip excluded files - check multiple formats
+            if ($this->isExcluded($key, $relativePath, $file->getFilename())) {
                 continue;
             }
             
@@ -166,10 +166,54 @@ class TranslationService
 
     /**
      * Check if a translation key should be excluded
+     * Supports multiple exclusion formats:
+     * - Dot notation: "auth.login"
+     * - File path: "auth/login.php" or "auth\\login.php" 
+     * - Filename only: "login.php"
+     * - Directory: "auth/*" (excludes all files in auth folder)
      */
-    private function isExcluded(string $key): bool
+    private function isExcluded(string $key, string $relativePath, string $filename): bool
     {
-        return in_array($key, $this->getExcludedFiles());
+        $excludedFiles = $this->getExcludedFiles();
+        
+        foreach ($excludedFiles as $pattern) {
+            // 1. Direct dot notation match: "auth.login"
+            if ($pattern === $key) {
+                return true;
+            }
+            
+            // 2. File path match: "auth/login.php"
+            $normalizedPath = str_replace('\\', '/', $relativePath);
+            if ($pattern === $normalizedPath) {
+                return true;
+            }
+            
+            // 3. Filename only match: "login.php"
+            if ($pattern === $filename) {
+                return true;
+            }
+            
+            // 4. Directory wildcard: "auth/*" excludes all files in auth folder
+            if (str_ends_with($pattern, '/*')) {
+                $dirPattern = str_replace('/*', '', $pattern);
+                if (str_starts_with($key, $dirPattern . '.') || str_starts_with($normalizedPath, $dirPattern . '/')) {
+                    return true;
+                }
+            }
+            
+            // 5. Wildcard pattern: "*.debug" excludes all files ending with .debug
+            if (str_contains($pattern, '*')) {
+                // Properly escape the pattern for regex, then replace * with .*
+                $escapedPattern = preg_quote($pattern, '/');
+                $regexPattern = str_replace('\\*', '.*', $escapedPattern);
+                
+                if (preg_match('/^' . $regexPattern . '$/', $key) || preg_match('/^' . $regexPattern . '$/', $filename)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**

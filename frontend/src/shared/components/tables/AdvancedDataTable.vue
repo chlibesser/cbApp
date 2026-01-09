@@ -6,7 +6,7 @@
         <v-text-field
           v-model="search"
           prepend-inner-icon="mdi-magnify"
-          label="Suchen..."
+          :label="t('admin.common.buttons.search')"
           variant="outlined"
           density="compact"
           hide-details
@@ -22,7 +22,7 @@
           prepend-icon="mdi-plus"
           @click="$emit('create')"
         >
-          {{ createButtonText || 'Neu erstellen' }}
+          {{ createButtonText || t('admin.common.buttons.create') }}
         </v-btn>
       </div>
     </v-card-title>
@@ -62,9 +62,9 @@
       <template #no-data>
         <div class="text-center pa-8">
           <v-icon size="48" color="grey-lighten-1">mdi-database-off</v-icon>
-          <p class="text-h6 mt-4 mb-2">Keine Daten vorhanden</p>
+          <p class="text-h6 mt-4 mb-2">{{ t('admin.common.messages.no_data') }}</p>
           <p class="text-body-2 text-medium-emphasis">
-            Es wurden noch keine Einträge erstellt.
+            {{ t('admin.common.messages.no_entries') }}
           </p>
           <v-btn
             v-if="enableCreate"
@@ -72,7 +72,7 @@
             class="mt-4"
             @click="$emit('create')"
           >
-            Ersten Eintrag erstellen
+            {{ t('admin.common.buttons.create_first') }}
           </v-btn>
         </div>
       </template>
@@ -84,6 +84,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '@/core/api'
 import { useNotifications } from '@/core/composables/useNotifications'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 export interface TableColumn {
   key: string
@@ -132,7 +135,7 @@ const computedHeaders = computed(() => {
     return []
   }
   return props.columns.map(column => ({
-    title: column.label,
+    title: t(column.label),
     key: column.key,
     sortable: column.sortable !== false,
     width: column.width || undefined,
@@ -159,7 +162,7 @@ const loadData = async () => {
     
   } catch (error: any) {
     console.error('Error loading data:', error)
-    showError('Fehler beim Laden der Daten')
+    showError(t('admin.common.messages.load_error'))
     items.value = []
   } finally {
     internalLoading.value = false

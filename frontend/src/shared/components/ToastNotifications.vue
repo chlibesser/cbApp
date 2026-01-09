@@ -1,12 +1,7 @@
 <template>
-  <v-overlay
-    v-model="hasNotifications"
-    persistent
-    no-click-animation
-    scrim="transparent"
-    class="toast-overlay"
-  >
-    <div class="toast-container">
+  <!-- Toast Container - Direct rendering without overlay -->
+  <Teleport to="body">
+    <div v-if="hasNotifications" class="toast-container">
       <transition-group
         name="toast"
         tag="div"
@@ -18,7 +13,6 @@
           :type="notification.type"
           :variant="alertVariant(notification.type)"
           :closable="!notification.persistent"
-          :timeout="notification.persistent ? 0 : notification.timeout"
           class="toast-item mb-3"
           elevation="6"
           @click:close="layoutStore.removeNotification(notification.id)"
@@ -74,7 +68,7 @@
         Alle schließen
       </v-btn>
     </div>
-  </v-overlay>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -127,29 +121,26 @@ const handleActionClick = (action: any, notificationId: string) => {
 </script>
 
 <style scoped>
-.toast-overlay {
-  pointer-events: none;
-  z-index: 9999 !important;
-}
-
 .toast-container {
   position: fixed;
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 24px;
   max-width: 400px;
-  width: 100%;
-  pointer-events: auto;
-  z-index: 10000;
+  width: auto;
+  min-width: 300px;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 .toast-list {
   display: flex;
   flex-direction: column-reverse;
   gap: 12px;
+  pointer-events: none;
 }
 
 .toast-item {
+  pointer-events: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   backdrop-filter: blur(8px);
   border-radius: 8px !important;
@@ -179,12 +170,13 @@ const handleActionClick = (action: any, notificationId: string) => {
 @media (max-width: 600px) {
   .toast-container {
     bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 32px);
+    right: 16px;
+    left: 16px;
+    width: auto;
     max-width: none;
+    min-width: 0;
   }
-  
+
   .toast-item {
     margin-bottom: 12px;
   }
@@ -216,10 +208,5 @@ const handleActionClick = (action: any, notificationId: string) => {
 /* Dark mode adjustments */
 .theme--dark .toast-item {
   background-color: rgba(var(--v-theme-surface), 0.95) !important;
-}
-
-/* Z-index layers */
-.toast-overlay .v-overlay__content {
-  z-index: 10000;
 }
 </style>
