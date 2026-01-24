@@ -106,15 +106,6 @@
             </v-list-item>
           </v-list>
 
-          <template v-if="activeFilterId">
-            <v-list-item @click="handleResetFilters">
-              <template #prepend>
-                <v-icon>mdi-filter-off</v-icon>
-              </template>
-              <v-list-item-title>Filter zurücksetzen</v-list-item-title>
-            </v-list-item>
-          </template>
-
           <v-divider />
         </template>
 
@@ -225,11 +216,6 @@ const handleFilterClick = (filter: TableFilter) => {
   } else {
     emit('filter-apply', filter)
   }
-  settingsMenuOpen.value = false
-}
-
-const handleResetFilters = () => {
-  emit('filter-reset')
   settingsMenuOpen.value = false
 }
 
