@@ -10,6 +10,9 @@
     item-value="id"
     class="elevation-0 dtc-table"
     :items-per-page-options="itemsPerPageOptions"
+    fixed-header
+    fixed-footer
+    height="100%"
     @update:options="handleOptionsUpdate"
     @click:row="handleRowClick"
   >
@@ -444,19 +447,34 @@ defineExpose({
 </script>
 
 <style scoped>
-:deep(.v-data-table__wrapper) {
-  min-height: 400px;
-  overflow-x: auto;
+/* Table Container - fill available space */
+.dtc-table {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-:deep(.v-data-table) {
-  table-layout: fixed;
+:deep(.v-data-table__wrapper) {
+  flex: 1;
+  overflow: auto;
 }
 
 :deep(.v-data-table > .v-data-table__wrapper > table) {
   table-layout: fixed;
   width: max-content;
   min-width: 100%;
+}
+
+/* Fixed header styling */
+:deep(.v-data-table--fixed-header > .v-data-table__wrapper > table > thead > tr > th) {
+  background: rgb(var(--v-theme-surface));
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* Fixed footer styling */
+:deep(.v-data-table-footer) {
+  background: rgb(var(--v-theme-surface));
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 :deep(.v-data-table-row:hover) {
