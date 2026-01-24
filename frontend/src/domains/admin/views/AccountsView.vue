@@ -243,8 +243,13 @@ const handleFilterApply = (filter: TableFilter) => {
 }
 
 const handleFilterReset = () => {
+  // Gleicher Effekt wie "Alles zurücksetzen"
   filterStore.clearActiveFilter()
-  resetFilters()
+  page.value = 1
+  search.value = ''
+  sortBy.value = []
+  tableRef.value?.resetAllSettings()
+  loadData()
 }
 
 const applyFilterState = (state: TableFilterState) => {
