@@ -6,25 +6,49 @@
         {{ $t('admin.accounts.page_title') }}
       </v-toolbar-title>
       <v-spacer />
-      <v-btn color="primary" @click="createAccount">
-        <v-icon start>mdi-plus</v-icon>
-        {{ $t('common.actions.create') }}
-      </v-btn>
+
+      <!-- TableToolbar in View-Toolbar -->
+      <TableToolbar
+        v-model="search"
+        :table-key="TABLE_KEY"
+        :enable-filters="true"
+        :enable-create="true"
+        :filters="filters"
+        :button-filters="buttonFilters"
+        :active-filter-id="activeFilterId"
+        :has-custom-column-order="tableRef?.hasCustomColumnOrder"
+        :has-custom-column-widths="tableRef?.hasCustomColumnWidths"
+        :has-custom-settings="tableRef?.hasCustomSettings"
+        @create="createAccount"
+        @filter-apply="handleFilterApply"
+        @filter-reset="handleFilterReset"
+        @filter-save="openSaveDialog(null)"
+        @filter-edit="openSaveDialog"
+        @filter-delete="handleDeleteFilter"
+        @reset-column-order="tableRef?.resetColumnOrder()"
+        @reset-column-widths="tableRef?.resetColumnWidths()"
+        @reset-all-settings="tableRef?.resetAllSettings()"
+      />
     </v-toolbar>
 
     <!-- Scrollable Content -->
     <div class="view-content">
-      <AdvancedDataTable
+      <DataTableCore
+        ref="tableRef"
+        :table-key="TABLE_KEY"
         :columns="accountEntityConfig.fields"
-        :api-endpoint="accountEntityConfig.apiEndpoint"
-        table-key="admin.accounts"
-        @item-selected="handleItemSelected"
-        @item-double-click="viewAccount"
-        @update:count="handleCountUpdate"
+        :items="items"
+        :total-items="totalItems"
+        :loading="loading"
+        v-model:page="page"
+        v-model:items-per-page="itemsPerPage"
+        v-model:sort-by="sortBy"
+        @row-click="handleItemSelected"
+        @options-update="loadData"
       >
         <!-- Custom slot for email verification status -->
         <template #item.email_verified_at="{ item }">
-          <v-chip 
+          <v-chip
             :color="item.email_verified_at ? 'success' : 'warning'"
             variant="tonal"
             size="x-small"
@@ -47,65 +71,236 @@
         <!-- Custom slot for actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
-            <v-btn 
-              icon 
-              size="small" 
+            <v-btn
+              icon
+              size="small"
               variant="text"
-              @click="viewAccount(item)"
+              @click.stop="viewAccount(item)"
             >
               <v-icon size="18">mdi-eye</v-icon>
               <v-tooltip activator="parent">{{ $t('admin.accounts.tooltips.view') }}</v-tooltip>
             </v-btn>
-            
-            <v-btn 
-              icon 
-              size="small" 
+
+            <v-btn
+              icon
+              size="small"
               variant="text"
-              @click="editAccount(item)"
+              @click.stop="editAccount(item)"
             >
               <v-icon size="18">mdi-pencil</v-icon>
               <v-tooltip activator="parent">{{ $t('admin.accounts.tooltips.edit') }}</v-tooltip>
             </v-btn>
-            
-            <v-btn 
-              icon 
-              size="small" 
+
+            <v-btn
+              icon
+              size="small"
               variant="text"
               color="error"
-              @click="deleteAccount(item)"
+              @click.stop="deleteAccount(item)"
             >
               <v-icon size="18">mdi-delete</v-icon>
               <v-tooltip activator="parent">{{ $t('admin.accounts.tooltips.delete') }}</v-tooltip>
             </v-btn>
           </div>
         </template>
-      </AdvancedDataTable>
+      </DataTableCore>
     </div>
+
+    <!-- Filter Save Dialog -->
+    <FilterSaveDialog
+      v-model="saveDialogOpen"
+      :filter-state="currentFilterState"
+      :table-key="TABLE_KEY"
+      :existing-filter="editingFilter"
+      @save="handleSaveFilter"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AdvancedDataTable } from '@/shared/components'
+import { useApi } from '@/core/api'
+import { DataTableCore, TableToolbar, FilterSaveDialog } from '@/shared/components'
 import { accountEntityConfig } from '@/config/entities'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
 import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
+import { useTableFilterStore } from '@/infrastructure/stores/tableFilterStore'
 import { accountService } from '../services/accountService'
 import type { Account } from '../types'
+import type { TableFilter, TableFilterState } from '@/types/tableFilter'
 
 const { t } = useI18n()
+const api = useApi()
 
+const TABLE_KEY = 'admin.accounts'
+
+// Stores
 const rsdStore = useRSDStore()
 const layoutStore = useLayoutStore()
-const totalCount = ref<number>()
+const filterStore = useTableFilterStore()
 
-function handleItemSelected(item: Account) {
-  console.log('Selected account:', item)
+// Table Ref
+const tableRef = ref<InstanceType<typeof DataTableCore> | null>(null)
+
+// Pagination State
+const page = ref(1)
+const itemsPerPage = ref(10)
+const totalItems = ref(0)
+const sortBy = ref<Array<{ key: string; order: 'asc' | 'desc' }>>([])
+
+// Search State
+const search = ref('')
+
+// Data State
+const items = ref<Account[]>([])
+const loading = ref(false)
+
+// Filter State
+const saveDialogOpen = ref(false)
+const editingFilter = ref<TableFilter | null>(null)
+
+// Filter Computed
+const filters = computed(() => filterStore.getFiltersForTable(TABLE_KEY))
+const buttonFilters = computed(() => filterStore.getButtonFilters(TABLE_KEY))
+const activeFilterId = computed(() => filterStore.activeFilterId)
+
+// Current Filter State
+const currentFilterState = computed((): TableFilterState => ({
+  page: page.value,
+  itemsPerPage: itemsPerPage.value,
+  sortBy: sortBy.value,
+  search: search.value
+}))
+
+// Build Query Parameters
+const buildQueryParams = (): Record<string, any> => {
+  const params: Record<string, any> = {
+    page: page.value,
+    per_page: itemsPerPage.value,
+  }
+
+  if (search.value) {
+    params.search = search.value
+  }
+
+  if (sortBy.value.length > 0) {
+    params.sort_by = sortBy.value[0].key
+    params.sort_order = sortBy.value[0].order
+  }
+
+  return params
 }
 
-function handleCountUpdate(count: number) {
-  totalCount.value = count
+// Load Data from API
+const loadData = async () => {
+  try {
+    loading.value = true
+
+    const params = buildQueryParams()
+    const queryString = new URLSearchParams(params).toString()
+    const url = `${accountEntityConfig.apiEndpoint}?${queryString}`
+
+    const response = await api.get(url)
+
+    if (response.data.data && typeof response.data.total !== 'undefined') {
+      items.value = response.data.data
+      totalItems.value = response.data.total
+    } else if (Array.isArray(response.data)) {
+      items.value = response.data
+      totalItems.value = response.data.length
+    } else {
+      items.value = []
+      totalItems.value = 0
+    }
+  } catch (error: any) {
+    console.error('Error loading data:', error)
+    layoutStore.showError('Fehler beim Laden der Daten')
+    items.value = []
+    totalItems.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+// Watch search for debounced reload
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+watch(search, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    page.value = 1
+    loadData()
+  }, 300)
+})
+
+// Filter Methods
+const handleFilterApply = (filter: TableFilter) => {
+  filterStore.setActiveFilter(filter.id)
+  applyFilterState(filter.filter_state)
+}
+
+const handleFilterReset = () => {
+  filterStore.clearActiveFilter()
+  resetFilters()
+}
+
+const applyFilterState = (state: TableFilterState) => {
+  page.value = state.page || 1
+  itemsPerPage.value = state.itemsPerPage || 10
+  sortBy.value = state.sortBy || []
+  search.value = state.search || ''
+  loadData()
+}
+
+const resetFilters = () => {
+  page.value = 1
+  search.value = ''
+  sortBy.value = []
+  loadData()
+}
+
+const openSaveDialog = (filter: TableFilter | null) => {
+  editingFilter.value = filter
+  saveDialogOpen.value = true
+}
+
+const handleSaveFilter = async (data: { name: string; color: string; showAsButton: boolean }) => {
+  try {
+    if (editingFilter.value) {
+      await filterStore.updateFilter(editingFilter.value.id, TABLE_KEY, {
+        name: data.name,
+        color: data.color,
+        show_as_button: data.showAsButton,
+        filter_state: currentFilterState.value
+      })
+      layoutStore.showSuccess('Filter erfolgreich aktualisiert')
+    } else {
+      await filterStore.createFilter({
+        table_key: TABLE_KEY,
+        name: data.name,
+        color: data.color,
+        show_as_button: data.showAsButton,
+        filter_state: currentFilterState.value
+      })
+      layoutStore.showSuccess('Filter erfolgreich gespeichert')
+    }
+  } catch (e: any) {
+    layoutStore.showError(e.message || 'Fehler beim Speichern des Filters')
+  }
+}
+
+const handleDeleteFilter = async (filter: TableFilter) => {
+  try {
+    await filterStore.deleteFilter(filter.id, TABLE_KEY)
+    layoutStore.showSuccess('Filter erfolgreich gelöscht')
+  } catch (e: any) {
+    layoutStore.showError(e.message || 'Fehler beim Löschen')
+  }
+}
+
+// CRUD Methods
+function handleItemSelected(item: Account) {
+  viewAccount(item)
 }
 
 function viewAccount(item: Account) {
@@ -122,7 +317,6 @@ function createAccount() {
 
 async function deleteAccount(item: Account) {
   const confirmed = await new Promise<boolean>(resolve => {
-    // Using browser confirm for now - can be replaced with custom dialog
     resolve(confirm(t('admin.accounts.messages.delete_confirm', { email: item.email })))
   })
 
@@ -131,9 +325,7 @@ async function deleteAccount(item: Account) {
   try {
     await accountService.deleteAccount(item.id)
     layoutStore.showSuccess(t('admin.accounts.messages.delete_success'))
-
-    // Trigger table refresh
-    window.dispatchEvent(new CustomEvent('refresh-tables'))
+    loadData()
   } catch (error: any) {
     layoutStore.showError(error.response?.data?.message || t('admin.accounts.messages.delete_error'))
   }
@@ -142,7 +334,7 @@ async function deleteAccount(item: Account) {
 function getSystemRoleColor(role: string): string {
   const colors: Record<string, string> = {
     global_admin: 'error',
-    tenant_admin: 'warning', 
+    tenant_admin: 'warning',
     tenant_member: 'primary'
   }
   return colors[role] || 'default'
@@ -156,6 +348,26 @@ function getSystemRoleLabel(role: string): string {
   }
   return labels[role] || role
 }
+
+// Event handler for table refresh
+const handleTableRefresh = () => {
+  loadData()
+}
+
+// Lifecycle
+onMounted(async () => {
+  window.addEventListener('table-refresh', handleTableRefresh)
+
+  // Load filters
+  try {
+    await filterStore.loadFilters(TABLE_KEY)
+  } catch (e) {
+    console.warn('Fehler beim Laden der Filter:', e)
+  }
+
+  // Load data
+  loadData()
+})
 </script>
 
 <style scoped>
