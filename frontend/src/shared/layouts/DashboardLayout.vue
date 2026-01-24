@@ -9,13 +9,11 @@
     <!-- Main Content Area -->
     <v-main data-testid="dashboard-content" class="dashboard-main">
       <div class="dashboard-content">
-        <v-container fluid class="pa-4 h-100">
-        <TranslationErrorBoundary>
+        <v-container fluid class="pa-2 h-100">
           <!-- Page Content -->
           <div class="page-content" data-testid="page-content">
             <router-view />
           </div>
-        </TranslationErrorBoundary>
         </v-container>
       </div>
     </v-main>
@@ -60,13 +58,14 @@ onMounted(async () => {
 
 .dashboard-content {
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .page-content {
-  height: 100%;
-  min-height: 0; /* Allow flexbox shrinking */
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Ensure smooth transitions */

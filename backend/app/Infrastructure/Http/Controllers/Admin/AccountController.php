@@ -24,18 +24,18 @@ class AccountController extends Controller
         $query = Account::with(['profiles.tenant'])
                       ->withCount('profiles as tenants_count');
 
-        // Search functionality
-        if ($request->has('filter.search') && !empty($request->input('filter.search'))) {
-            $searchTerm = $request->input('filter.search');
+        // Search functionality (supports both 'search' and 'filter.search')
+        $searchTerm = $request->input('search') ?? $request->input('filter.search');
+        if (!empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('username', 'ILIKE', "%{$searchTerm}%")
                   ->orWhere('email', 'ILIKE', "%{$searchTerm}%");
             });
         }
 
-        // Sortierung
+        // Sortierung (supports both 'sort_order' and 'sort_direction')
         $sortBy = $request->input('sort_by', 'created_at');
-        $sortDirection = $request->input('sort_direction', 'desc');
+        $sortDirection = $request->input('sort_order') ?? $request->input('sort_direction', 'desc');
         
         // Validierte Sortier-Felder für ADT
         $allowedSortFields = [

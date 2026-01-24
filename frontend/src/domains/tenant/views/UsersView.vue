@@ -7,27 +7,29 @@
         <p class="text-body-1 text-medium-emphasis mt-1">
           Verwalten Sie Benutzer und Einladungen in Ihrem Tenant
         </p>
-        <v-chip 
-          v-if="userStats"
-          size="small" 
-          color="primary" 
+        <v-chip
+          v-if="totalUsers > 0"
+          size="small"
+          color="primary"
           variant="tonal"
           class="mt-2"
         >
-          {{ userStats.total }} Benutzer
+          {{ totalUsers }} Benutzer
         </v-chip>
       </div>
     </div>
 
     <!-- Advanced Data Table -->
     <AdvancedDataTable
+      ref="dataTable"
       :columns="tableColumns"
-      :api-endpoint="'/tenant/users'"
-      @create="handleCreateUser"
-      @item-selected="handleUserSelected"
-      :loading="loading"
+      api-endpoint="/tenant/users"
+      table-key="tenant.users"
       :enable-create="canInviteUsers"
       create-button-text="Benutzer einladen"
+      @create="handleCreateUser"
+      @item-selected="handleUserSelected"
+      @update:count="handleCountUpdate"
     >
       <!-- Status Cell -->
       <template #item.status="{ item, value }">
@@ -155,11 +157,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRSDStore } from '@/infrastructure/stores/rsdStore';
 import { useToast } from '@/shared/composables/useToast';
 import { useApi } from '@/core/api';
-import AdvancedDataTable, { type TableColumn } from '@/shared/components/tables/AdvancedDataTable.vue';
+import AdvancedDataTable from '@/shared/components/tables/AdvancedDataTable.vue';
+import type { TableColumn } from '@/types/table';
 import GenericRSDWrapper from '@/shared/components/GenericRSDWrapper.vue';
 
 // Stores & Composables
@@ -167,9 +170,12 @@ const rsdStore = useRSDStore();
 const toast = useToast();
 const api = useApi();
 
+// Refs
+const dataTable = ref<InstanceType<typeof AdvancedDataTable> | null>(null);
+
 // State
 const loading = ref(false);
-const userStats = ref<{total: number, active: number, invited: number} | null>(null);
+const totalUsers = ref(0);
 
 // Permissions (sollten vom aktuellen User/Profile kommen)
 const canInviteUsers = ref(true); // TODO: Von Auth Store
@@ -179,58 +185,55 @@ const canManageUsers = ref(true); // TODO: Von Auth Store
 const tableColumns: TableColumn[] = [
   {
     key: 'full_name',
-    label: 'Name',
+    title: 'Name',
     type: 'text',
     sortable: true,
-    searchable: true,
-    width: '200px'
+    width: 200
   },
   {
     key: 'email',
-    label: 'E-Mail',
+    title: 'E-Mail',
     type: 'email',
     sortable: true,
-    searchable: true,
-    width: '250px'
+    width: 250
   },
   {
     key: 'system_role',
-    label: 'Rolle',
-    type: 'enum',
+    title: 'Rolle',
+    type: 'select',
     sortable: true,
     filterable: true,
-    width: '150px',
-    options: [
-      { value: 'tenant_admin', label: 'Tenant Admin' },
-      { value: 'tenant_member', label: 'Tenant Mitglied' }
+    width: 150,
+    filterOptions: [
+      { value: 'tenant_admin', text: 'Tenant Admin' },
+      { value: 'tenant_member', text: 'Tenant Mitglied' }
     ]
   },
   {
     key: 'status',
-    label: 'Status',
-    type: 'enum',
+    title: 'Status',
+    type: 'select',
     sortable: true,
     filterable: true,
-    width: '120px',
-    options: [
-      { value: 'active', label: 'Aktiv' },
-      { value: 'invited', label: 'Eingeladen' },
-      { value: 'inactive', label: 'Inaktiv' }
+    width: 120,
+    filterOptions: [
+      { value: 'active', text: 'Aktiv' },
+      { value: 'invited', text: 'Eingeladen' },
+      { value: 'inactive', text: 'Inaktiv' }
     ]
   },
   {
     key: 'last_login_at',
-    label: 'Letzter Login',
+    title: 'Letzter Login',
     type: 'datetime',
     sortable: true,
-    width: '180px'
+    width: 180
   },
   {
     key: 'actions',
-    label: 'Aktionen',
-    type: 'custom',
+    title: 'Aktionen',
     sortable: false,
-    width: '150px'
+    width: 150
   }
 ];
 
@@ -241,6 +244,10 @@ const handleCreateUser = () => {
 
 const handleUserSelected = (user: any) => {
   handleViewUser(user);
+};
+
+const handleCountUpdate = (count: number) => {
+  totalUsers.value = count;
 };
 
 const handleViewUser = (user: any) => {
@@ -259,13 +266,13 @@ const handleToggleStatus = async (user: any) => {
     await api.patch(`/tenant/users/${user.id}/${action}`);
     
     toast.success(
-      user.is_active 
-        ? 'Benutzer wurde deaktiviert' 
+      user.is_active
+        ? 'Benutzer wurde deaktiviert'
         : 'Benutzer wurde aktiviert'
     );
-    
+
     // Refresh table
-    // TODO: Trigger table refresh
+    dataTable.value?.refresh();
     
   } catch (error) {
     toast.error('Fehler beim Ändern des Status');
@@ -299,9 +306,9 @@ const handleDeleteUser = async (user: any) => {
     
     await api.delete(`/tenant/users/${user.id}`);
     toast.success('Benutzer wurde entfernt');
-    
+
     // Refresh table
-    // TODO: Trigger table refresh
+    dataTable.value?.refresh();
     
   } catch (error) {
     toast.error('Fehler beim Entfernen des Benutzers');
@@ -364,20 +371,6 @@ const formatDateTime = (datetime: string): string => {
   });
 };
 
-// Load initial data
-onMounted(async () => {
-  try {
-    loading.value = true;
-    
-    const response = await api.get('/tenant/users');
-    userStats.value = response.data.meta;
-    
-  } catch (error) {
-    toast.error('Fehler beim Laden der Benutzer');
-  } finally {
-    loading.value = false;
-  }
-});
 </script>
 
 <style scoped>

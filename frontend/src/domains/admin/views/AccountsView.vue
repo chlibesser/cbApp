@@ -1,34 +1,25 @@
 <template>
-  <div class="accounts-view">
-    <!-- Page Header -->
-    <div class="d-flex align-center justify-space-between mb-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold">{{ $t('admin.accounts.page_title') }}</h1>
-        <p class="text-subtitle-1 text-medium-emphasis">
-          {{ $t('admin.accounts.page_description') }}
-        </p>
-      </div>
-      
-      <v-chip 
-        v-if="totalCount !== undefined" 
-        color="primary" 
-        variant="tonal"
-        size="large"
-        class="px-4"
-      >
-        {{ totalCount }} {{ $t('admin.accounts.counter_text') }}
-      </v-chip>
-    </div>
+  <div class="view-container">
+    <!-- Toolbar -->
+    <v-toolbar flat color="primary" variant="outlined" rounded density="compact" class="view-toolbar">
+      <v-toolbar-title class="text-h5 font-weight-bold view-title">
+        {{ $t('admin.accounts.page_title') }}
+      </v-toolbar-title>
+      <v-spacer />
+      <v-btn color="primary" @click="createAccount">
+        <v-icon start>mdi-plus</v-icon>
+        {{ $t('common.actions.create') }}
+      </v-btn>
+    </v-toolbar>
 
-    <!-- Advanced Data Table -->
-    <v-card>
+    <!-- Scrollable Content -->
+    <div class="view-content">
       <AdvancedDataTable
         :columns="accountEntityConfig.fields"
         :api-endpoint="accountEntityConfig.apiEndpoint"
-        enable-create
+        table-key="admin.accounts"
         @item-selected="handleItemSelected"
         @item-double-click="viewAccount"
-        @create="createAccount"
         @update:count="handleCountUpdate"
       >
         <!-- Custom slot for email verification status -->
@@ -89,7 +80,7 @@
           </div>
         </template>
       </AdvancedDataTable>
-    </v-card>
+    </div>
   </div>
 </template>
 
@@ -166,3 +157,33 @@ function getSystemRoleLabel(role: string): string {
   return labels[role] || role
 }
 </script>
+
+<style scoped>
+.view-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.view-toolbar {
+  flex-shrink: 0;
+  background-color: rgba(25, 118, 210, 0.05) !important;
+  border: 2px solid rgba(25, 118, 210, 0.8) !important;
+}
+
+.view-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding: 16px;
+  border: 2px solid rgba(25, 118, 210, 0.8);
+  border-radius: 4px;
+  background-color: rgba(25, 118, 210, 0.02);
+}
+
+.view-title {
+  color: rgba(25, 118, 210, 0.8) !important;
+}
+</style>

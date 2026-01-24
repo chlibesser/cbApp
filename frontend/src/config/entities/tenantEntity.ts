@@ -18,7 +18,7 @@ export const tenantEntityConfig: EntityConfig = {
   fields: [
     {
       key: 'id',
-      label: 'admin.common.fields.id',
+      title: 'admin.common.fields.id',
       type: 'text',
       sortable: true,
       filterable: false,
@@ -27,7 +27,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'name',
-      label: 'admin.tenants.table.name',
+      title: 'admin.tenants.table.name',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -38,7 +38,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'slug',
-      label: 'admin.tenants.table.slug',
+      title: 'admin.tenants.table.slug',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -48,7 +48,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'description',
-      label: 'admin.common.fields.description',
+      title: 'admin.common.fields.description',
       type: 'text',
       sortable: false,
       filterable: true,
@@ -58,7 +58,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'is_personal',
-      label: 'admin.common.fields.type',
+      title: 'admin.common.fields.type',
       type: 'boolean',
       sortable: true,
       filterable: true,
@@ -72,7 +72,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'is_active',
-      label: 'admin.tenants.table.status',
+      title: 'admin.tenants.table.status',
       type: 'boolean',
       sortable: true,
       filterable: true,
@@ -86,7 +86,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'users_count',
-      label: 'admin.tenants.table.users_count',
+      title: 'admin.tenants.table.users_count',
       type: 'number',
       sortable: true,
       filterable: false,
@@ -95,7 +95,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'created_at',
-      label: 'admin.common.fields.created_at',
+      title: 'admin.common.fields.created_at',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -105,7 +105,7 @@ export const tenantEntityConfig: EntityConfig = {
     },
     {
       key: 'updated_at',
-      label: 'admin.common.fields.updated_at',
+      title: 'admin.common.fields.updated_at',
       type: 'datetime',
       sortable: true,
       filterable: false,

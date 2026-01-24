@@ -19,7 +19,7 @@ export const accountEntityConfig: EntityConfig = {
   fields: [
     {
       key: 'id',
-      label: 'admin.common.fields.id',
+      title: 'admin.common.fields.id',
       type: 'text',
       sortable: true,
       filterable: false,
@@ -28,7 +28,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'username',
-      label: 'admin.accounts.table.username',
+      title: 'admin.accounts.table.username',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -39,7 +39,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'email',
-      label: 'admin.accounts.table.email',
+      title: 'admin.accounts.table.email',
       type: 'email',
       sortable: true,
       filterable: true,
@@ -50,7 +50,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'email_verified_at',
-      label: 'admin.accounts.table.verified',
+      title: 'admin.accounts.table.verified',
       type: 'boolean',
       sortable: true,
       filterable: true,
@@ -63,7 +63,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'system_role',
-      label: 'admin.accounts.table.role',
+      title: 'admin.accounts.table.role',
       type: 'select',
       sortable: true,
       filterable: true,
@@ -77,7 +77,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'is_active',
-      label: 'admin.common.fields.status',
+      title: 'admin.common.fields.status',
       type: 'boolean',
       sortable: true,
       filterable: true,
@@ -90,7 +90,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'tenants_count',
-      label: 'admin.common.fields.tenants',
+      title: 'admin.common.fields.tenants',
       type: 'number',
       sortable: true,
       filterable: false,
@@ -99,7 +99,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'last_login_at',
-      label: 'admin.accounts.table.last_login',
+      title: 'admin.accounts.table.last_login',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -109,7 +109,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'created_at',
-      label: 'admin.common.fields.created_at',
+      title: 'admin.common.fields.created_at',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -119,7 +119,7 @@ export const accountEntityConfig: EntityConfig = {
     },
     {
       key: 'updated_at',
-      label: 'admin.common.fields.updated_at',
+      title: 'admin.common.fields.updated_at',
       type: 'datetime',
       sortable: true,
       filterable: false,

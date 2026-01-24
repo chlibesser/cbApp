@@ -7,7 +7,7 @@ import type { TableColumn, ColumnType, FilterType } from './table'
 
 export interface EntityField {
   key: string
-  label: string
+  title: string
   type: ColumnType
   sortable?: boolean
   filterable?: boolean
@@ -122,7 +122,7 @@ export interface Role {
 export function entityFieldsToColumns(fields: EntityField[]): TableColumn[] {
   return fields.map(field => ({
     key: field.key,
-    title: field.label,
+    title: field.title,
     type: field.type,
     sortable: field.sortable ?? true,
     filterable: field.filterable ?? true,

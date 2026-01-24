@@ -19,7 +19,7 @@ export const profileEntityConfig: EntityConfig = {
   fields: [
     {
       key: 'id',
-      label: 'ID',
+      title: 'ID',
       type: 'text',
       sortable: true,
       filterable: false,
@@ -28,7 +28,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'first_name',
-      label: 'Vorname',
+      title: 'Vorname',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -39,7 +39,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'last_name',
-      label: 'Nachname',
+      title: 'Nachname',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -50,7 +50,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'email',
-      label: 'E-Mail',
+      title: 'E-Mail',
       type: 'email',
       sortable: true,
       filterable: true,
@@ -61,7 +61,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'phone',
-      label: 'Telefon',
+      title: 'Telefon',
       type: 'phone',
       sortable: false,
       filterable: true,
@@ -71,7 +71,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'system_role',
-      label: 'System-Rolle',
+      title: 'System-Rolle',
       type: 'select',
       sortable: true,
       filterable: true,
@@ -93,7 +93,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'tenant.name',
-      label: 'Tenant',
+      title: 'Tenant',
       type: 'text',
       sortable: true,
       filterable: true,
@@ -103,7 +103,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'is_active',
-      label: 'Status',
+      title: 'Status',
       type: 'boolean',
       sortable: true,
       filterable: true,
@@ -117,7 +117,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'created_at',
-      label: 'Erstellt am',
+      title: 'Erstellt am',
       type: 'datetime',
       sortable: true,
       filterable: true,
@@ -127,7 +127,7 @@ export const profileEntityConfig: EntityConfig = {
     },
     {
       key: 'updated_at',
-      label: 'Aktualisiert am',
+      title: 'Aktualisiert am',
       type: 'datetime',
       sortable: true,
       filterable: false,

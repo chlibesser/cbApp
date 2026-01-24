@@ -13,6 +13,8 @@ use App\Infrastructure\Http\Controllers\Documents\SignedDocumentController;
 use App\Domains\Workflow\Http\Controllers\WorkflowController;
 use App\Domains\Partner\Controllers\PartnerController;
 use App\Infrastructure\Http\Controllers\TranslationController;
+use App\Infrastructure\Http\Controllers\TableFilterController;
+use App\Infrastructure\Http\Controllers\TableSettingsController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -162,4 +164,34 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     // DELETE /api/translations/cache - Clear translation cache
     Route::delete('translations/cache', [TranslationController::class, 'clearCache'])
         ->name('translations.cache.clear');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Table Filter Routes
+|--------------------------------------------------------------------------
+| Routes for managing user-specific table filter presets
+| All routes require authentication
+*/
+
+Route::middleware(['auth:sanctum'])->prefix('table-filters')->name('table-filters.')->group(function () {
+    Route::get('/', [TableFilterController::class, 'index'])->name('index');
+    Route::post('/', [TableFilterController::class, 'store'])->name('store');
+    Route::patch('/{tableFilter}', [TableFilterController::class, 'update'])->name('update');
+    Route::delete('/{tableFilter}', [TableFilterController::class, 'destroy'])->name('destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Table Settings Routes
+|--------------------------------------------------------------------------
+| Routes for managing user-specific table settings
+| (column order, column widths)
+| All routes require authentication
+*/
+
+Route::middleware(['auth:sanctum'])->prefix('table-settings')->name('table-settings.')->group(function () {
+    Route::get('/', [TableSettingsController::class, 'show'])->name('show');
+    Route::put('/', [TableSettingsController::class, 'update'])->name('update');
+    Route::delete('/', [TableSettingsController::class, 'destroy'])->name('destroy');
 });

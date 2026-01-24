@@ -21,11 +21,43 @@ class UserManagementController extends Controller
     public function index(Request $request): JsonResponse
     {
         $tenant = $this->getCurrentTenant($request);
-        
-        $users = $this->tenantUserService->getTenantUsers($tenant);
-        
+
+        // Query-Parameter
+        $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        // Basis-Query mit Eager Loading
+        $query = $tenant->profiles()->with(['account']);
+
+        // Suche
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'ilike', "%{$search}%")
+                  ->orWhere('last_name', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%")
+                  ->orWhere('phone', 'ilike', "%{$search}%");
+            });
+        }
+
+        // Sortierung
+        $allowedSortFields = ['first_name', 'last_name', 'email', 'system_role', 'is_active', 'created_at', 'updated_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        }
+
+        // Für full_name müssen wir speziell sortieren
+        if ($sortBy === 'full_name') {
+            $query->orderBy('first_name', $sortOrder === 'asc' ? 'asc' : 'desc')
+                  ->orderBy('last_name', $sortOrder === 'asc' ? 'asc' : 'desc');
+        }
+
+        // Pagination
+        $paginated = $query->paginate($perPage);
+
         // Transform für Frontend
-        $userData = $users->map(function ($profile) {
+        $userData = $paginated->getCollection()->map(function ($profile) {
             return [
                 'id' => $profile->id,
                 'full_name' => $profile->full_name,
@@ -46,12 +78,13 @@ class UserManagementController extends Controller
         });
 
         return response()->json([
-            'users' => $userData,
-            'meta' => [
-                'total' => $userData->count(),
-                'active' => $userData->where('is_active', true)->count(),
-                'invited' => $userData->where('status', 'invited')->count(),
-            ]
+            'data' => $userData,
+            'current_page' => $paginated->currentPage(),
+            'per_page' => $paginated->perPage(),
+            'total' => $paginated->total(),
+            'last_page' => $paginated->lastPage(),
+            'from' => $paginated->firstItem(),
+            'to' => $paginated->lastItem(),
         ]);
     }
 
