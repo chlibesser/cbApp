@@ -42,15 +42,8 @@
           size="small"
           color="primary"
         >
-          <v-icon start>mdi-filter-variant</v-icon>
+          <v-icon start>mdi-filter-cog</v-icon>
           Filter
-          <v-badge
-            v-if="filterCount > 0"
-            :content="filterCount"
-            color="primary"
-            inline
-          />
-          <v-icon end>mdi-cog</v-icon>
         </v-btn>
       </template>
 
@@ -159,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useTranslations } from '@/core/localization/composables/useTranslations'
 import type { TableFilter } from '@/types/tableFilter'
 
@@ -207,9 +200,6 @@ const emit = defineEmits<{
 const searchInput = ref(props.modelValue)
 const settingsMenuOpen = ref(false)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
-
-// Computed
-const filterCount = computed(() => props.filters?.length || 0)
 
 // Sync modelValue to local state
 watch(() => props.modelValue, (val) => {
