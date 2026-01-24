@@ -248,13 +248,25 @@ const orderedHeaders = computed(() => {
   return ordered
 })
 
-// Get header style with custom width
+// Get header style with custom width - verwendet min/max-width für fixierte Breiten
 const getHeaderStyle = (header: { key: string; width?: string }) => {
   const customWidth = columnWidths.value[header.key]
   if (customWidth) {
-    return { width: `${customWidth}px` }
+    return {
+      width: `${customWidth}px`,
+      minWidth: `${customWidth}px`,
+      maxWidth: `${customWidth}px`
+    }
   }
-  return { width: header.width }
+  // Default width aus Entity-Config
+  if (header.width) {
+    return {
+      width: header.width,
+      minWidth: header.width,
+      maxWidth: header.width
+    }
+  }
+  return {}
 }
 
 // Drag & Drop Handlers
@@ -501,8 +513,8 @@ defineExpose({
 
 :deep(.v-data-table > .v-data-table__wrapper > table) {
   table-layout: fixed;
-  width: max-content;
-  min-width: 100%;
+  width: auto;
+  min-width: max-content;
 }
 
 /* Fixed header styling */
