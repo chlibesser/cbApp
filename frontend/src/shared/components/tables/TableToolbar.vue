@@ -52,7 +52,7 @@
         <!-- Filter Section -->
         <template v-if="enableFilters && tableKey">
           <!-- Filter erstellen / aktualisieren Buttons -->
-          <div class="pa-2 d-flex flex-column gap-2">
+          <div class="pa-2 d-flex flex-column gap-3">
             <v-btn
               block
               color="primary"
