@@ -601,7 +601,6 @@ onMounted(async () => {
   min-height: 0;
   overflow: hidden;
   margin-top: 8px;
-  padding: 16px;
   border: 2px solid rgba(25, 118, 210, 0.8);
   border-radius: 4px;
   background-color: rgba(25, 118, 210, 0.02);
