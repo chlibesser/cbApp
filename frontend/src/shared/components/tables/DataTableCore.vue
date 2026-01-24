@@ -22,6 +22,7 @@
         <th
           v-for="(header, index) in headerColumns"
           :key="header.key"
+          :data-column-key="header.key"
           :class="[
             'dtc-header',
             { 'dtc-header--dragging': draggedIndex === index },
@@ -324,6 +325,22 @@ const saveColumnOrder = () => {
 const handleResizeStart = (event: MouseEvent, columnKey: string) => {
   resizingColumn.value = columnKey
   resizeStartX.value = event.clientX
+
+  // Alle aktuellen Spaltenbreiten erfassen, damit sie beim Resize fixiert bleiben
+  const headerRow = (event.target as HTMLElement).closest('tr')
+  if (headerRow) {
+    const allHeaders = headerRow.querySelectorAll('th')
+    const newWidths: Record<string, number> = { ...columnWidths.value }
+
+    allHeaders.forEach((th) => {
+      const key = th.getAttribute('data-column-key')
+      if (key && !newWidths[key]) {
+        newWidths[key] = th.offsetWidth
+      }
+    })
+
+    columnWidths.value = newWidths
+  }
 
   const currentWidth = columnWidths.value[columnKey]
   if (currentWidth) {
