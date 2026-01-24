@@ -52,11 +52,11 @@
         <!-- Filter Section -->
         <template v-if="enableFilters && tableKey">
           <!-- Filter erstellen / aktualisieren Buttons -->
-          <div class="pa-2 d-flex flex-column gap-3">
+          <div class="pa-3 d-flex flex-column">
             <v-btn
               block
               color="primary"
-              variant="tonal"
+              variant="outlined"
               prepend-icon="mdi-plus"
               @click="handleOpenSaveDialog"
             >
@@ -68,6 +68,7 @@
               color="primary"
               variant="outlined"
               prepend-icon="mdi-content-save"
+              class="mt-4"
               @click="handleUpdateFilter"
             >
               Filter aktualisieren
