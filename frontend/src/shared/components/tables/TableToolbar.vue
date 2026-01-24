@@ -18,18 +18,19 @@
     <!-- Filter Quick-Access Buttons -->
     <template v-if="enableFilters && tableKey && buttonFilters.length > 0">
       <v-btn
-        v-for="filter in buttonFilters"
+        v-for="(filter, index) in buttonFilters"
         :key="filter.id"
         :color="filter.color"
         :variant="activeFilterId === filter.id ? 'flat' : 'outlined'"
         size="small"
+        :class="{ 'ml-2': index === 0 }"
         @click="handleQuickFilterClick(filter)"
       >
         {{ filter.name }}
       </v-btn>
     </template>
 
-    <!-- Combined Settings Menu -->
+    <!-- Filter Settings Menu -->
     <v-menu
       v-model="settingsMenuOpen"
       :close-on-content-click="false"
@@ -38,12 +39,13 @@
       <template #activator="{ props: menuProps }">
         <v-btn
           v-bind="menuProps"
+          icon
           variant="outlined"
           size="small"
           color="primary"
+          class="ml-2"
         >
-          <v-icon start>mdi-filter-cog</v-icon>
-          Filter
+          <v-icon>mdi-filter-cog</v-icon>
         </v-btn>
       </template>
 
