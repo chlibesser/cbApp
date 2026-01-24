@@ -26,8 +26,6 @@
         :filters="filters"
         :button-filters="buttonFilters"
         :active-filter-id="activeFilterId"
-        :has-custom-column-order="tableRef?.hasCustomColumnOrder"
-        :has-custom-column-widths="tableRef?.hasCustomColumnWidths"
         :has-custom-settings="tableRef?.hasCustomSettings"
         @create="handleCreateUser"
         @filter-apply="handleFilterApply"
@@ -35,8 +33,6 @@
         @filter-save="openSaveDialog(null)"
         @filter-edit="openSaveDialog"
         @filter-delete="handleDeleteFilter"
-        @reset-column-order="tableRef?.resetColumnOrder()"
-        @reset-column-widths="tableRef?.resetColumnWidths()"
         @reset-all-settings="handleResetAllSettings"
       />
     </v-toolbar>

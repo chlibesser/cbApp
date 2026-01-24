@@ -125,31 +125,7 @@
           <v-divider />
         </template>
 
-        <!-- Column Settings Section -->
-        <v-list-subheader>Spalten</v-list-subheader>
-
-        <v-list-item
-          :disabled="!hasCustomColumnOrder"
-          @click="handleResetColumnOrder"
-        >
-          <template #prepend>
-            <v-icon>mdi-table-column</v-icon>
-          </template>
-          <v-list-item-title>Spaltenreihenfolge zurücksetzen</v-list-item-title>
-        </v-list-item>
-
-        <v-list-item
-          :disabled="!hasCustomColumnWidths"
-          @click="handleResetColumnWidths"
-        >
-          <template #prepend>
-            <v-icon>mdi-arrow-expand-horizontal</v-icon>
-          </template>
-          <v-list-item-title>Spaltenbreiten zurücksetzen</v-list-item-title>
-        </v-list-item>
-
-        <v-divider class="my-1" />
-
+        <!-- Alles zurücksetzen -->
         <v-list-item
           :disabled="!hasCustomSettings"
           color="error"
@@ -192,8 +168,6 @@ interface Props {
   activeFilterId?: string | null
   filters?: TableFilter[]
   buttonFilters?: TableFilter[]
-  hasCustomColumnOrder?: boolean
-  hasCustomColumnWidths?: boolean
   hasCustomSettings?: boolean
 }
 
@@ -207,8 +181,6 @@ const props = withDefaults(defineProps<Props>(), {
   activeFilterId: null,
   filters: () => [],
   buttonFilters: () => [],
-  hasCustomColumnOrder: false,
-  hasCustomColumnWidths: false,
   hasCustomSettings: false
 })
 
@@ -220,8 +192,6 @@ const emit = defineEmits<{
   'filter-edit': [filter: TableFilter]
   'filter-delete': [filter: TableFilter]
   'create': []
-  'reset-column-order': []
-  'reset-column-widths': []
   'reset-all-settings': []
 }>()
 
@@ -275,17 +245,6 @@ const handleResetFilters = () => {
 const handleOpenSaveDialog = () => {
   settingsMenuOpen.value = false
   emit('filter-save')
-}
-
-// Column Settings Handlers
-const handleResetColumnOrder = () => {
-  emit('reset-column-order')
-  settingsMenuOpen.value = false
-}
-
-const handleResetColumnWidths = () => {
-  emit('reset-column-widths')
-  settingsMenuOpen.value = false
 }
 
 const handleResetAllSettings = () => {
