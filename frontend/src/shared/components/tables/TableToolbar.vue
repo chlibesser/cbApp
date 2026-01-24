@@ -10,6 +10,7 @@
       density="compact"
       hide-details
       clearable
+      color="primary"
       style="max-width: 300px;"
       @update:model-value="handleSearchInput"
     />
@@ -37,8 +38,9 @@
       <template #activator="{ props: menuProps }">
         <v-btn
           v-bind="menuProps"
-          variant="text"
+          variant="outlined"
           size="small"
+          color="primary"
         >
           <v-icon start>mdi-filter-variant</v-icon>
           Filter
