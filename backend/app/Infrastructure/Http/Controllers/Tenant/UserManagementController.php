@@ -27,6 +27,7 @@ class UserManagementController extends Controller
         $search = $request->input('search');
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
+        $filters = $request->input('filters');
 
         // Basis-Query mit Eager Loading
         $query = $tenant->profiles()->with(['account']);
@@ -39,6 +40,16 @@ class UserManagementController extends Controller
                   ->orWhere('email', 'ilike', "%{$search}%")
                   ->orWhere('phone', 'ilike', "%{$search}%");
             });
+        }
+
+        // Spalten-Filter anwenden
+        if ($filters) {
+            $columnFilters = json_decode($filters, true);
+            if (is_array($columnFilters)) {
+                foreach ($columnFilters as $filter) {
+                    $query = $this->applyColumnFilter($query, $filter);
+                }
+            }
         }
 
         // Sortierung
@@ -328,11 +339,101 @@ class UserManagementController extends Controller
     private function getCurrentTenant(Request $request): Tenant
     {
         $tenantId = $request->header('X-Tenant-ID');
-        
+
         if (!$tenantId) {
             abort(400, 'X-Tenant-ID header ist erforderlich');
         }
 
         return Tenant::findOrFail($tenantId);
+    }
+
+    /**
+     * Wendet einen Spalten-Filter auf die Query an
+     */
+    private function applyColumnFilter($query, array $filter)
+    {
+        $column = $filter['columnKey'] ?? null;
+        $operator = $filter['operator'] ?? null;
+        $value = $filter['value'] ?? null;
+
+        if (!$column || !$operator) {
+            return $query;
+        }
+
+        // Spalten-Mapping (Frontend-Key -> DB-Spalte)
+        $columnMapping = [
+            'full_name' => ['first_name', 'last_name'],
+            'email' => 'email',
+            'system_role' => 'system_role',
+            'status' => 'status',
+            'is_active' => 'is_active',
+            'last_login_at' => 'last_login_at',
+            'created_at' => 'created_at',
+        ];
+
+        // Prüfen ob Spalte erlaubt
+        if (!array_key_exists($column, $columnMapping)) {
+            return $query;
+        }
+
+        $dbColumn = $columnMapping[$column];
+
+        // Spezialfall: full_name (kombiniertes Feld)
+        if ($column === 'full_name' && is_array($dbColumn)) {
+            return $this->applyTextFilterToMultipleColumns($query, $dbColumn, $operator, $value);
+        }
+
+        return match($operator) {
+            // Text-Operatoren
+            'contains' => $query->where($dbColumn, 'ilike', "%{$value}%"),
+            'equals' => $query->where($dbColumn, '=', $value),
+            'startsWith' => $query->where($dbColumn, 'ilike', "{$value}%"),
+            'endsWith' => $query->where($dbColumn, 'ilike', "%{$value}"),
+            'isEmpty' => $query->whereNull($dbColumn)->orWhere($dbColumn, '=', ''),
+            'isNotEmpty' => $query->whereNotNull($dbColumn)->where($dbColumn, '!=', ''),
+
+            // Zahlen-Operatoren
+            'gt' => $query->where($dbColumn, '>', $value),
+            'gte' => $query->where($dbColumn, '>=', $value),
+            'lt' => $query->where($dbColumn, '<', $value),
+            'lte' => $query->where($dbColumn, '<=', $value),
+            'between' => is_array($value) && count($value) === 2
+                ? $query->whereBetween($dbColumn, $value)
+                : $query,
+
+            // Datum-Operatoren
+            'before' => $query->where($dbColumn, '<', $value),
+            'after' => $query->where($dbColumn, '>', $value),
+
+            // Select-Operatoren
+            'in' => is_array($value)
+                ? $query->whereIn($dbColumn, $value)
+                : $query,
+            'notIn' => is_array($value)
+                ? $query->whereNotIn($dbColumn, $value)
+                : $query,
+
+            default => $query
+        };
+    }
+
+    /**
+     * Wendet einen Text-Filter auf mehrere Spalten an (OR-Verknüpfung)
+     */
+    private function applyTextFilterToMultipleColumns($query, array $columns, string $operator, $value)
+    {
+        return $query->where(function ($q) use ($columns, $operator, $value) {
+            foreach ($columns as $column) {
+                match($operator) {
+                    'contains' => $q->orWhere($column, 'ilike', "%{$value}%"),
+                    'equals' => $q->orWhere($column, '=', $value),
+                    'startsWith' => $q->orWhere($column, 'ilike', "{$value}%"),
+                    'endsWith' => $q->orWhere($column, 'ilike', "%{$value}"),
+                    'isEmpty' => $q->orWhereNull($column)->orWhere($column, '=', ''),
+                    'isNotEmpty' => $q->orWhereNotNull($column)->where($column, '!=', ''),
+                    default => null
+                };
+            }
+        });
     }
 }

@@ -36,4 +36,9 @@ html, body, #app {
 .v-application {
   height: 100vh !important;
 }
+
+/* Tonal Chips mit farbigem Rand */
+.v-chip.v-chip--variant-tonal {
+  border: 1px solid currentColor !important;
+}
 </style>

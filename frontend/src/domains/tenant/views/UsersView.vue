@@ -50,6 +50,7 @@
         v-model:page="page"
         v-model:items-per-page="itemsPerPage"
         v-model:sort-by="sortBy"
+        v-model:column-filters="columnFilters"
         @row-click="handleUserSelected"
         @options-update="loadData"
       >
@@ -69,7 +70,7 @@
           <v-chip
             :color="getRoleColor(value)"
             size="small"
-            variant="outlined"
+            variant="tonal"
           >
             {{ getRoleLabel(value) }}
           </v-chip>
@@ -197,7 +198,7 @@ import { useTableFilterStore } from '@/infrastructure/stores/tableFilterStore'
 import { DataTableCore, TableToolbar, FilterSaveDialog } from '@/shared/components'
 import GenericRSDWrapper from '@/shared/components/GenericRSDWrapper.vue'
 import type { TableColumn } from '@/types/table'
-import type { TableFilter, TableFilterState } from '@/types/tableFilter'
+import type { TableFilter, TableFilterState, ColumnFilter } from '@/types/tableFilter'
 
 const TABLE_KEY = 'tenant.users'
 const API_ENDPOINT = '/tenant/users'
@@ -219,6 +220,10 @@ const sortBy = ref<Array<{ key: string; order: 'asc' | 'desc' }>>([])
 
 // Search State
 const search = ref('')
+
+// Column Filters State
+const columnFilters = ref<ColumnFilter[]>([])
+let skipColumnFilterWatch = false
 
 // Data State
 const items = ref<any[]>([])
@@ -244,6 +249,7 @@ const currentFilterState = computed((): TableFilterState => ({
   itemsPerPage: itemsPerPage.value,
   sortBy: sortBy.value,
   search: search.value,
+  columnFilters: columnFilters.value,
   columnOrder: tableRef.value?.getColumnOrder() || [],
   columnWidths: tableRef.value?.getColumnWidths() || {}
 }))
@@ -324,6 +330,11 @@ const buildQueryParams = (): Record<string, any> => {
     params.sort_order = 'desc'
   }
 
+  // Spalten-Filter hinzufügen
+  if (columnFilters.value.length > 0) {
+    params.filters = JSON.stringify(columnFilters.value)
+  }
+
   return params
 }
 
@@ -376,6 +387,16 @@ watch(search, () => {
   }, 300)
 })
 
+// Watch column filters for reload (nur bei User-Interaktion, nicht bei programmatischen Änderungen)
+watch(columnFilters, () => {
+  if (skipColumnFilterWatch) {
+    skipColumnFilterWatch = false
+    return
+  }
+  page.value = 1
+  loadData()
+}, { deep: true })
+
 // Filter Methods
 const handleFilterApply = (filter: TableFilter) => {
   filterStore.setActiveFilter(filter.id)
@@ -388,6 +409,8 @@ const handleFilterReset = () => {
   page.value = 1
   search.value = ''
   sortBy.value = []
+  skipColumnFilterWatch = true
+  columnFilters.value = []
   tableRef.value?.resetAllSettings()
   loadData()
 }
@@ -397,6 +420,10 @@ const applyFilterState = (state: TableFilterState) => {
   itemsPerPage.value = state.itemsPerPage || 10
   sortBy.value = state.sortBy || []
   search.value = state.search || ''
+
+  // Skip watch um doppeltes Laden zu vermeiden
+  skipColumnFilterWatch = true
+  columnFilters.value = state.columnFilters || []
 
   // Spalteneinstellungen anwenden
   if (state.columnOrder && state.columnOrder.length > 0) {
@@ -424,6 +451,8 @@ const handleResetAllSettings = () => {
   page.value = 1
   search.value = ''
   sortBy.value = []
+  skipColumnFilterWatch = true
+  columnFilters.value = []
   // Tabellen-Settings zurücksetzen
   tableRef.value?.resetAllSettings()
   // Daten neu laden

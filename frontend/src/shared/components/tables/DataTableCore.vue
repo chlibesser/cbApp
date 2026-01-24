@@ -7,6 +7,7 @@
     :items="items"
     :items-length="totalItems"
     :loading="loading"
+    :density="density"
     item-value="id"
     class="elevation-0 dtc-table"
     :items-per-page-options="itemsPerPageOptions"
@@ -64,6 +65,14 @@
             >
               {{ getSortIcon(header) }}
             </v-icon>
+
+            <!-- Column Filter Icon -->
+            <ColumnFilterMenu
+              v-if="header.key !== 'actions' && getColumnDefinition(header.key)?.filterable !== false"
+              :column="getColumnDefinition(header.key)!"
+              :model-value="getColumnFilter(header.key)"
+              @update:model-value="(filter) => handleColumnFilterChange(header.key, filter)"
+            />
           </div>
 
           <!-- Resize Handle -->
@@ -113,7 +122,9 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useTranslations } from '@/core/localization/composables/useTranslations'
 import { useTableSettingsStore } from '@/infrastructure/stores/tableSettingsStore'
 import { useNotifications } from '@/core/composables/useNotifications'
+import ColumnFilterMenu from './ColumnFilterMenu.vue'
 import type { TableColumn } from '@/types/table'
+import type { ColumnFilter } from '@/types/tableFilter'
 
 const { t } = useTranslations('admin.common')
 const { showSuccess, showError } = useNotifications()
@@ -127,19 +138,24 @@ interface Props {
   page?: number
   itemsPerPage?: number
   sortBy?: Array<{ key: string; order: 'asc' | 'desc' }>
+  columnFilters?: ColumnFilter[]
+  density?: 'default' | 'comfortable' | 'compact'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   page: 1,
   itemsPerPage: 10,
-  sortBy: () => []
+  sortBy: () => [],
+  columnFilters: () => [],
+  density: 'compact'
 })
 
 const emit = defineEmits<{
   'update:page': [page: number]
   'update:itemsPerPage': [count: number]
   'update:sortBy': [sortBy: Array<{ key: string; order: 'asc' | 'desc' }>]
+  'update:columnFilters': [filters: ColumnFilter[]]
   'row-click': [item: any]
   'options-update': []
 }>()
@@ -181,6 +197,37 @@ const itemsPerPageOptions = [
   { value: 50, title: '50' },
   { value: 100, title: '100' },
 ]
+
+// Column Filter Helpers
+const getColumnFilter = (columnKey: string): ColumnFilter | null => {
+  return props.columnFilters?.find(f => f.columnKey === columnKey) || null
+}
+
+const handleColumnFilterChange = (columnKey: string, filter: ColumnFilter | null) => {
+  const currentFilters = [...(props.columnFilters || [])]
+  const existingIndex = currentFilters.findIndex(f => f.columnKey === columnKey)
+
+  if (filter === null) {
+    // Remove filter
+    if (existingIndex >= 0) {
+      currentFilters.splice(existingIndex, 1)
+    }
+  } else {
+    // Add or update filter
+    if (existingIndex >= 0) {
+      currentFilters[existingIndex] = filter
+    } else {
+      currentFilters.push(filter)
+    }
+  }
+
+  emit('update:columnFilters', currentFilters)
+}
+
+// Get original column definition for filter menu
+const getColumnDefinition = (columnKey: string): TableColumn | undefined => {
+  return props.columns?.find(c => c.key === columnKey)
+}
 
 // Check if custom column order exists
 const hasCustomColumnOrder = computed(() => {
@@ -523,10 +570,24 @@ defineExpose({
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
-/* Fixed footer styling */
+/* Fixed footer styling - compact */
 :deep(.v-data-table-footer) {
   background: rgb(var(--v-theme-surface));
   border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding: 4px 8px !important;
+  min-height: auto !important;
+}
+
+:deep(.v-data-table-footer__items-per-page) {
+  padding: 0 !important;
+}
+
+:deep(.v-data-table-footer__info) {
+  padding: 0 8px !important;
+}
+
+:deep(.v-data-table-footer__pagination) {
+  margin: 0 !important;
 }
 
 :deep(.v-data-table-row:hover) {
@@ -537,7 +598,7 @@ defineExpose({
 .dtc-header {
   user-select: none;
   transition: background-color 0.15s ease;
-  padding: 12px 16px !important;
+  padding: 8px 12px !important;
   position: relative;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -607,6 +668,12 @@ defineExpose({
 
 .cursor-pointer:hover {
   color: rgb(var(--v-theme-primary));
+}
+
+/* Column Filter in Header */
+.dtc-header-content :deep(.column-filter-icon) {
+  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 /* Column Resize Handle */

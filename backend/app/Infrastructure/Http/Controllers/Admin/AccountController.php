@@ -47,7 +47,7 @@ class AccountController extends Controller
             $query->orderBy($sortBy, $sortDirection);
         }
 
-        // ADT Filter
+        // ADT Filter (Legacy-Format)
         if ($request->has('filter')) {
             foreach ($request->input('filter') as $field => $value) {
                 if ($value === null || $value === '' || $field === 'search') {
@@ -93,6 +93,16 @@ class AccountController extends Controller
                             // Invalid date format, ignore filter
                         }
                         break;
+                }
+            }
+        }
+
+        // Neue Spalten-Filter (JSON-Format)
+        if ($filters = $request->input('filters')) {
+            $columnFilters = json_decode($filters, true);
+            if (is_array($columnFilters)) {
+                foreach ($columnFilters as $filter) {
+                    $query = $this->applyColumnFilter($query, $filter);
                 }
             }
         }
@@ -178,5 +188,63 @@ class AccountController extends Controller
         return response()->json([
             'message' => 'Account deleted successfully',
         ]);
+    }
+
+    /**
+     * Wendet einen Spalten-Filter auf die Query an
+     */
+    private function applyColumnFilter($query, array $filter)
+    {
+        $column = $filter['columnKey'] ?? null;
+        $operator = $filter['operator'] ?? null;
+        $value = $filter['value'] ?? null;
+
+        if (!$column || !$operator) {
+            return $query;
+        }
+
+        // Spalten-Mapping (Frontend-Key -> DB-Spalte)
+        $allowedColumns = [
+            'username', 'email', 'system_role', 'is_active',
+            'email_verified_at', 'created_at', 'updated_at', 'last_login_at'
+        ];
+
+        // Prüfen ob Spalte erlaubt
+        if (!in_array($column, $allowedColumns)) {
+            return $query;
+        }
+
+        return match($operator) {
+            // Text-Operatoren
+            'contains' => $query->where($column, 'ilike', "%{$value}%"),
+            'equals' => $query->where($column, '=', $value),
+            'startsWith' => $query->where($column, 'ilike', "{$value}%"),
+            'endsWith' => $query->where($column, 'ilike', "%{$value}"),
+            'isEmpty' => $query->whereNull($column)->orWhere($column, '=', ''),
+            'isNotEmpty' => $query->whereNotNull($column)->where($column, '!=', ''),
+
+            // Zahlen-Operatoren
+            'gt' => $query->where($column, '>', $value),
+            'gte' => $query->where($column, '>=', $value),
+            'lt' => $query->where($column, '<', $value),
+            'lte' => $query->where($column, '<=', $value),
+            'between' => is_array($value) && count($value) === 2
+                ? $query->whereBetween($column, $value)
+                : $query,
+
+            // Datum-Operatoren
+            'before' => $query->where($column, '<', $value),
+            'after' => $query->where($column, '>', $value),
+
+            // Select-Operatoren
+            'in' => is_array($value)
+                ? $query->whereIn($column, $value)
+                : $query,
+            'notIn' => is_array($value)
+                ? $query->whereNotIn($column, $value)
+                : $query,
+
+            default => $query
+        };
     }
 }
