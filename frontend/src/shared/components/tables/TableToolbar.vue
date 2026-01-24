@@ -18,12 +18,12 @@
     <!-- Filter Quick-Access Buttons -->
     <template v-if="enableFilters && tableKey && buttonFilters.length > 0">
       <v-btn
-        v-for="(filter, index) in buttonFilters"
+        v-for="filter in buttonFilters"
         :key="filter.id"
         :color="filter.color"
         :variant="activeFilterId === filter.id ? 'flat' : 'outlined'"
         size="small"
-        :class="{ 'ml-2': index === 0 }"
+        class="ml-2"
         @click="handleQuickFilterClick(filter)"
       >
         {{ filter.name }}
@@ -39,7 +39,6 @@
       <template #activator="{ props: menuProps }">
         <v-btn
           v-bind="menuProps"
-          icon
           variant="outlined"
           size="small"
           color="primary"
