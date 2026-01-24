@@ -31,6 +31,7 @@
         @filter-apply="handleFilterApply"
         @filter-reset="handleFilterReset"
         @filter-save="openSaveDialog(null)"
+        @filter-update="handleUpdateFilter"
         @filter-edit="openSaveDialog"
         @filter-delete="handleDeleteFilter"
         @reset-all-settings="handleResetAllSettings"
@@ -460,6 +461,23 @@ const handleDeleteFilter = async (filter: TableFilter) => {
     layoutStore.showSuccess('Filter erfolgreich gelöscht')
   } catch (e: any) {
     layoutStore.showError(e.message || 'Fehler beim Löschen')
+  }
+}
+
+// Aktiven Filter mit aktuellem State aktualisieren
+const handleUpdateFilter = async () => {
+  if (!activeFilterId.value) return
+
+  const activeFilter = filters.value.find(f => f.id === activeFilterId.value)
+  if (!activeFilter) return
+
+  try {
+    await filterStore.updateFilter(activeFilter.id, TABLE_KEY, {
+      filter_state: currentFilterState.value
+    })
+    layoutStore.showSuccess('Filter erfolgreich aktualisiert')
+  } catch (e: any) {
+    layoutStore.showError(e.message || 'Fehler beim Aktualisieren')
   }
 }
 

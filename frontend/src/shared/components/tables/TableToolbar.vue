@@ -57,21 +57,32 @@
       <v-card min-width="280">
         <!-- Filter Section -->
         <template v-if="enableFilters && tableKey">
-          <v-card-title class="text-subtitle-1 d-flex align-center justify-space-between py-2">
-            Gespeicherte Filter
+          <!-- Filter erstellen / aktualisieren Buttons -->
+          <div class="pa-2 d-flex flex-column gap-2">
             <v-btn
-              icon
-              variant="text"
-              size="small"
+              block
+              color="primary"
+              variant="tonal"
+              prepend-icon="mdi-plus"
               @click="handleOpenSaveDialog"
             >
-              <v-icon>mdi-plus</v-icon>
-              <v-tooltip activator="parent" location="top">
-                Aktuellen Filter speichern
-              </v-tooltip>
+              Filter erstellen
             </v-btn>
-          </v-card-title>
+            <v-btn
+              v-if="activeFilterId"
+              block
+              color="primary"
+              variant="outlined"
+              prepend-icon="mdi-content-save"
+              @click="handleUpdateFilter"
+            >
+              Filter aktualisieren
+            </v-btn>
+          </div>
 
+          <v-divider v-if="filters.length > 0" />
+
+          <!-- Filter Liste -->
           <v-list v-if="filters.length > 0" density="compact" class="py-0">
             <v-list-item
               v-for="filter in filters"
@@ -108,10 +119,6 @@
               </template>
             </v-list-item>
           </v-list>
-
-          <v-card-text v-else class="text-center text-medium-emphasis py-3">
-            Keine Filter gespeichert
-          </v-card-text>
 
           <template v-if="activeFilterId">
             <v-list-item @click="handleResetFilters">
@@ -189,6 +196,7 @@ const emit = defineEmits<{
   'filter-apply': [filter: TableFilter]
   'filter-reset': []
   'filter-save': []
+  'filter-update': []
   'filter-edit': [filter: TableFilter]
   'filter-delete': [filter: TableFilter]
   'create': []
@@ -245,6 +253,11 @@ const handleResetFilters = () => {
 const handleOpenSaveDialog = () => {
   settingsMenuOpen.value = false
   emit('filter-save')
+}
+
+const handleUpdateFilter = () => {
+  settingsMenuOpen.value = false
+  emit('filter-update')
 }
 
 const handleResetAllSettings = () => {
