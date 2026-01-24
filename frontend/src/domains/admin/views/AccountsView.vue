@@ -165,12 +165,14 @@ const filters = computed(() => filterStore.getFiltersForTable(TABLE_KEY))
 const buttonFilters = computed(() => filterStore.getButtonFilters(TABLE_KEY))
 const activeFilterId = computed(() => filterStore.activeFilterId)
 
-// Current Filter State
+// Current Filter State (inkl. Spalteneinstellungen)
 const currentFilterState = computed((): TableFilterState => ({
   page: page.value,
   itemsPerPage: itemsPerPage.value,
   sortBy: sortBy.value,
-  search: search.value
+  search: search.value,
+  columnOrder: tableRef.value?.getColumnOrder() || [],
+  columnWidths: tableRef.value?.getColumnWidths() || {}
 }))
 
 // Build Query Parameters
@@ -253,6 +255,15 @@ const applyFilterState = (state: TableFilterState) => {
   itemsPerPage.value = state.itemsPerPage || 10
   sortBy.value = state.sortBy || []
   search.value = state.search || ''
+
+  // Spalteneinstellungen anwenden
+  if (state.columnOrder && state.columnOrder.length > 0) {
+    tableRef.value?.setColumnOrder(state.columnOrder)
+  }
+  if (state.columnWidths && Object.keys(state.columnWidths).length > 0) {
+    tableRef.value?.setColumnWidths(state.columnWidths)
+  }
+
   loadData()
 }
 

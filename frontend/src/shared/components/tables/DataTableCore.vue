@@ -418,6 +418,24 @@ const resetAllSettings = async () => {
   }
 }
 
+// Getter/Setter für Filter-Integration
+const getColumnOrder = (): string[] => columnOrder.value
+const getColumnWidths = (): Record<string, number> => columnWidths.value
+
+const setColumnOrder = (order: string[]) => {
+  columnOrder.value = order
+  if (props.tableKey && order.length > 0) {
+    settingsStore.saveColumnOrder(props.tableKey, order)
+  }
+}
+
+const setColumnWidths = (widths: Record<string, number>) => {
+  columnWidths.value = widths
+  if (props.tableKey && Object.keys(widths).length > 0) {
+    settingsStore.saveColumnWidths(props.tableKey, widths)
+  }
+}
+
 // Event handler for table refresh
 const handleTableRefresh = () => {
   emit('options-update')
@@ -442,7 +460,12 @@ defineExpose({
   resetAllSettings,
   hasCustomColumnOrder,
   hasCustomColumnWidths,
-  hasCustomSettings
+  hasCustomSettings,
+  // Getter/Setter für Filter-Integration
+  getColumnOrder,
+  getColumnWidths,
+  setColumnOrder,
+  setColumnWidths
 })
 </script>
 

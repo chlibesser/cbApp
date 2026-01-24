@@ -7,6 +7,8 @@ export interface TableFilterState {
   itemsPerPage: number
   sortBy: Array<{ key: string; order: 'asc' | 'desc' }>
   search: string
+  columnOrder?: string[]
+  columnWidths?: Record<string, number>
 }
 
 export interface TableFilter {
