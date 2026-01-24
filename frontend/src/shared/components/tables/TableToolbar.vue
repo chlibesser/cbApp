@@ -20,7 +20,7 @@
       <v-btn
         v-for="filter in buttonFilters"
         :key="filter.id"
-        :color="activeFilterId === filter.id ? filter.color : undefined"
+        :color="filter.color"
         :variant="activeFilterId === filter.id ? 'flat' : 'outlined'"
         size="small"
         @click="handleQuickFilterClick(filter)"
