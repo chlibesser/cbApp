@@ -16,7 +16,7 @@
     />
 
     <!-- Filter Quick-Access Buttons -->
-    <template v-if="enableFilters && tableKey && buttonFilters.length > 0">
+    <template v-if="enableFilters && filterContext && buttonFilters.length > 0">
       <v-btn
         v-for="filter in buttonFilters"
         :key="filter.id"
@@ -50,7 +50,7 @@
 
       <v-card min-width="280">
         <!-- Filter Section -->
-        <template v-if="enableFilters && tableKey">
+        <template v-if="enableFilters && filterContext">
           <!-- Filter erstellen / aktualisieren -->
           <v-list-item @click="handleOpenSaveDialog">
             <template #prepend>
@@ -89,7 +89,7 @@
                   icon
                   variant="text"
                   size="x-small"
-                  @click.stop="emit('filter-edit', filter)"
+                  @click.stop="handleEditFilter(filter)"
                 >
                   <v-icon size="small">mdi-pencil</v-icon>
                 </v-btn>
@@ -98,7 +98,7 @@
                   variant="text"
                   size="x-small"
                   color="error"
-                  @click.stop="emit('filter-delete', filter)"
+                  @click.stop="handleDeleteFilter(filter)"
                 >
                   <v-icon size="small">mdi-delete</v-icon>
                 </v-btn>
@@ -136,59 +136,57 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useTranslations } from '@/core/localization/composables/useTranslations'
+import { useFilterContextOptional } from '@/shared/composables'
 import type { TableFilter } from '@/types/tableFilter'
 
 const { t } = useTranslations('admin.common')
 
+// Filter Context via Inject (optional - funktioniert auch ohne)
+const filterContext = useFilterContextOptional()
+
 interface Props {
   tableKey?: string
-  modelValue?: string
   enableSearch?: boolean
   enableFilters?: boolean
   enableCreate?: boolean
   createButtonText?: string
-  activeFilterId?: string | null
-  filters?: TableFilter[]
-  buttonFilters?: TableFilter[]
   hasCustomSettings?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   tableKey: '',
-  modelValue: '',
   enableSearch: true,
   enableFilters: true,
   enableCreate: false,
   createButtonText: '',
-  activeFilterId: null,
-  filters: () => [],
-  buttonFilters: () => [],
   hasCustomSettings: false
 })
 
+// Nur noch @create Event wird emittiert (view-spezifisch)
 const emit = defineEmits<{
-  'update:modelValue': [search: string]
-  'filter-apply': [filter: TableFilter]
-  'filter-reset': []
-  'filter-save': []
-  'filter-update': []
-  'filter-edit': [filter: TableFilter]
-  'filter-delete': [filter: TableFilter]
   'create': []
-  'reset-all-settings': []
 }>()
 
+// Computed: Filter-Daten aus Context oder leere Arrays
+const filters = computed(() => filterContext?.filters.value ?? [])
+const buttonFilters = computed(() => filterContext?.buttonFilters.value ?? [])
+const activeFilterId = computed(() => filterContext?.activeFilterId.value ?? null)
+
+// Search aus Context
+const searchInput = ref(filterContext?.search.value ?? '')
+
+// Sync search mit Context
+watch(() => filterContext?.search.value, (val) => {
+  if (val !== undefined) {
+    searchInput.value = val
+  }
+})
+
 // Local state
-const searchInput = ref(props.modelValue)
 const settingsMenuOpen = ref(false)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
-
-// Sync modelValue to local state
-watch(() => props.modelValue, (val) => {
-  searchInput.value = val
-})
 
 // Debounced Search Handler
 const handleSearchInput = (value: string | null) => {
@@ -197,40 +195,54 @@ const handleSearchInput = (value: string | null) => {
   }
 
   searchTimeout = setTimeout(() => {
-    emit('update:modelValue', value || '')
+    if (filterContext) {
+      filterContext.search.value = value || ''
+    }
   }, 300)
 }
 
-// Filter Handlers
+// Filter Handlers - Direkte Context-Aufrufe statt emit
 const handleQuickFilterClick = (filter: TableFilter) => {
-  if (props.activeFilterId === filter.id) {
-    emit('filter-reset')
+  if (!filterContext) return
+
+  if (activeFilterId.value === filter.id) {
+    filterContext.handleFilterReset()
   } else {
-    emit('filter-apply', filter)
+    filterContext.handleFilterApply(filter)
   }
 }
 
 const handleFilterClick = (filter: TableFilter) => {
-  if (props.activeFilterId === filter.id) {
-    emit('filter-reset')
+  if (!filterContext) return
+
+  if (activeFilterId.value === filter.id) {
+    filterContext.handleFilterReset()
   } else {
-    emit('filter-apply', filter)
+    filterContext.handleFilterApply(filter)
   }
   settingsMenuOpen.value = false
 }
 
 const handleOpenSaveDialog = () => {
   settingsMenuOpen.value = false
-  emit('filter-save')
+  filterContext?.openSaveDialog(null)
 }
 
 const handleUpdateFilter = () => {
   settingsMenuOpen.value = false
-  emit('filter-update')
+  filterContext?.handleUpdateFilter()
+}
+
+const handleEditFilter = (filter: TableFilter) => {
+  filterContext?.openSaveDialog(filter)
+}
+
+const handleDeleteFilter = (filter: TableFilter) => {
+  filterContext?.handleDeleteFilter(filter)
 }
 
 const handleResetAllSettings = () => {
-  emit('reset-all-settings')
+  filterContext?.handleResetAllSettings()
   settingsMenuOpen.value = false
 }
 </script>

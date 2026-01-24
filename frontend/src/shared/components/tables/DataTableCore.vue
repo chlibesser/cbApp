@@ -19,7 +19,7 @@
   >
     <!-- Custom Headers with Drag & Drop and Resize -->
     <template #headers="{ columns: headerColumns, isSorted, getSortIcon, toggleSort }">
-      <tr>
+      <tr @contextmenu="handleHeaderContextMenu">
         <th
           v-for="(header, index) in headerColumns"
           :key="header.key"
@@ -115,6 +115,14 @@
       </div>
     </template>
   </v-data-table-server>
+
+  <!-- Column Visibility Menu (Rechtsklick auf Header) -->
+  <ColumnVisibilityMenu
+    ref="columnVisibilityMenuRef"
+    :columns="columns"
+    :hidden-columns="hiddenColumns"
+    @update:hidden-columns="handleHiddenColumnsUpdate"
+  />
 </template>
 
 <script setup lang="ts">
@@ -123,6 +131,7 @@ import { useTranslations } from '@/core/localization/composables/useTranslations
 import { useTableSettingsStore } from '@/infrastructure/stores/tableSettingsStore'
 import { useNotifications } from '@/core/composables/useNotifications'
 import ColumnFilterMenu from './ColumnFilterMenu.vue'
+import ColumnVisibilityMenu from './ColumnVisibilityMenu.vue'
 import type { TableColumn } from '@/types/table'
 import type { ColumnFilter } from '@/types/tableFilter'
 
@@ -145,7 +154,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   page: 1,
-  itemsPerPage: 10,
+  itemsPerPage: 25,
   sortBy: () => [],
   columnFilters: () => [],
   density: 'compact'
@@ -189,6 +198,10 @@ const columnWidths = ref<Record<string, number>>({})
 const resizingColumn = ref<string | null>(null)
 const resizeStartX = ref(0)
 const resizeStartWidth = ref(0)
+
+// Hidden Columns State
+const hiddenColumns = ref<string[]>([])
+const columnVisibilityMenuRef = ref<InstanceType<typeof ColumnVisibilityMenu> | null>(null)
 
 // Items per page options
 const itemsPerPageOptions = [
@@ -241,9 +254,12 @@ const hasCustomColumnWidths = computed(() => {
   return Object.keys(columnWidths.value).length > 0
 })
 
+// Check if hidden columns exist
+const hasHiddenColumns = computed(() => hiddenColumns.value.length > 0)
+
 // Check if any custom settings exist
 const hasCustomSettings = computed(() =>
-  hasCustomColumnOrder.value || hasCustomColumnWidths.value
+  hasCustomColumnOrder.value || hasCustomColumnWidths.value || hasHiddenColumns.value
 )
 
 // Helper to translate title if it's a translation key
@@ -255,13 +271,16 @@ const translateTitle = (title: string): string => {
   return title
 }
 
-// Computed Headers (base)
+// Computed Headers (base) - berücksichtigt visible und hiddenColumns
 const computedHeaders = computed(() => {
   if (!props.columns || !Array.isArray(props.columns)) {
     return []
   }
   return props.columns
-    .filter(column => column.visible !== false)
+    .filter(column =>
+      column.visible !== false &&
+      !hiddenColumns.value.includes(column.key)
+    )
     .map(column => ({
       title: translateTitle(column.title),
       key: column.key,
@@ -451,6 +470,9 @@ const loadTableSettings = async () => {
     if (settings.column_widths) {
       columnWidths.value = settings.column_widths
     }
+    if (settings.hidden_columns) {
+      hiddenColumns.value = settings.hidden_columns
+    }
   } catch (e) {
     console.warn('Failed to load table settings:', e)
   }
@@ -484,6 +506,7 @@ const resetColumnWidths = () => {
 const resetAllSettings = async () => {
   columnOrder.value = []
   columnWidths.value = {}
+  hiddenColumns.value = []
   if (props.tableKey) {
     try {
       await settingsStore.resetSettings(props.tableKey)
@@ -512,6 +535,30 @@ const setColumnWidths = (widths: Record<string, number>) => {
   }
 }
 
+// Getter/Setter für Hidden Columns
+const getHiddenColumns = (): string[] => hiddenColumns.value
+
+const setHiddenColumns = (columns: string[]) => {
+  hiddenColumns.value = columns
+  if (props.tableKey) {
+    settingsStore.saveHiddenColumns(props.tableKey, columns)
+  }
+}
+
+// Handler für Spalten-Visibility Update (aus dem Menü)
+const handleHiddenColumnsUpdate = (columns: string[]) => {
+  hiddenColumns.value = columns
+  if (props.tableKey) {
+    settingsStore.saveHiddenColumns(props.tableKey, columns)
+  }
+}
+
+// Rechtsklick-Handler für Header
+const handleHeaderContextMenu = (event: MouseEvent) => {
+  event.preventDefault()
+  columnVisibilityMenuRef.value?.open(event)
+}
+
 // Event handler for table refresh
 const handleTableRefresh = () => {
   emit('options-update')
@@ -536,12 +583,15 @@ defineExpose({
   resetAllSettings,
   hasCustomColumnOrder,
   hasCustomColumnWidths,
+  hasHiddenColumns,
   hasCustomSettings,
   // Getter/Setter für Filter-Integration
   getColumnOrder,
   getColumnWidths,
   setColumnOrder,
-  setColumnWidths
+  setColumnWidths,
+  getHiddenColumns,
+  setHiddenColumns
 })
 </script>
 

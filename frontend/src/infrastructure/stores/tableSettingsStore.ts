@@ -37,6 +37,12 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
     }
   })
 
+  const getHiddenColumns = computed(() => {
+    return (tableKey: string): string[] | null => {
+      return settings.value.get(tableKey)?.hidden_columns || null
+    }
+  })
+
   // Actions
 
   /**
@@ -53,7 +59,7 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
     } catch (e: any) {
       error.value = e.message || 'Fehler beim Laden der Einstellungen'
       // Return empty settings on error
-      return { column_order: null, column_widths: null }
+      return { column_order: null, column_widths: null, hidden_columns: null }
     } finally {
       loading.value = false
     }
@@ -64,7 +70,7 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
    */
   function saveColumnOrder(tableKey: string, columnOrder: string[]): void {
     // Update local state immediately
-    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null }
+    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null, hidden_columns: null }
     settings.value.set(tableKey, { ...current, column_order: columnOrder })
 
     // Debounced save to backend
@@ -76,8 +82,20 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
    */
   function saveColumnWidths(tableKey: string, columnWidths: Record<string, number>): void {
     // Update local state immediately
-    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null }
+    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null, hidden_columns: null }
     settings.value.set(tableKey, { ...current, column_widths: columnWidths })
+
+    // Debounced save to backend
+    debouncedSave(tableKey)
+  }
+
+  /**
+   * Speichert die versteckten Spalten (mit Debounce)
+   */
+  function saveHiddenColumns(tableKey: string, hiddenColumns: string[]): void {
+    // Update local state immediately
+    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null, hidden_columns: null }
+    settings.value.set(tableKey, { ...current, hidden_columns: hiddenColumns })
 
     // Debounced save to backend
     debouncedSave(tableKey)
@@ -87,7 +105,7 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
    * Speichert eine einzelne Spaltenbreite (mit Debounce)
    */
   function saveColumnWidth(tableKey: string, columnKey: string, width: number): void {
-    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null }
+    const current = settings.value.get(tableKey) || { column_order: null, column_widths: null, hidden_columns: null }
     const currentWidths = current.column_widths || {}
 
     settings.value.set(tableKey, {
@@ -132,7 +150,8 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
       await tableSettingsService.saveSettings({
         table_key: tableKey,
         column_order: current.column_order,
-        column_widths: current.column_widths
+        column_widths: current.column_widths,
+        hidden_columns: current.hidden_columns
       })
     } catch (e: any) {
       error.value = e.message || 'Fehler beim Speichern der Einstellungen'
@@ -158,7 +177,7 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
 
     try {
       await tableSettingsService.resetSettings(tableKey)
-      settings.value.set(tableKey, { column_order: null, column_widths: null })
+      settings.value.set(tableKey, { column_order: null, column_widths: null, hidden_columns: null })
     } catch (e: any) {
       error.value = e.message || 'Fehler beim Zurücksetzen der Einstellungen'
       throw e
@@ -178,12 +197,14 @@ export const useTableSettingsStore = defineStore('tableSettings', () => {
     getSettings,
     getColumnOrder,
     getColumnWidths,
+    getHiddenColumns,
 
     // Actions
     loadSettings,
     saveColumnOrder,
     saveColumnWidths,
     saveColumnWidth,
+    saveHiddenColumns,
     resetSettings,
   }
 })

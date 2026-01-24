@@ -76,6 +76,7 @@ export interface TableFilterState {
   columnFilters?: ColumnFilter[]
   columnOrder?: string[]
   columnWidths?: Record<string, number>
+  hiddenColumns?: string[]
 }
 
 export interface TableFilter {

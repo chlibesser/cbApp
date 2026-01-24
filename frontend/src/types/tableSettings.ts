@@ -6,10 +6,12 @@
 export interface TableSettings {
   column_order: string[] | null
   column_widths: Record<string, number> | null
+  hidden_columns: string[] | null
 }
 
 export interface UpdateTableSettingsPayload {
   table_key: string
   column_order?: string[] | null
   column_widths?: Record<string, number> | null
+  hidden_columns?: string[] | null
 }

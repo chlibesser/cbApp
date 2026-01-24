@@ -7,24 +7,12 @@
       </v-toolbar-title>
       <v-spacer />
 
-      <!-- TableToolbar in View-Toolbar -->
+      <!-- TableToolbar in View-Toolbar (Filter via Provide/Inject) -->
       <TableToolbar
-        v-model="search"
         :table-key="TABLE_KEY"
-        :enable-filters="true"
         :enable-create="true"
-        :filters="filters"
-        :button-filters="buttonFilters"
-        :active-filter-id="activeFilterId"
         :has-custom-settings="tableRef?.hasCustomSettings"
         @create="createAccount"
-        @filter-apply="handleFilterApply"
-        @filter-reset="handleFilterReset"
-        @filter-save="openSaveDialog(null)"
-        @filter-update="handleUpdateFilter"
-        @filter-edit="openSaveDialog"
-        @filter-delete="handleDeleteFilter"
-        @reset-all-settings="handleResetAllSettings"
       />
     </v-toolbar>
 
@@ -116,17 +104,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useApi } from '@/core/api'
 import { DataTableCore, TableToolbar, FilterSaveDialog } from '@/shared/components'
+import { useTableFilters, provideFilterContext } from '@/shared/composables'
 import { accountEntityConfig } from '@/config/entities'
 import { useRSDStore } from '@/infrastructure/stores/rsdStore'
 import { useLayoutStore } from '@/infrastructure/stores/layoutStore'
-import { useTableFilterStore } from '@/infrastructure/stores/tableFilterStore'
 import { accountService } from '../services/accountService'
 import type { Account } from '../types'
-import type { TableFilter, TableFilterState, ColumnFilter } from '@/types/tableFilter'
 
 const { t } = useI18n()
 const api = useApi()
@@ -136,77 +123,16 @@ const TABLE_KEY = 'admin.accounts'
 // Stores
 const rsdStore = useRSDStore()
 const layoutStore = useLayoutStore()
-const filterStore = useTableFilterStore()
 
 // Table Ref
 const tableRef = ref<InstanceType<typeof DataTableCore> | null>(null)
 
-// Pagination State
-const page = ref(1)
-const itemsPerPage = ref(10)
-const totalItems = ref(0)
-const sortBy = ref<Array<{ key: string; order: 'asc' | 'desc' }>>([])
-
-// Search State
-const search = ref('')
-
-// Column Filters State
-const columnFilters = ref<ColumnFilter[]>([])
-let skipColumnFilterWatch = false
-
 // Data State
 const items = ref<Account[]>([])
+const totalItems = ref(0)
 const loading = ref(false)
 
-// Filter State
-const saveDialogOpen = ref(false)
-const editingFilter = ref<TableFilter | null>(null)
-
-// Filter Computed
-const filters = computed(() => filterStore.getFiltersForTable(TABLE_KEY))
-const buttonFilters = computed(() => filterStore.getButtonFilters(TABLE_KEY))
-const activeFilterId = computed(() => filterStore.activeFilterId)
-
-// Current Filter State (inkl. Spalteneinstellungen)
-const currentFilterState = computed((): TableFilterState => ({
-  page: page.value,
-  itemsPerPage: itemsPerPage.value,
-  sortBy: sortBy.value,
-  search: search.value,
-  columnFilters: columnFilters.value,
-  columnOrder: tableRef.value?.getColumnOrder() || [],
-  columnWidths: tableRef.value?.getColumnWidths() || {}
-}))
-
-// Build Query Parameters
-const buildQueryParams = (): Record<string, any> => {
-  const params: Record<string, any> = {
-    page: page.value,
-    per_page: itemsPerPage.value,
-  }
-
-  if (search.value) {
-    params.search = search.value
-  }
-
-  // Sortierung - Default: created_at desc für konsistente Reihenfolge
-  if (sortBy.value.length > 0) {
-    params.sort_by = sortBy.value[0].key
-    params.sort_order = sortBy.value[0].order
-  } else {
-    params.sort_by = 'created_at'
-    params.sort_order = 'desc'
-  }
-
-  // Spalten-Filter hinzufügen
-  if (columnFilters.value.length > 0) {
-    params.filters = JSON.stringify(columnFilters.value)
-  }
-
-  return params
-}
-
-// Load Data from API
+// Load Data from API (view-spezifisch)
 const loadData = async () => {
   try {
     loading.value = true
@@ -237,143 +163,29 @@ const loadData = async () => {
   }
 }
 
-// Watch search for debounced reload
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
-watch(search, () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    page.value = 1
-    loadData()
-  }, 300)
+// Filter Composable (zentralisierte Filter-Logik)
+const filterState = useTableFilters({
+  tableKey: TABLE_KEY,
+  tableRef,
+  loadData
 })
 
-// Watch column filters for reload (nur bei User-Interaktion, nicht bei programmatischen Änderungen)
-watch(columnFilters, () => {
-  if (skipColumnFilterWatch) {
-    skipColumnFilterWatch = false
-    return
-  }
-  page.value = 1
-  loadData()
-}, { deep: true })
+// Provide filter context für TableToolbar (Provide/Inject Pattern)
+provideFilterContext(filterState)
 
-// Filter Methods
-const handleFilterApply = (filter: TableFilter) => {
-  filterStore.setActiveFilter(filter.id)
-  applyFilterState(filter.filter_state)
-}
-
-const handleFilterReset = () => {
-  // Gleicher Effekt wie "Alles zurücksetzen"
-  filterStore.clearActiveFilter()
-  page.value = 1
-  search.value = ''
-  sortBy.value = []
-  skipColumnFilterWatch = true
-  columnFilters.value = []
-  tableRef.value?.resetAllSettings()
-  loadData()
-}
-
-const applyFilterState = (state: TableFilterState) => {
-  page.value = state.page || 1
-  itemsPerPage.value = state.itemsPerPage || 10
-  sortBy.value = state.sortBy || []
-  search.value = state.search || ''
-
-  // Skip watch um doppeltes Laden zu vermeiden
-  skipColumnFilterWatch = true
-  columnFilters.value = state.columnFilters || []
-
-  // Spalteneinstellungen anwenden
-  if (state.columnOrder && state.columnOrder.length > 0) {
-    tableRef.value?.setColumnOrder(state.columnOrder)
-  }
-  if (state.columnWidths && Object.keys(state.columnWidths).length > 0) {
-    tableRef.value?.setColumnWidths(state.columnWidths)
-  }
-
-  loadData()
-}
-
-const resetFilters = () => {
-  page.value = 1
-  search.value = ''
-  sortBy.value = []
-  loadData()
-}
-
-// Alles zurücksetzen - inkl. aktiver Filter
-const handleResetAllSettings = () => {
-  // Aktiven Filter deaktivieren
-  filterStore.clearActiveFilter()
-  // Filter-State zurücksetzen
-  page.value = 1
-  search.value = ''
-  sortBy.value = []
-  skipColumnFilterWatch = true
-  columnFilters.value = []
-  // Tabellen-Settings zurücksetzen
-  tableRef.value?.resetAllSettings()
-  // Daten neu laden
-  loadData()
-}
-
-const openSaveDialog = (filter: TableFilter | null) => {
-  editingFilter.value = filter
-  saveDialogOpen.value = true
-}
-
-const handleSaveFilter = async (data: { name: string; color: string; showAsButton: boolean }) => {
-  try {
-    if (editingFilter.value) {
-      await filterStore.updateFilter(editingFilter.value.id, TABLE_KEY, {
-        name: data.name,
-        color: data.color,
-        show_as_button: data.showAsButton,
-        filter_state: currentFilterState.value
-      })
-      layoutStore.showSuccess('Filter erfolgreich aktualisiert')
-    } else {
-      await filterStore.createFilter({
-        table_key: TABLE_KEY,
-        name: data.name,
-        color: data.color,
-        show_as_button: data.showAsButton,
-        filter_state: currentFilterState.value
-      })
-      layoutStore.showSuccess('Filter erfolgreich gespeichert')
-    }
-  } catch (e: any) {
-    layoutStore.showError(e.message || 'Fehler beim Speichern des Filters')
-  }
-}
-
-const handleDeleteFilter = async (filter: TableFilter) => {
-  try {
-    await filterStore.deleteFilter(filter.id, TABLE_KEY)
-    layoutStore.showSuccess('Filter erfolgreich gelöscht')
-  } catch (e: any) {
-    layoutStore.showError(e.message || 'Fehler beim Löschen')
-  }
-}
-
-// Aktiven Filter mit aktuellem State aktualisieren
-const handleUpdateFilter = async () => {
-  if (!activeFilterId.value) return
-
-  const activeFilter = filters.value.find(f => f.id === activeFilterId.value)
-  if (!activeFilter) return
-
-  try {
-    await filterStore.updateFilter(activeFilter.id, TABLE_KEY, {
-      filter_state: currentFilterState.value
-    })
-    layoutStore.showSuccess('Filter erfolgreich aktualisiert')
-  } catch (e: any) {
-    layoutStore.showError(e.message || 'Fehler beim Aktualisieren')
-  }
-}
+// Destructure nur was in der View benötigt wird
+const {
+  page,
+  itemsPerPage,
+  sortBy,
+  columnFilters,
+  saveDialogOpen,
+  editingFilter,
+  currentFilterState,
+  handleSaveFilter,
+  buildQueryParams,
+  initFilters
+} = filterState
 
 // CRUD Methods
 function handleItemSelected(item: Account) {
@@ -435,15 +247,11 @@ const handleTableRefresh = () => {
 onMounted(async () => {
   window.addEventListener('table-refresh', handleTableRefresh)
 
-  // Load filters
-  try {
-    await filterStore.loadFilters(TABLE_KEY)
-  } catch (e) {
-    console.warn('Fehler beim Laden der Filter:', e)
-  }
+  // Load filters (via Composable)
+  await initFilters()
 
   // Load data
-  loadData()
+  await loadData()
 })
 </script>
 
