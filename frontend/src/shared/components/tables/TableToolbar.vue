@@ -51,31 +51,22 @@
       <v-card min-width="280">
         <!-- Filter Section -->
         <template v-if="enableFilters && tableKey">
-          <!-- Filter erstellen / aktualisieren Buttons -->
-          <div class="pa-3 d-flex flex-column">
-            <v-btn
-              block
-              color="primary"
-              variant="outlined"
-              prepend-icon="mdi-plus"
-              @click="handleOpenSaveDialog"
-            >
-              Filter erstellen
-            </v-btn>
-            <v-btn
-              v-if="activeFilterId"
-              block
-              color="primary"
-              variant="outlined"
-              prepend-icon="mdi-content-save"
-              class="mt-4"
-              @click="handleUpdateFilter"
-            >
-              Filter aktualisieren
-            </v-btn>
-          </div>
+          <!-- Filter erstellen / aktualisieren -->
+          <v-list-item @click="handleOpenSaveDialog">
+            <template #prepend>
+              <v-icon>mdi-plus</v-icon>
+            </template>
+            <v-list-item-title>Filter erstellen</v-list-item-title>
+          </v-list-item>
 
-          <v-divider v-if="filters.length > 0" />
+          <v-list-item v-if="activeFilterId" @click="handleUpdateFilter">
+            <template #prepend>
+              <v-icon>mdi-content-save</v-icon>
+            </template>
+            <v-list-item-title>Filter aktualisieren</v-list-item-title>
+          </v-list-item>
+
+          <v-divider />
 
           <!-- Filter Liste -->
           <v-list v-if="filters.length > 0" density="compact" class="py-0">
