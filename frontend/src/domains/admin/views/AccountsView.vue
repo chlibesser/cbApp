@@ -27,7 +27,7 @@
         @filter-delete="handleDeleteFilter"
         @reset-column-order="tableRef?.resetColumnOrder()"
         @reset-column-widths="tableRef?.resetColumnWidths()"
-        @reset-all-settings="tableRef?.resetAllSettings()"
+        @reset-all-settings="handleResetAllSettings"
       />
     </v-toolbar>
 
@@ -271,6 +271,20 @@ const resetFilters = () => {
   page.value = 1
   search.value = ''
   sortBy.value = []
+  loadData()
+}
+
+// Alles zurücksetzen - inkl. aktiver Filter
+const handleResetAllSettings = () => {
+  // Aktiven Filter deaktivieren
+  filterStore.clearActiveFilter()
+  // Filter-State zurücksetzen
+  page.value = 1
+  search.value = ''
+  sortBy.value = []
+  // Tabellen-Settings zurücksetzen
+  tableRef.value?.resetAllSettings()
+  // Daten neu laden
   loadData()
 }
 
