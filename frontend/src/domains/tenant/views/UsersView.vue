@@ -316,9 +316,13 @@ const buildQueryParams = (): Record<string, any> => {
     params.search = search.value
   }
 
+  // Sortierung - Default: created_at desc für konsistente Reihenfolge
   if (sortBy.value.length > 0) {
     params.sort_by = sortBy.value[0].key
     params.sort_order = sortBy.value[0].order
+  } else {
+    params.sort_by = 'created_at'
+    params.sort_order = 'desc'
   }
 
   return params
