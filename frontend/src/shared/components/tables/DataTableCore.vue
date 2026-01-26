@@ -11,11 +11,13 @@
     item-value="id"
     class="elevation-0 dtc-table"
     :items-per-page-options="itemsPerPageOptions"
+    :row-props="getRowProps"
     fixed-header
     fixed-footer
     height="100%"
     @update:options="handleOptionsUpdate"
     @click:row="handleRowClick"
+    @dblclick:row="handleRowDblClick"
   >
     <!-- Custom Headers with Drag & Drop and Resize -->
     <template #headers="{ columns: headerColumns, isSorted, getSortIcon, toggleSort }">
@@ -167,6 +169,7 @@ const emit = defineEmits<{
   'update:sortBy': [sortBy: Array<{ key: string; order: 'asc' | 'desc' }>]
   'update:columnFilters': [filters: ColumnFilter[]]
   'row-click': [item: any]
+  'row-dblclick': [item: any]
   'options-update': []
 }>()
 
@@ -203,6 +206,9 @@ const resizeStartWidth = ref(0)
 // Hidden Columns State
 const hiddenColumns = ref<string[]>([])
 const columnVisibilityMenuRef = ref<InstanceType<typeof ColumnVisibilityMenu> | null>(null)
+
+// Selected Row State
+const selectedItemId = ref<string | null>(null)
 
 // Items per page options
 const itemsPerPageOptions = [
@@ -528,9 +534,39 @@ const handleOptionsUpdate = () => {
   emit('options-update')
 }
 
-// Handle Row Click
+// Get row props for styling (selected state)
+const getRowProps = ({ item }: { item: any }) => {
+  return {
+    class: {
+      'dtc-row--selected': selectedItemId.value === item.id
+    }
+  }
+}
+
+// Handle Row Click - selects the row
 const handleRowClick = (event: Event, row: any) => {
+  // Prevent text selection
+  window.getSelection()?.removeAllRanges()
+  selectedItemId.value = row.item.id
   emit('row-click', row.item)
+}
+
+// Handle Row Double Click
+const handleRowDblClick = (event: Event, row: any) => {
+  // Prevent text selection on double click
+  window.getSelection()?.removeAllRanges()
+  emit('row-dblclick', row.item)
+}
+
+// Clear selection
+const clearSelection = () => {
+  selectedItemId.value = null
+}
+
+// Get selected item
+const getSelectedItem = () => {
+  if (!selectedItemId.value) return null
+  return props.items.find(item => item.id === selectedItemId.value) || null
 }
 
 // Reset methods
@@ -636,7 +672,10 @@ defineExpose({
   setColumnOrder,
   setColumnWidths,
   getHiddenColumns,
-  setHiddenColumns
+  setHiddenColumns,
+  // Selection Methods
+  clearSelection,
+  getSelectedItem
 })
 </script>
 
@@ -685,8 +724,24 @@ defineExpose({
   margin: 0 !important;
 }
 
+:deep(.v-data-table-row),
+:deep(.v-data-table-row td),
+:deep(.v-data-table-row td *) {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
 :deep(.v-data-table-row:hover) {
   cursor: pointer;
+}
+
+/* Selected Row Styling */
+:deep(.dtc-row--selected) {
+  background-color: rgba(var(--v-theme-primary), 0.12) !important;
+}
+
+:deep(.dtc-row--selected:hover) {
+  background-color: rgba(var(--v-theme-primary), 0.18) !important;
 }
 
 /* Drag & Drop Header Styles */

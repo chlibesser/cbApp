@@ -29,7 +29,8 @@
         v-model:items-per-page="itemsPerPage"
         v-model:sort-by="sortBy"
         v-model:column-filters="columnFilters"
-        @row-click="handleItemSelected"
+        @row-click="handleRowClick"
+        @row-dblclick="handleRowDblClick"
         @options-update="loadData"
       >
         <!-- Custom slot for email verification status -->
@@ -199,11 +200,17 @@ const {
   initFilters
 } = filterState
 
-// CRUD Methods
-function handleItemSelected(item: Account) {
+// Row Click Handlers
+function handleRowClick(item: Account) {
+  // Single click only selects the row (visual feedback handled by DataTableCore)
+}
+
+function handleRowDblClick(item: Account) {
+  // Double click opens RSD in view mode
   viewAccount(item)
 }
 
+// CRUD Methods
 function viewAccount(item: Account) {
   rsdStore.open('account', 'view', item)
 }

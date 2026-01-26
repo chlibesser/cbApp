@@ -41,6 +41,7 @@
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
       @row-click="handleRowClick"
+      @row-dblclick="handleRowDblClick"
       @options-update="loadData"
     >
       <!-- Pass through all slots -->
@@ -204,9 +205,13 @@ const loadData = async () => {
   }
 }
 
-// Handle Row Click
+// Handle Row Click (Single Click)
 const handleRowClick = (item: any) => {
   emit('itemSelected', item)
+}
+
+// Handle Row Double Click
+const handleRowDblClick = (item: any) => {
   emit('item-double-click', item)
 }
 
