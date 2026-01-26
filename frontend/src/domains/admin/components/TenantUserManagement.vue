@@ -27,13 +27,15 @@
         <div class="d-flex justify-space-between align-center mb-4">
           <v-text-field
             v-model="searchQuery"
-            :label="$t('admin.tenants.components.user_management.search_placeholder')"
+            :placeholder="$t('admin.common.buttons.search')"
             variant="outlined"
             prepend-inner-icon="mdi-magnify"
             density="compact"
-            style="max-width: 300px"
+            style="min-width: 200px"
             clearable
             hide-details
+            color="primary"
+            base-color="primary"
           />
 
           <v-btn

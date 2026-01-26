@@ -265,10 +265,28 @@ export const useLocaleStore = defineStore('locale', () => {
 
       // Merge into existing messages (preserve other namespaces)
       const currentMessages = i18n.global.getLocaleMessage(currentLocale.value)
-      i18n.global.setLocaleMessage(currentLocale.value, {
-        ...currentMessages,
-        [namespace]: translations,
-      })
+
+      // Build nested structure from namespace (e.g., "admin.common" → { admin: { common: {...} } })
+      const parts = namespace.split('.')
+      let nested: any = translations
+      for (let i = parts.length - 1; i >= 0; i--) {
+        nested = { [parts[i]]: nested }
+      }
+
+      // Deep merge with existing messages
+      const deepMerge = (target: any, source: any): any => {
+        const result = { ...target }
+        for (const key of Object.keys(source)) {
+          if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+            result[key] = deepMerge(result[key] || {}, source[key])
+          } else {
+            result[key] = source[key]
+          }
+        }
+        return result
+      }
+
+      i18n.global.setLocaleMessage(currentLocale.value, deepMerge(currentMessages, nested))
 
       // Mark as loaded (only if we actually got data)
       loadedNamespaces.value.add(namespaceKey)

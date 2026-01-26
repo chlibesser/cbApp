@@ -1,7 +1,7 @@
 <template>
   <div class="view-container">
     <!-- Toolbar -->
-    <v-toolbar flat color="primary" variant="outlined" rounded density="compact" class="view-toolbar">
+    <v-toolbar flat variant="outlined" rounded density="compact" class="view-toolbar">
       <v-toolbar-title class="text-h5 font-weight-bold view-title">
         {{ $t('admin.accounts.page_title') }}
       </v-toolbar-title>
@@ -52,6 +52,17 @@
             size="x-small"
           >
             {{ getSystemRoleLabel(item.system_role) }}
+          </v-chip>
+        </template>
+
+        <!-- Custom slot for status -->
+        <template #item.is_active="{ item }">
+          <v-chip
+            :color="item.is_active ? 'success' : 'error'"
+            variant="tonal"
+            size="x-small"
+          >
+            {{ item.is_active ? $t('admin.common.status.active') : $t('admin.common.status.inactive') }}
           </v-chip>
         </template>
 

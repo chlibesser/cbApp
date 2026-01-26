@@ -5,13 +5,15 @@
       v-if="enableSearch"
       v-model="searchInput"
       prepend-inner-icon="mdi-magnify"
-      :label="t('buttons.search')"
+      :placeholder="t('buttons.search')"
       variant="outlined"
       density="compact"
       hide-details
       clearable
+      clear-icon="mdi-close"
       color="primary"
-      style="max-width: 300px;"
+      base-color="primary"
+      style="min-width: 250px;"
       @update:model-value="handleSearchInput"
     />
 
@@ -140,6 +142,7 @@ import { ref, computed, watch } from 'vue'
 import { useTranslations } from '@/core/localization/composables/useTranslations'
 import { useFilterContextOptional } from '@/shared/composables'
 import type { TableFilter } from '@/types/tableFilter'
+
 
 const { t, $t } = useTranslations('admin.common')
 
