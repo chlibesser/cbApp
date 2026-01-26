@@ -95,7 +95,7 @@
         :name="`item.${column.key}`"
         v-bind="slotProps"
       >
-        {{ slotProps.value }}
+        {{ formatValue(slotProps.value, column) }}
       </slot>
     </template>
 
@@ -271,6 +271,49 @@ const translateTitle = (title: string): string => {
     return translated !== title ? translated : title
   }
   return title
+}
+
+// Format value based on column type
+const formatValue = (value: any, column: TableColumn): string => {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+
+  // Date formatting (dd.mm.YYYY)
+  if (column.type === 'date') {
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return String(value)
+    return date.toLocaleDateString('de-CH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
+  // DateTime formatting (dd.mm.YYYY HH:mm)
+  if (column.type === 'datetime') {
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return String(value)
+    const dateStr = date.toLocaleDateString('de-CH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    const timeStr = date.toLocaleTimeString('de-CH', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    return `${dateStr} ${timeStr}`
+  }
+
+  // Number formatting
+  if (column.type === 'number') {
+    const num = Number(value)
+    if (isNaN(num)) return String(value)
+    return num.toLocaleString('de-CH')
+  }
+
+  return String(value)
 }
 
 // Computed Headers (base) - berücksichtigt visible und hiddenColumns
