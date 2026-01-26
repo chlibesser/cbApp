@@ -53,6 +53,20 @@ return [
         'inactive' => 'Inactive',
         'clear' => 'Clear filters',
         'apply' => 'Apply',
+        'create' => 'Create filter',
+        'update' => 'Update filter',
+        'reset_all' => 'Reset all',
+        'dialog' => [
+            'save_title' => 'Save filter',
+            'edit_title' => 'Edit filter',
+            'name_label' => 'Filter name',
+            'color_label' => 'Button color',
+            'show_as_button' => 'Show as quick-access button',
+            'validation' => [
+                'required' => 'This field is required',
+                'max_length' => 'Maximum 100 characters allowed',
+            ],
+        ],
     ],
     
     // Pagination

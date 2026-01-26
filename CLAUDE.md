@@ -196,10 +196,10 @@ $table->enum('system_role', ['global_admin', 'tenant_admin']);
 
 ## 🇩🇪 Sprache
 
-**WICHTIG**: Claude soll IMMER auf Deutsch antworten, es sei denn explizit anders gefordert:
+**WICHTIG**: Claude soll IMMER auf Deutsch antworten ausser bei Commit, es sei denn explizit anders gefordert:
 - Alle Antworten auf Deutsch
 - Code-Kommentare auf Deutsch (wenn welche nötig sind)
-- Commit-Nachrichten auf Deutsch
+- Commit-Nachrichten auf Englisch
 - Dokumentation auf Deutsch
 
 ## 🔧 Arbeitsweise für Code-Änderungen

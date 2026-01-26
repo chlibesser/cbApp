@@ -6,15 +6,14 @@
   >
     <v-card>
       <v-card-title class="text-h6">
-        {{ isEditing ? 'Filter bearbeiten' : 'Filter speichern' }}
+        {{ isEditing ? t('filter.dialog.edit_title') : t('filter.dialog.save_title') }}
       </v-card-title>
 
       <v-card-text>
-        <v-form ref="formRef" v-model="formValid">
+        <v-form ref="formRef">
           <v-text-field
             v-model="form.name"
-            label="Filter-Name"
-            :rules="[rules.required, rules.maxLength]"
+            :label="t('filter.dialog.name_label')"
             counter="100"
             variant="outlined"
             density="comfortable"
@@ -23,7 +22,7 @@
 
           <div class="mb-4">
             <label class="text-body-2 text-medium-emphasis mb-2 d-block">
-              Button-Farbe
+              {{ t('filter.dialog.color_label') }}
             </label>
             <div class="d-flex flex-wrap ga-2">
               <v-btn
@@ -42,7 +41,7 @@
 
           <v-checkbox
             v-model="form.showAsButton"
-            label="Als Quick-Access Button anzeigen"
+            :label="t('filter.dialog.show_as_button')"
             density="comfortable"
             hide-details
           />
@@ -55,16 +54,15 @@
           variant="text"
           @click="handleCancel"
         >
-          Abbrechen
+          {{ t('buttons.cancel') }}
         </v-btn>
         <v-btn
           color="primary"
           variant="flat"
-          :disabled="!formValid"
           :loading="loading"
           @click="handleSave"
         >
-          {{ isEditing ? 'Speichern' : 'Erstellen' }}
+          {{ isEditing ? t('buttons.save') : t('buttons.create') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -73,8 +71,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useTranslations } from '@/core/localization/composables/useTranslations'
 import { FILTER_COLOR_PRESETS } from '@/types/tableFilter'
 import type { TableFilter, TableFilterState } from '@/types/tableFilter'
+
+const { t } = useTranslations('admin.common')
 
 interface Props {
   modelValue: boolean
@@ -93,13 +94,12 @@ const emit = defineEmits<{
 }>()
 
 const formRef = ref()
-const formValid = ref(false)
 const loading = ref(false)
 
 const form = ref({
   name: '',
   color: FILTER_COLOR_PRESETS[0],
-  showAsButton: false,
+  showAsButton: true,
 })
 
 const dialog = computed({
@@ -110,12 +110,6 @@ const dialog = computed({
 const isEditing = computed(() => !!props.existingFilter)
 
 const colorPresets = FILTER_COLOR_PRESETS
-
-const rules = {
-  required: (v: string) => !!v?.trim() || 'Dieses Feld ist erforderlich',
-  maxLength: (v: string) =>
-    !v || v.length <= 100 || 'Maximal 100 Zeichen erlaubt',
-}
 
 watch(
   () => props.modelValue,
@@ -131,7 +125,7 @@ watch(
         form.value = {
           name: '',
           color: FILTER_COLOR_PRESETS[0],
-          showAsButton: false,
+          showAsButton: true,
         }
       }
     }
@@ -143,9 +137,6 @@ const handleCancel = () => {
 }
 
 const handleSave = async () => {
-  const { valid } = await formRef.value?.validate()
-  if (!valid) return
-
   loading.value = true
   try {
     emit('save', {

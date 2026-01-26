@@ -26,7 +26,7 @@
         class="ml-2"
         @click="handleQuickFilterClick(filter)"
       >
-        {{ filter.name }}
+        {{ translateText(filter.name) }}
       </v-btn>
     </template>
 
@@ -56,14 +56,14 @@
             <template #prepend>
               <v-icon>mdi-plus</v-icon>
             </template>
-            <v-list-item-title>Filter erstellen</v-list-item-title>
+            <v-list-item-title>{{ t('filter.create') }}</v-list-item-title>
           </v-list-item>
 
           <v-list-item v-if="activeFilterId" @click="handleUpdateFilter">
             <template #prepend>
               <v-icon>mdi-content-save</v-icon>
             </template>
-            <v-list-item-title>Filter aktualisieren</v-list-item-title>
+            <v-list-item-title>{{ t('filter.update') }}</v-list-item-title>
           </v-list-item>
 
           <v-divider />
@@ -82,7 +82,7 @@
                 </v-avatar>
               </template>
 
-              <v-list-item-title>{{ filter.name }}</v-list-item-title>
+              <v-list-item-title>{{ translateText(filter.name) }}</v-list-item-title>
 
               <template #append>
                 <v-btn
@@ -118,7 +118,7 @@
           <template #prepend>
             <v-icon>mdi-refresh</v-icon>
           </template>
-          <v-list-item-title>Alles zurücksetzen</v-list-item-title>
+          <v-list-item-title>{{ t('filter.reset_all') }}</v-list-item-title>
         </v-list-item>
       </v-card>
     </v-menu>
@@ -141,7 +141,16 @@ import { useTranslations } from '@/core/localization/composables/useTranslations
 import { useFilterContextOptional } from '@/shared/composables'
 import type { TableFilter } from '@/types/tableFilter'
 
-const { t } = useTranslations('admin.common')
+const { t, $t } = useTranslations('admin.common')
+
+// Helper to translate text if it's a translation key
+const translateText = (text: string): string => {
+  if (text && text.includes('.') && !text.includes(' ')) {
+    const translated = $t(text)
+    return translated !== text ? translated : text
+  }
+  return text
+}
 
 // Filter Context via Inject (optional - funktioniert auch ohne)
 const filterContext = useFilterContextOptional()

@@ -46,6 +46,7 @@
         <!-- Custom slot for system role -->
         <template #item.system_role="{ item }">
           <v-chip
+            v-if="item.system_role"
             :color="getSystemRoleColor(item.system_role)"
             variant="tonal"
             size="x-small"

@@ -34,8 +34,7 @@ export const accountEntityConfig: EntityConfig = {
       filterable: true,
       filterType: 'text',
       width: 150,
-      minWidth: 120,
-      required: true
+      minWidth: 120
     },
     {
       key: 'email',
@@ -45,8 +44,7 @@ export const accountEntityConfig: EntityConfig = {
       filterable: true,
       filterType: 'text',
       width: 200,
-      minWidth: 150,
-      required: true
+      minWidth: 150
     },
     {
       key: 'email_verified_at',

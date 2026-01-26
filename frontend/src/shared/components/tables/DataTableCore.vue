@@ -121,6 +121,7 @@
     ref="columnVisibilityMenuRef"
     :columns="columns"
     :hidden-columns="hiddenColumns"
+    :column-order="columnOrder"
     @update:hidden-columns="handleHiddenColumnsUpdate"
   />
 </template>
@@ -135,7 +136,7 @@ import ColumnVisibilityMenu from './ColumnVisibilityMenu.vue'
 import type { TableColumn } from '@/types/table'
 import type { ColumnFilter } from '@/types/tableFilter'
 
-const { t } = useTranslations('admin.common')
+const { t, $t } = useTranslations('admin.common')
 const { showSuccess, showError } = useNotifications()
 
 interface Props {
@@ -263,9 +264,10 @@ const hasCustomSettings = computed(() =>
 )
 
 // Helper to translate title if it's a translation key
+// Uses $t (without namespace prefix) for full translation keys like 'admin.accounts.table.email'
 const translateTitle = (title: string): string => {
   if (title && title.includes('.') && !title.includes(' ')) {
-    const translated = t(title)
+    const translated = $t(title)
     return translated !== title ? translated : title
   }
   return title

@@ -18,7 +18,7 @@
 
     <v-card min-width="280" class="column-filter-card">
       <v-card-title class="text-subtitle-1 pb-2">
-        {{ column.title }} filtern
+        {{ translateText(column.title) }} filtern
       </v-card-title>
 
       <v-card-text class="pt-0">
@@ -97,7 +97,7 @@
           <v-select
             v-if="isSelectFilter"
             v-model="localValueArray"
-            :items="column.filterOptions || []"
+            :items="translatedFilterOptions"
             item-title="text"
             item-value="value"
             label="Werte auswählen"
@@ -168,6 +168,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useTranslations } from '@/core/localization/composables/useTranslations'
 import type { TableColumn } from '@/types/table'
 import type { ColumnFilter, FilterOperator, FilterOperatorOption } from '@/types/tableFilter'
 import {
@@ -177,6 +178,17 @@ import {
   BOOLEAN_OPERATORS,
   SELECT_OPERATORS
 } from '@/types/tableFilter'
+
+const { t } = useTranslations()
+
+// Helper to translate text if it's a translation key
+const translateText = (text: string): string => {
+  if (text && text.includes('.') && !text.includes(' ')) {
+    const translated = t(text)
+    return translated !== text ? translated : text
+  }
+  return text
+}
 
 interface Props {
   column: TableColumn
@@ -202,6 +214,15 @@ const booleanOptions = [
   { value: true, text: 'Ja' },
   { value: false, text: 'Nein' }
 ]
+
+// Translated filter options for select filters
+const translatedFilterOptions = computed(() => {
+  if (!props.column.filterOptions) return []
+  return props.column.filterOptions.map(option => ({
+    ...option,
+    text: translateText(option.text)
+  }))
+})
 
 // Determine filter type based on column type
 const filterType = computed(() => {

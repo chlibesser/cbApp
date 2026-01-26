@@ -40,6 +40,20 @@ return [
         'active' => 'Aktiv',
         'inactive' => 'Inaktiv',
         'clear' => 'Filter zurücksetzen',
+        'create' => 'Filter erstellen',
+        'update' => 'Filter aktualisieren',
+        'reset_all' => 'Alles zurücksetzen',
+        'dialog' => [
+            'save_title' => 'Filter speichern',
+            'edit_title' => 'Filter bearbeiten',
+            'name_label' => 'Filter-Name',
+            'color_label' => 'Button-Farbe',
+            'show_as_button' => 'Als Quick-Access Button anzeigen',
+            'validation' => [
+                'required' => 'Dieses Feld ist erforderlich',
+                'max_length' => 'Maximal 100 Zeichen erlaubt',
+            ],
+        ],
     ],
     
     'pagination' => [
